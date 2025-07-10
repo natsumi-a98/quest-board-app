@@ -11,10 +11,13 @@
 ```bash
 git clone https://github.com/your-org/quest-board-app.git
 cd quest-board-app
+```
 
 ### 2. 依存パッケージをインストール
 
+```bash
 pnpm install
+```
 
 ---
 
@@ -22,8 +25,12 @@ pnpm install
 
 ### フロントエンド
 
+```bash
 pnpm dev
+```
 
 ### バックエンド
 
+```bash
 pnpm --filter backend dev
+```
