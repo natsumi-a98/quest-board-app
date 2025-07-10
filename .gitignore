@@ -1,5 +1,9 @@
 # Node modules
 node_modules/
+docs/node_modules/
+
+# pnpm
+.pnpm-store/
 
 # Logs
 logs
@@ -12,33 +16,46 @@ pnpm-debug.log*
 # Dependency directories
 jspm_packages/
 
-# Optional npm cache directory
-.npm
+# npm/yarn/pnpm pack files
+*.tgz
 
-# Optional eslint cache
-.eslintcache
-
-# Optional REPL history
-.node_repl_history
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Output of 'npm pack'
 *.tgz
 
-# dotenv environment variables files
-.env*
+# Eslint/REPL cache
+.npm
+.eslintcache
+.node_repl_history
 
-# Vitepress cache
+# Build outputs
+.next/
+dist/
+
+# VitePress
 .vitepress/dist/
 .vitepress/cache/
-
-# Mac system files
-.DS_Store
-
-# VSCode settings
-.vscode/
-
-# VitePress (docsディレクトリ配下)
-docs/node_modules/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
+
+# Biome
+.biome/
+
+# Database (Prisma)
+prisma/migrations/
+*.db
+*.db-journal
+
+# Mac/Windows system files
+.DS_Store
 docs/.DS_Store
+Thumbs.db
+
+# VSCode
+.vscode/

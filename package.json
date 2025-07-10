@@ -1,0 +1,26 @@
+{
+  "name": "quest-board-app",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --parallel run dev",
+    "build": "pnpm run build:docs && pnpm run build:frontend && pnpm run build:backend",
+    "build:docs": "pnpm --filter docs run build",
+    "build:frontend": "pnpm --filter frontend run build",
+    "build:backend": "pnpm --filter backend run build",
+    "dev:docs": "pnpm --filter docs run dev",
+    "dev:frontend": "pnpm --filter frontend run dev",
+    "dev:backend": "pnpm --filter backend run dev",
+    "lint": "biome check .",
+    "lint:fix": "biome check --apply .",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.0.0",
+    "prisma": "^5.0.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.0.0"
+  }
+}
