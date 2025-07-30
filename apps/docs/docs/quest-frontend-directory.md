@@ -1,8 +1,9 @@
-# クエスト掲示板アプリケーション設計方針
+# クエスト掲示板アプリケーション設計方針（App Router対応）
 
 ## 使用技術
-- フロントエンド：React, TypeScript, Next.js
+- フロントエンド：React, TypeScript, Next.js（App Router 構成）
 - コンポーネント設計：Atomic Design（テンプレート層は除く）
+- Firebase Authentication
 
 ---
 
@@ -12,26 +13,41 @@
 frontend/
 ├── public/
 ├── src/
-│   ├── pages/
-│   │   ├── index.tsx
-│   │   ├── login.tsx
+│   ├── app/
+│   │   ├── page.tsx（＝トップページ）
+│   │   ├── login/
+│   │   │   └── page.tsx
+│   │   ├── signUp/
+│   │   │   └── page.tsx
 │   │   ├── quests/
+│   │   │   └── page.tsx
 │   │   ├── mypage/
+│   │   │   └── page.tsx
 │   │   └── admin/
-│   │       ├── dashboard.tsx
-│   │       ├── quests.tsx
-│   │       ├── rewards.tsx
-│   │       ├── users.tsx
-│   │       └── roles.tsx
+│   │       ├── dashboard/
+│   │       │   └── page.tsx
+│   │       ├── quests/
+│   │       │   └── page.tsx
+│   │       ├── rewards/
+│   │       │   └── page.tsx
+│   │       ├── users/
+│   │       │   └── page.tsx
+│   │       └── roles/
+│   │           └── page.tsx
 │   ├── components/
 │   │   ├── atoms/
 │   │   ├── molecules/
 │   │   ├── organisms/
 │   ├── features/
 │   ├── layouts/
-│   ├── hooks/ usehooksとかまとめること
+│   ├── hooks/
+│   │   └── useAuth.ts
 │   ├── utils/
-│   ├── services/ ←utilsとまとめて良いかも
+│   ├── services/
+│   │   ├── firebase.ts
+│   │   ├── auth/
+│   │   │   ├── login.ts
+│   │   │   └── signUp.ts
 │   ├── types/
 │   └── store/
 ├── .env.local
@@ -51,22 +67,6 @@ frontend/
 | **Atom**     | UIの最小単位。再利用性が高い。       | `Button`, `TextInput`, `Icon`    |
 | **Molecule** | 複数のAtomを組み合わせた部品。       | `LoginForm`, `QuestCard`         |
 | **Organism** | 機能としてまとまったコンポーネント。 | `Header`, `Sidebar`, `QuestList` |
-
-### ディレクトリ構成例（components）
-
-src/
-└── components/
-    ├── atoms/
-    │   ├── Button.tsx
-    │   ├── TextInput.tsx
-    │   └── Icon.tsx
-    ├── molecules/
-    │   ├── LoginForm.tsx
-    │   └── QuestCard.tsx
-    └── organisms/
-        ├── Header.tsx
-        ├── QuestList.tsx
-        └── Sidebar.tsx
 
 ---
 
@@ -89,12 +89,12 @@ src/
 
 ---
 
-## 4. コンポーネント構成例
+## 4. コンポーネント構成
 
 本セクションでは、Atomic Design に基づくコンポーネント構成の具体例を画面ごとに示します。
 
 ### 一般ユーザー向け画面：クエスト一覧画面
-pages/quests/index.tsx
+app/quest/page.tsx
  └─ <QuestList /> (organism)
      └─ <QuestCard /> (molecule)
          ├─ <Title /> (atom)
@@ -104,7 +104,7 @@ pages/quests/index.tsx
          └─ <ActionButton /> (atom)
 
 ### 一般ユーザー向け画面：マイページ
-pages/mypage/index.tsx
+app/mypage/page.tsx
  └─ <UserProfile /> (organism)
      ├─ <Avatar /> (atom)
      ├─ <UserInfo /> (molecule)
@@ -114,7 +114,7 @@ pages/mypage/index.tsx
          └─ <QuestCard /> (molecule)
 
 ### 管理者画面：ユーザー管理画面
-pages/admin/users.tsx
+app/admin/users/page.tsx
  └─ <UserTable /> (organism)
      └─ <UserRow /> (molecule)
          ├─ <UserName /> (atom)
@@ -122,7 +122,7 @@ pages/admin/users.tsx
          └─ <RoleBadge /> (atom)
 
 ### 管理者画面：クエスト管理画面
-pages/admin/quests.tsx
+app/admin/quests/page.tsx
  └─ <AdminQuestList /> (organism)
      └─ <AdminQuestCard /> (molecule)
          ├─ <QuestTitle /> (atom)
@@ -130,10 +130,9 @@ pages/admin/quests.tsx
          └─ <EditButton /> (atom)
 
 ### 共通レイアウト構成
-src/layouts/
- └─ <MainLayout />
-     ├─ <Header /> (organism)
-     ├─ <Sidebar /> (organism)
-     └─ <Footer /> (organism)
+src/components/layouts/MainLayout.tsx
+ ├─ <Header /> (organism)
+ ├─ <Sidebar /> (organism)
+ └─ <Footer /> (organism)
 
 ---
