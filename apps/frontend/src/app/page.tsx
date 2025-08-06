@@ -1,50 +1,80 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "@/services/firebase";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function RootPage() {
-  const router = useRouter();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      alert("ログアウトしました");
+      router.push("/");
+    } catch (error: any) {
+      alert(`ログアウトエラー: ${error.message}`);
+    }
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setIsLoggedIn(true);
-        router.replace("/home");
-      } else {
-        setCheckingAuth(false);
-      }
+      setIsLoggedIn(!!user);
+      setCheckingAuth(false);
     });
-
     return () => unsubscribe();
-  }, [router]);
+  }, []);
 
-  if (checkingAuth || isLoggedIn) {
+  if (checkingAuth) {
     return <div className="text-center mt-10">Loading...</div>;
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-      <h1 className="text-2xl font-bold">ようこそ クエスト掲示板 へ</h1>
-      <div className="flex gap-4">
-        <Link
-          href="/login"
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          ログイン
-        </Link>
-        <Link
-          href="/signUp"
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-        >
-          新規登録
-        </Link>
-      </div>
-    </div>
+    <main className="flex justify-center items-center min-h-screen bg-gradient-to-b from-gray-800 to-gray-900">
+      {/* ログインしている場合 */}
+      {isLoggedIn ? (
+        /* TODOクエスト一覧コンポーネントを表示するようにする */
+        <div className="bg-[#fef3c7] border-2 border-[#fbbf24] rounded-lg shadow-lg p-8 w-full max-w-2xl text-center">
+          <h1 className="text-3xl font-bold text-[#1e3a8a] mb-6">
+            クエスト一覧
+          </h1>
+          <p className="text-gray-700 mb-8">ここにクエスト一覧表示</p>
+          <button
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+            onClick={handleLogout}
+          >
+            ログアウト
+          </button>
+        </div>
+      ) : (
+        /* ログインしていない場合 */
+        <div className="bg-[#fef3c7] border-2 border-[#fbbf24] rounded-lg shadow-lg p-8 w-full max-w-md text-center">
+          <h1 className="text-3xl font-bold text-[#1e3a8a] mb-6">
+            ようこそ クエスト掲示板 へ
+          </h1>
+          <p className="text-gray-700 mb-6">
+            ログインまたは新規登録をして、クエストに挑戦しましょう！
+          </p>
+          <div className="flex flex-col gap-4">
+            <Link
+              href="/login"
+              className="w-full px-4 py-3 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
+            >
+              ログイン
+            </Link>
+            <Link
+              href="/signUp"
+              className="w-full px-4 py-3 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300"
+            >
+              新規登録
+            </Link>
+          </div>
+        </div>
+      )}
+    </main>
   );
 }

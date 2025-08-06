@@ -13,34 +13,49 @@ export default function SignupPage() {
     try {
       await signUp(email, password);
       alert("サインアップ成功");
-      router.push("/home"); // 成功時に遷移
+      router.push("/");
     } catch (error: any) {
       alert(`エラー: ${error.message}`);
     }
   };
 
+  const handleBack = () => {
+    router.push("/"); // トップページに戻る
+  };
+
   return (
-    <main className="p-8">
-      <h1 className="text-2xl mb-4">サインアップ</h1>
-      <input
-        className="border p-2 mb-2 block"
-        placeholder="メールアドレス"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <input
-        className="border p-2 mb-2 block"
-        type="password"
-        placeholder="パスワード"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button
-        className="bg-blue-500 text-white px-4 py-2"
-        onClick={handleSignup}
-      >
-        登録
-      </button>
+    <main className="flex justify-center items-center min-h-screen bg-gradient-to-b from-gray-800 to-gray-900">
+      {/* 中央カード */}
+      <div className="bg-[#fef3c7] border-2 border-[#fbbf24] rounded-lg shadow-lg p-8 w-full max-w-md">
+        <h1 className="text-2xl font-bold mb-6 text-center text-[#1e3a8a]">
+          新規登録
+        </h1>
+        <input
+          className="w-full bg-white border border-gray-400 p-3 mb-4 rounded focus:outline-none focus:ring-2 focus:ring-[#fbbf24]"
+          placeholder="メールアドレス"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <input
+          className="w-full bg-white border border-gray-400 p-3 mb-6 rounded focus:outline-none focus:ring-2 focus:ring-[#fbbf24]"
+          type="password"
+          placeholder="パスワード"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <button
+          className="w-full bg-[#1e3a8a] text-white py-3 rounded hover:bg-blue-800 transition duration-300 mb-3"
+          onClick={handleSignup}
+        >
+          登録
+        </button>
+        <button
+          className="w-full bg-gray-500 text-white py-3 rounded hover:bg-gray-600 transition duration-300"
+          onClick={handleBack}
+        >
+          戻る
+        </button>
+      </div>
     </main>
   );
 }
