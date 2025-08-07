@@ -1,8 +1,30 @@
 import { mockQuests } from "../data/mockQuests";
 
-// 全クエスト取得サービス
-export const getAllQuestsService = () => {
-  return mockQuests;
+interface QuestFilterOptions {
+  keyword?: string;
+  status?: string;
+}
+
+// 全クエスト取得サービス（フィルタ機能付き）
+export const getAllQuestsService = (filters: QuestFilterOptions) => {
+  const { keyword, status } = filters;
+
+  let filteredQuests = mockQuests;
+
+  if (keyword) {
+    const lowerKeyword = keyword.toLowerCase();
+    filteredQuests = filteredQuests.filter(
+      (quest) =>
+        quest.title.toLowerCase().includes(lowerKeyword) ||
+        quest.description.toLowerCase().includes(lowerKeyword)
+    );
+  }
+
+  if (status) {
+    filteredQuests = filteredQuests.filter((quest) => quest.status === status);
+  }
+
+  return filteredQuests;
 };
 
 // IDから1件のクエスト取得サービス

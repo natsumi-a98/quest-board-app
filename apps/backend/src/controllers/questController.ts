@@ -5,7 +5,13 @@ import {
 } from "../services/questService";
 
 export const getAllQuests = (req: Request, res: Response) => {
-  const quests = getAllQuestsService();
+  const { keyword, status } = req.query;
+
+  const quests = getAllQuestsService({
+    keyword: keyword as string,
+    status: status as string,
+  });
+
   res.json(quests);
 };
 
