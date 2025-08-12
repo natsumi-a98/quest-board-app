@@ -21,6 +21,9 @@ importers:
 
   apps/backend:
     dependencies:
+      '@prisma/client':
+        specifier: 5.22.0
+        version: 5.22.0(prisma@5.22.0)
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -33,6 +36,9 @@ importers:
       helmet:
         specifier: ^7.0.0
         version: 7.2.0
+      prisma:
+        specifier: ^5.22.0
+        version: 5.22.0
     devDependencies:
       '@types/cors':
         specifier: ^2.8.0
