@@ -3,6 +3,8 @@
 import { logIn } from "@/services/auth/login";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "@/services/firebase"; // Firebase初期化ファイルからauthをインポート
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -14,6 +16,21 @@ export default function LoginPage() {
       await logIn(email, password);
       alert("ログイン成功");
       router.push("/");
+    } catch (error: any) {
+      alert(`エラー: ${error.message}`);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!email) {
+      alert(
+        "パスワード再設定リンクを送るにはメールアドレスを入力してください。"
+      );
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      alert("パスワード再設定用のメールを送信しました。");
     } catch (error: any) {
       alert(`エラー: ${error.message}`);
     }
@@ -48,6 +65,12 @@ export default function LoginPage() {
           onClick={handleLogin}
         >
           ログイン
+        </button>
+        <button
+          className="w-full bg-yellow-500 text-white py-3 rounded hover:bg-yellow-600 transition duration-300 mb-3"
+          onClick={handlePasswordReset}
+        >
+          パスワードを忘れた方はこちら
         </button>
         <button
           className="w-full bg-gray-500 text-white py-3 rounded hover:bg-gray-600 transition duration-300"
