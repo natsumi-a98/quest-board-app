@@ -1,25 +1,50 @@
 import React from "react";
-import { statusConfig } from "../../constants/config";
 
 type StatusRibbonProps = {
   status: "participating" | "completed" | "applied"; // 参加中、達成済み、応募中
   className?: string;
 };
 
-// クエストクエストの状態を表すリボンラベル
+// クエストの状態を表すリボンラベル
 const StatusRibbon: React.FC<StatusRibbonProps> = ({
   status,
   className = "",
 }) => {
-  const config = statusConfig[status];
-  const Icon = config.icon;
+  const getStatusColor = (status: string): string => {
+    switch (status) {
+      case "participating":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "completed":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "applied":
+        return "bg-orange-100 text-orange-800 border-orange-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const getStatusText = (status: string): string => {
+    switch (status) {
+      case "participating":
+        return "参加中";
+      case "completed":
+        return "達成済み";
+      case "applied":
+        return "応募中";
+      default:
+        return "不明";
+    }
+  };
 
   return (
-    <div
-      className={`absolute -top-2 -right-2 ${config.bg} text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg ${className}`}
-    >
-      <Icon className="w-3 h-3" />
-      {config.text}
+    <div className={`absolute top-0 right-0 ${className}`}>
+      <div
+        className={`px-3 py-1 text-xs font-semibold rounded-bl-lg border-l border-b ${getStatusColor(
+          status
+        )}`}
+      >
+        {getStatusText(status)}
+      </div>
     </div>
   );
 };
