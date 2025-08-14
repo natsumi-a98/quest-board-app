@@ -7,7 +7,11 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // 最新のユーザー情報を取得
+        await user.reload();
+      }
       setUser(user);
       setLoading(false);
     });

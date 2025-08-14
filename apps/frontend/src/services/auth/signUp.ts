@@ -12,6 +12,7 @@ export const signUp = async (name: string, email: string, password: string) => {
     await updateProfile(auth.currentUser, {
       displayName: name,
     });
+    await auth.currentUser.reload();
   }
 
   return userCredential;
