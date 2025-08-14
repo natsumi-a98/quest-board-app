@@ -39,13 +39,13 @@ export default function RootPage() {
       {/* ログインしている場合 */}
       {isLoggedIn ? (
         /* TODOクエスト一覧コンポーネントを表示するようにする */
-        <div className="bg-[#fef3c7] border-2 border-[#fbbf24] rounded-lg shadow-lg p-8 w-full max-w-2xl text-center">
+        <div className="bg-[#fef3c7] border-2 border-[#fbbf24] rounded-lg shadow-lg p-8 w-full max-w-7xl text-center">
           <h1 className="text-3xl font-bold text-[#1e3a8a] mb-6">
             クエスト一覧
           </h1>
           <QuestsPage />
           <button
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300 mt-8"
             onClick={handleLogout}
           >
             ログアウト
