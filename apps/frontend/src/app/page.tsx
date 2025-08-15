@@ -1,26 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/services/firebase";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import QuestsPage from "@/components/QuestsPage";
+import QuestList from "@/components/organisms/QuestList";
 
 export default function RootPage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      alert("ログアウトしました");
-      router.push("/");
-    } catch (error: any) {
-      alert(`ログアウトエラー: ${error.message}`);
-    }
-  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -38,19 +26,8 @@ export default function RootPage() {
     <main className="flex justify-center items-center min-h-screen bg-gradient-to-b from-gray-800 to-gray-900">
       {/* ログインしている場合 */}
       {isLoggedIn ? (
-        /* TODOクエスト一覧コンポーネントを表示するようにする */
-        <div className="bg-[#fef3c7] border-2 border-[#fbbf24] rounded-lg shadow-lg p-8 w-full max-w-7xl text-center">
-          <h1 className="text-3xl font-bold text-[#1e3a8a] mb-6">
-            クエスト一覧
-          </h1>
-          <QuestsPage />
-          <button
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300 mt-8"
-            onClick={handleLogout}
-          >
-            ログアウト
-          </button>
-        </div>
+        /* クエスト一覧表示 */
+        <QuestList />
       ) : (
         /* ログインしていない場合 */
         <div className="bg-[#fef3c7] border-2 border-[#fbbf24] rounded-lg shadow-lg p-8 w-full max-w-md text-center">
