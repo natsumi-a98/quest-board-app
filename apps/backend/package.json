@@ -2,10 +2,10 @@
   "name": "backend",
   "private": true,
   "scripts": {
-    "dev": "nodemon --exec tsx src/index.ts",
+    "dev": "nodemon --exec tsx src/app.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "start": "node dist/app.js"
   },
   "dependencies": {
     "@prisma/client": "5.22.0",
