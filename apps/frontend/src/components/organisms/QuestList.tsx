@@ -17,10 +17,13 @@ import {
   LogOut,
 } from "lucide-react";
 import { questData } from "@/mocks/questData";
+import QuestJoinDialog from "@/components/organisms/QuestJoinDialog";
 
 const QuestList: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedQuest, setSelectedQuest] = useState<any | null>(null);
 
   // アイコン名からJSX要素を生成する関数
   const getIconComponent = (iconName: string) => {
@@ -282,6 +285,10 @@ const QuestList: React.FC = () => {
 
                 {/* Action Button */}
                 <button
+                  onClick={() => {
+                    setSelectedQuest(quest);
+                    setIsDialogOpen(true);
+                  }}
                   className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg ${
                     quest.status === "active"
                       ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
@@ -311,6 +318,12 @@ const QuestList: React.FC = () => {
             <p className="text-gray-400">検索条件を変更してお試しください</p>
           </div>
         )}
+        <QuestJoinDialog
+  quest={selectedQuest}
+  isOpen={isDialogOpen}
+  onClose={() => setIsDialogOpen(false)}
+/>
+
       </main>
     </div>
   );
