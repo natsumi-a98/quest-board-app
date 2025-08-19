@@ -1,33 +1,61 @@
-import { mockQuests } from "../data/mockQuests";
+import { PrismaClient } from "@prisma/client";
 
-interface QuestFilterOptions {
+const prisma = new PrismaClient();
+
+interface GetAllQuestsParams {
   keyword?: string;
   status?: string;
 }
 
-// 全クエスト取得サービス（フィルタ機能付き）
-export const getAllQuestsService = (filters: QuestFilterOptions) => {
-  const { keyword, status } = filters;
-
-  let filteredQuests = mockQuests;
+// 全クエスト取得（オプションでキーワード・ステータスで絞り込み）
+export const getAllQuestsService = async ({
+  keyword,
+  status,
+}: GetAllQuestsParams) => {
+  const where: any = {};
 
   if (keyword) {
-    const lowerKeyword = keyword.toLowerCase();
-    filteredQuests = filteredQuests.filter(
-      (quest) =>
-        quest.title.toLowerCase().includes(lowerKeyword) ||
-        quest.description.toLowerCase().includes(lowerKeyword)
-    );
+    where.OR = [
+      { title: { contains: keyword } },
+      { description: { contains: keyword } },
+    ];
   }
 
   if (status) {
-    filteredQuests = filteredQuests.filter((quest) => quest.status === status);
+    where.status = status;
   }
 
-  return filteredQuests;
+  const quests = await prisma.quest.findMany({
+    where,
+    include: {
+      rewards: true,
+      quest_participants: {
+        include: {
+          user: true,
+        },
+      },
+    },
+    orderBy: {
+      start_date: "desc",
+    },
+  });
+
+  return quests;
 };
 
-// IDから1件のクエスト取得サービス
-export const getQuestByIdService = (id: number) => {
-  return mockQuests.find((quest) => quest.id === id);
+// IDでクエスト取得
+export const getQuestByIdService = async (id: number) => {
+  const quest = await prisma.quest.findUnique({
+    where: { id },
+    include: {
+      rewards: true,
+      quest_participants: {
+        include: {
+          user: true,
+        },
+      },
+    },
+  });
+
+  return quest;
 };
