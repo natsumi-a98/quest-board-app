@@ -1,8 +1,23 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import {
+  Search,
+  Sword,
+  Book,
+  Wrench,
+  Crown,
+  Clock,
+  Star,
+  Users,
+  Award,
+  Bell,
+  User,
+  Settings,
+  LogOut,
+} from "lucide-react";
+import QuestJoinDialog from "@/components/organisms/QuestJoinDialog";
 import { apiClient } from "@/services/httpClient";
-import { Search, Sword, Book, Wrench } from "lucide-react";
 
 interface User {
   id: number;
@@ -27,16 +42,18 @@ interface Quest {
   status: string;
   difficulty: string;
   end_date: string;
-  maxParticipants: number | null;
+  maxParticipants: number;
   rewards?: Reward | null;
   quest_participants: QuestParticipant[];
   tags: string[];
-  _count: {
+  _count?: {
     quest_participants: number;
   };
 }
 
 const QuestList: React.FC = () => {
+  const [quests, setQuests] = useState<Quest[]>([]);
+  const [loading, setLoading] = useState(true);
   const [quests, setQuests] = useState<Quest[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState("all");
@@ -138,7 +155,7 @@ const QuestList: React.FC = () => {
     const matchesSearch =
       quest.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       quest.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      quest.tags.some((tag) =>
+      (quest.tags ?? []).some((tag) =>
         tag.toLowerCase().includes(searchQuery.toLowerCase())
       );
 
@@ -155,7 +172,7 @@ const QuestList: React.FC = () => {
 
   return (
     <div className="w-full">
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen flex flex-col">
         {/* Search and Filter */}
         <div className="mb-8 space-y-4">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -228,7 +245,7 @@ const QuestList: React.FC = () => {
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {quest.tags.map((tag, index) => (
+                  {(quest.tags ?? []).map((tag, index) => (
                     <span
                       key={index}
                       className="px-2 py-1 bg-slate-200 text-slate-700 text-xs rounded-full font-medium"
@@ -264,8 +281,9 @@ const QuestList: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span>参加者:</span>
                     <span className="font-semibold">
-                      {quest._count.quest_participants}/{quest.maxParticipants}
-                      名
+                      {quest._count?.quest_participants ??
+                        quest.quest_participants.length}
+                      /{quest.maxParticipants}名
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -277,13 +295,13 @@ const QuestList: React.FC = () => {
                 </div>
 
                 {/* Participants List */}
-                {quest.quest_participants.length > 0 && (
+                {(quest.quest_participants ?? []).length > 0 && (
                   <div className="mb-4">
                     <div className="text-xs text-slate-600 mb-2">
                       参加メンバー:
                     </div>
                     <div className="flex flex-wrap gap-1">
-                      {quest.quest_participants
+                      {(quest.quest_participants ?? [])
                         .slice(0, 3)
                         .map((participant, index) => (
                           <span
@@ -293,9 +311,9 @@ const QuestList: React.FC = () => {
                             {participant.user.name}
                           </span>
                         ))}
-                      {quest.quest_participants.length > 3 && (
+                      {(quest.quest_participants ?? []).length > 3 && (
                         <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
-                          +{quest.quest_participants.length - 3}名
+                          +{(quest.quest_participants ?? []).length - 3}名
                         </span>
                       )}
                     </div>
@@ -307,16 +325,11 @@ const QuestList: React.FC = () => {
                   <div className="flex items-center justify-between text-xs text-slate-600 mb-1">
                     <span>参加状況</span>
                     <span>
-                      {(() => {
-                        const total = quest.maxParticipants ?? 0;
-                        const percent =
-                          total > 0
-                            ? Math.round(
-                                (quest._count.quest_participants / total) * 100
-                              )
-                            : 0;
-                        return percent;
-                      })()}
+                      {Math.round(
+                        ((quest._count?.quest_participants || 0) /
+                          quest.maxParticipants) *
+                          100
+                      )}
                       %
                     </span>
                   </div>
@@ -327,7 +340,7 @@ const QuestList: React.FC = () => {
                         width: `${(() => {
                           const total = quest.maxParticipants ?? 0;
                           const percent =
-                            total > 0
+                            total > 0 && quest._count?.quest_participants !== undefined
                               ? (quest._count.quest_participants / total) * 100
                               : 0;
                           return percent;
@@ -339,10 +352,6 @@ const QuestList: React.FC = () => {
 
                 {/* Action Button */}
                 <button
-                  onClick={() => {
-                    setSelectedQuest(quest);
-                    setIsDialogOpen(true);
-                  }}
                   className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg ${
                     quest.status === "active"
                       ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
@@ -375,12 +384,6 @@ const QuestList: React.FC = () => {
             <p className="text-gray-400">検索条件を変更してお試しください</p>
           </div>
         )}
-        <QuestJoinDialog
-  quest={selectedQuest}
-  isOpen={isDialogOpen}
-  onClose={() => setIsDialogOpen(false)}
-/>
-
       </main>
     </div>
   );
