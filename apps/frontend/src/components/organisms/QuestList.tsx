@@ -1,28 +1,65 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  Search,
-  Sword,
-  Book,
-  Wrench,
-  Crown,
-  Clock,
-  Star,
-  Users,
-  Award,
-  Bell,
-  User,
-  Settings,
-  LogOut,
-} from "lucide-react";
-import { questData } from "@/mocks/questData";
+import React, { useState, useEffect } from "react";
+import { Search, Sword, Book, Wrench } from "lucide-react";
+
+interface User {
+  id: number;
+  name: string;
+}
+
+interface Reward {
+  point_amount: number;
+  incentive_amount: number;
+}
+
+interface QuestParticipant {
+  user: User;
+}
+
+interface Quest {
+  id: number;
+  title: string;
+  description: string;
+  icon: string;
+  type: string;
+  status: string;
+  difficulty: string;
+  end_date: string;
+  maxParticipants: number;
+  rewards?: Reward | null;
+  quest_participants: QuestParticipant[];
+  tags: string[];
+  _count?: {
+    quest_participants: number;
+  };
+}
 
 const QuestList: React.FC = () => {
+  const [quests, setQuests] = useState<Quest[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // アイコン名からJSX要素を生成する関数
+  useEffect(() => {
+    const fetchQuests = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/quests`
+        );
+        if (!res.ok) throw new Error("Failed to fetch quests");
+        const data: Quest[] = await res.json();
+        setQuests(data);
+      } catch (err) {
+        console.error(err);
+        setQuests([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchQuests();
+  }, []);
+
   const getIconComponent = (iconName: string) => {
     switch (iconName) {
       case "Sword":
@@ -36,7 +73,7 @@ const QuestList: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: string): string => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
         return "bg-blue-100 text-blue-800 border-blue-200";
@@ -49,7 +86,7 @@ const QuestList: React.FC = () => {
     }
   };
 
-  const getStatusText = (status: string): string => {
+  const getStatusText = (status: string) => {
     switch (status) {
       case "active":
         return "募集中";
@@ -62,7 +99,7 @@ const QuestList: React.FC = () => {
     }
   };
 
-  const getDifficultyColor = (difficulty: string): string => {
+  const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "初級":
         return "bg-green-500";
@@ -75,16 +112,15 @@ const QuestList: React.FC = () => {
     }
   };
 
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString("ja-JP", {
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString("ja-JP", {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
-  };
 
-  const formatCurrency = (amount: number): string => {
-    if (typeof amount !== "number" || isNaN(amount)) return "-";
+  const formatCurrency = (amount?: number) => {
+    if (!amount) return "-";
     return new Intl.NumberFormat("ja-JP", {
       style: "currency",
       currency: "JPY",
@@ -92,22 +128,31 @@ const QuestList: React.FC = () => {
     }).format(amount);
   };
 
-  const filteredQuests = questData.filter((quest) => {
+  const filteredQuests = quests.filter((quest) => {
     const matchesFilter =
       selectedFilter === "all" || quest.status === selectedFilter;
+
     const matchesSearch =
       quest.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       quest.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      quest.tags.some((tag) =>
+      (quest.tags ?? []).some((tag) =>
         tag.toLowerCase().includes(searchQuery.toLowerCase())
       );
+
     return matchesFilter && matchesSearch;
   });
 
+  if (loading) {
+    return (
+      <div className="text-center py-12 text-gray-400">
+        クエストを読み込み中...
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen flex flex-col">
         {/* Search and Filter */}
         <div className="mb-8 space-y-4">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -135,7 +180,7 @@ const QuestList: React.FC = () => {
         </div>
 
         {/* Quest Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl-grid-cols-3 gap-8 md:gap-8 xl:grid-cols-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
           {filteredQuests.map((quest) => (
             <div
               key={quest.id}
@@ -179,7 +224,7 @@ const QuestList: React.FC = () => {
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {quest.tags.map((tag, index) => (
+                  {(quest.tags ?? []).map((tag, index) => (
                     <span
                       key={index}
                       className="px-2 py-1 bg-slate-200 text-slate-700 text-xs rounded-full font-medium"
@@ -205,18 +250,19 @@ const QuestList: React.FC = () => {
                     <span>報酬:</span>
                     <div className="text-right">
                       <div className="font-semibold text-yellow-600">
-                        {quest.rewards.point_amount} GP
+                        {quest.rewards?.point_amount ?? 0} GP
                       </div>
                       <div className="text-xs text-slate-500">
-                        {formatCurrency(quest.rewards.incentive_amount)}
+                        {formatCurrency(quest.rewards?.incentive_amount)}
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>参加者:</span>
                     <span className="font-semibold">
-                      {quest._count.quest_participants}/{quest.maxParticipants}
-                      名
+                      {quest._count?.quest_participants ??
+                        quest.quest_participants.length}
+                      /{quest.maxParticipants}名
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -228,13 +274,13 @@ const QuestList: React.FC = () => {
                 </div>
 
                 {/* Participants List */}
-                {quest.quest_participants.length > 0 && (
+                {(quest.quest_participants ?? []).length > 0 && (
                   <div className="mb-4">
                     <div className="text-xs text-slate-600 mb-2">
                       参加メンバー:
                     </div>
                     <div className="flex flex-wrap gap-1">
-                      {quest.quest_participants
+                      {(quest.quest_participants ?? [])
                         .slice(0, 3)
                         .map((participant, index) => (
                           <span
@@ -244,9 +290,9 @@ const QuestList: React.FC = () => {
                             {participant.user.name}
                           </span>
                         ))}
-                      {quest.quest_participants.length > 3 && (
+                      {(quest.quest_participants ?? []).length > 3 && (
                         <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
-                          +{quest.quest_participants.length - 3}名
+                          +{(quest.quest_participants ?? []).length - 3}名
                         </span>
                       )}
                     </div>
@@ -259,7 +305,8 @@ const QuestList: React.FC = () => {
                     <span>参加状況</span>
                     <span>
                       {Math.round(
-                        (quest._count.quest_participants /
+                        ((quest._count?.quest_participants ??
+                          quest.quest_participants.length) /
                           quest.maxParticipants) *
                           100
                       )}
@@ -271,7 +318,8 @@ const QuestList: React.FC = () => {
                       className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
                       style={{
                         width: `${
-                          (quest._count.quest_participants /
+                          ((quest._count?.quest_participants ??
+                            quest.quest_participants.length) /
                             quest.maxParticipants) *
                           100
                         }%`,
