@@ -1,0 +1,209 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = "mysql://app_user:app_password@localhost:3306/your_project_db"
+}
+
+model User {
+  id                 Int                @id @default(autoincrement())
+  name               String             @db.VarChar(255)
+  email              String             @unique @db.VarChar(255)
+  role               String             @db.VarChar(50)
+  created_at         DateTime           @default(now())
+  updated_at         DateTime           @updatedAt
+  clear_submissions  ClearSubmission[]
+  entries            Entry[]
+  feedbacks          Feedback[]
+  incentive_payments IncentivePayment[]
+  notifications      Notification[]
+  offers             Offer[]
+  point_transactions PointTransaction[]
+  quest_participants QuestParticipant[]
+  reviews            Review[]
+
+  @@map("users")
+}
+
+model Quest {
+  id                 Int                @id @default(autoincrement())
+  title              String             @db.VarChar(255)
+  description        String             @db.Text
+  type               String             @db.VarChar(100)
+  status             String             @db.VarChar(50)
+  start_date         DateTime?
+  end_date           DateTime?
+  rewards_id         Int?
+  created_at         DateTime           @default(now())
+  updated_at         DateTime           @updatedAt
+  clear_submissions  ClearSubmission[]
+  entries            Entry[]
+  feedbacks          Feedback[]
+  incentive_payments IncentivePayment[]
+  offers             Offer[]
+  point_transactions PointTransaction[]
+  quest_participants QuestParticipant[]
+  rewards            Reward?            @relation(fields: [rewards_id], references: [id])
+
+  @@index([rewards_id], map: "quests_rewards_id_fkey")
+  @@map("quests")
+}
+
+model Review {
+  id          Int      @id @default(autoincrement())
+  reviewer_id Int
+  guest_id    Int
+  rating      Decimal  @db.Decimal(2, 1)
+  comment     String?  @db.Text
+  created_at  DateTime @default(now())
+  reviewer    User     @relation(fields: [reviewer_id], references: [id])
+
+  @@index([reviewer_id], map: "reviews_reviewer_id_fkey")
+  @@map("reviews")
+}
+
+model QuestParticipant {
+  id                 Int       @id @default(autoincrement())
+  user_id            Int
+  quest_id           Int
+  joined_at          DateTime  @default(now())
+  completed_at       DateTime?
+  cleared_at         DateTime?
+  feedback_submitted Boolean   @default(false)
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
+  quest              Quest     @relation(fields: [quest_id], references: [id])
+  user               User      @relation(fields: [user_id], references: [id])
+
+  @@unique([user_id, quest_id])
+  @@index([quest_id], map: "quest_participants_quest_id_fkey")
+  @@map("quest_participants")
+}
+
+model Entry {
+  id            Int       @id @default(autoincrement())
+  user_id       Int
+  quest_id      Int
+  reason        String?   @db.Text
+  status        String    @db.VarChar(50)
+  applied_at    DateTime  @default(now())
+  reply_comment String?   @db.Text
+  approved_at   DateTime?
+  rejected_at   DateTime?
+  quest         Quest     @relation(fields: [quest_id], references: [id])
+  user          User      @relation(fields: [user_id], references: [id])
+
+  @@index([quest_id], map: "entries_quest_id_fkey")
+  @@index([user_id], map: "entries_user_id_fkey")
+  @@map("entries")
+}
+
+model Offer {
+  id           Int       @id @default(autoincrement())
+  user_id      Int
+  quest_id     Int
+  reason       String?   @db.Text
+  status       String    @db.VarChar(50)
+  sent_at      DateTime  @default(now())
+  responded_at DateTime?
+  quest        Quest     @relation(fields: [quest_id], references: [id])
+  user         User      @relation(fields: [user_id], references: [id])
+
+  @@index([quest_id], map: "offers_quest_id_fkey")
+  @@index([user_id], map: "offers_user_id_fkey")
+  @@map("offers")
+}
+
+model ClearSubmission {
+  id             Int       @id @default(autoincrement())
+  user_id        Int
+  quest_id       Int
+  submission_url String?   @db.VarChar(500)
+  status         String    @db.VarChar(50)
+  submitted_at   DateTime  @default(now())
+  reviewed_at    DateTime?
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+  quest          Quest     @relation(fields: [quest_id], references: [id])
+  user           User      @relation(fields: [user_id], references: [id])
+
+  @@index([quest_id], map: "clear_submissions_quest_id_fkey")
+  @@index([user_id], map: "clear_submissions_user_id_fkey")
+  @@map("clear_submissions")
+}
+
+model Feedback {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  quest_id   Int
+  comment    String   @db.Text
+  created_at DateTime @default(now())
+  quest      Quest    @relation(fields: [quest_id], references: [id])
+  user       User     @relation(fields: [user_id], references: [id])
+
+  @@index([quest_id], map: "feedbacks_quest_id_fkey")
+  @@index([user_id], map: "feedbacks_user_id_fkey")
+  @@map("feedbacks")
+}
+
+model Reward {
+  id               Int      @id @default(autoincrement())
+  quest_id         Int?
+  incentive_amount Decimal? @db.Decimal(10, 2)
+  point_amount     Int?
+  note             String?  @db.Text
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+  quests           Quest[]
+
+  @@map("rewards")
+}
+
+model IncentivePayment {
+  id               Int       @id @default(autoincrement())
+  user_id          Int
+  quest_id         Int
+  incentive_amount Decimal   @db.Decimal(10, 2)
+  status           String    @db.VarChar(50)
+  paid_at          DateTime?
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+  quest            Quest     @relation(fields: [quest_id], references: [id])
+  user             User      @relation(fields: [user_id], references: [id])
+
+  @@index([quest_id], map: "incentive_payments_quest_id_fkey")
+  @@index([user_id], map: "incentive_payments_user_id_fkey")
+  @@map("incentive_payments")
+}
+
+model PointTransaction {
+  id           Int      @id @default(autoincrement())
+  user_id      Int
+  quest_id     Int?
+  point_amount Int
+  reason_type  String   @db.VarChar(100)
+  granted_at   DateTime @default(now())
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  quest        Quest?   @relation(fields: [quest_id], references: [id])
+  user         User     @relation(fields: [user_id], references: [id])
+
+  @@index([quest_id], map: "point_transactions_quest_id_fkey")
+  @@index([user_id], map: "point_transactions_user_id_fkey")
+  @@map("point_transactions")
+}
+
+model Notification {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  message    String    @db.Text
+  is_read    Boolean   @default(false)
+  created_at DateTime  @default(now())
+  read_at    DateTime?
+  user       User      @relation(fields: [user_id], references: [id])
+
+  @@index([user_id], map: "notifications_user_id_fkey")
+  @@map("notifications")
+}
