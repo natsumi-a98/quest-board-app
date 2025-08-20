@@ -29,11 +29,8 @@ export const getAllQuestsService = async ({
     where,
     include: {
       rewards: true,
-      quest_participants: {
-        include: {
-          user: true,
-        },
-      },
+      quest_participants: { include: { user: true } },
+      _count: { select: { quest_participants: true } },
     },
     orderBy: {
       start_date: "desc",

@@ -30,7 +30,7 @@ interface Quest {
   rewards?: Reward | null;
   quest_participants: QuestParticipant[];
   tags: string[];
-  _count?: {
+  _count: {
     quest_participants: number;
   };
 }
@@ -135,7 +135,7 @@ const QuestList: React.FC = () => {
     const matchesSearch =
       quest.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       quest.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (quest.tags ?? []).some((tag) =>
+      quest.tags.some((tag) =>
         tag.toLowerCase().includes(searchQuery.toLowerCase())
       );
 
@@ -152,7 +152,7 @@ const QuestList: React.FC = () => {
 
   return (
     <div className="w-full">
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen flex flex-col">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search and Filter */}
         <div className="mb-8 space-y-4">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -224,7 +224,7 @@ const QuestList: React.FC = () => {
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {(quest.tags ?? []).map((tag, index) => (
+                  {quest.tags.map((tag, index) => (
                     <span
                       key={index}
                       className="px-2 py-1 bg-slate-200 text-slate-700 text-xs rounded-full font-medium"
@@ -260,9 +260,8 @@ const QuestList: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span>参加者:</span>
                     <span className="font-semibold">
-                      {quest._count?.quest_participants ??
-                        quest.quest_participants.length}
-                      /{quest.maxParticipants}名
+                      {quest._count.quest_participants}/{quest.maxParticipants}
+                      名
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -274,13 +273,13 @@ const QuestList: React.FC = () => {
                 </div>
 
                 {/* Participants List */}
-                {(quest.quest_participants ?? []).length > 0 && (
+                {quest.quest_participants.length > 0 && (
                   <div className="mb-4">
                     <div className="text-xs text-slate-600 mb-2">
                       参加メンバー:
                     </div>
                     <div className="flex flex-wrap gap-1">
-                      {(quest.quest_participants ?? [])
+                      {quest.quest_participants
                         .slice(0, 3)
                         .map((participant, index) => (
                           <span
@@ -290,9 +289,9 @@ const QuestList: React.FC = () => {
                             {participant.user.name}
                           </span>
                         ))}
-                      {(quest.quest_participants ?? []).length > 3 && (
+                      {quest.quest_participants.length > 3 && (
                         <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
-                          +{(quest.quest_participants ?? []).length - 3}名
+                          +{quest.quest_participants.length - 3}名
                         </span>
                       )}
                     </div>
@@ -305,8 +304,7 @@ const QuestList: React.FC = () => {
                     <span>参加状況</span>
                     <span>
                       {Math.round(
-                        ((quest._count?.quest_participants ??
-                          quest.quest_participants.length) /
+                        (quest._count.quest_participants /
                           quest.maxParticipants) *
                           100
                       )}
@@ -318,8 +316,7 @@ const QuestList: React.FC = () => {
                       className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
                       style={{
                         width: `${
-                          ((quest._count?.quest_participants ??
-                            quest.quest_participants.length) /
+                          (quest._count.quest_participants /
                             quest.maxParticipants) *
                           100
                         }%`,

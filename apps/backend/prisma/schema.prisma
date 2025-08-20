@@ -36,6 +36,7 @@ model Quest {
   start_date         DateTime?
   end_date           DateTime?
   rewards_id         Int?
+  tags               Json?
   created_at         DateTime           @default(now())
   updated_at         DateTime           @updatedAt
   clear_submissions  ClearSubmission[]
@@ -50,6 +51,7 @@ model Quest {
   @@index([rewards_id], map: "quests_rewards_id_fkey")
   @@map("quests")
 }
+
 
 model Review {
   id          Int      @id @default(autoincrement())
