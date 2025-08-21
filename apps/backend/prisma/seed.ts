@@ -1,5 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-const prisma = new PrismaClient();
+import prisma from "../src/lib/prisma";
 
 async function main() {
   // ---------------------
@@ -47,6 +46,7 @@ async function main() {
         "RESTful APIの設計・実装を通じて、システム設計スキルを向上させよう！",
       type: "development",
       status: "active",
+      maxParticipants: 10,
       tags: ["API", "設計", "バックエンド"],
       start_date: new Date("2025-07-01T00:00:00Z"),
       end_date: new Date("2025-07-15T23:59:59Z"),
@@ -73,6 +73,7 @@ async function main() {
         "既存アプリのデザインを改善して、より直感的で使いやすいUIを目指そう。",
       type: "design",
       status: "active",
+      maxParticipants: 8,
       tags: ["TypeScript", "フロントエンド", "学習"],
       start_date: new Date("2025-08-01T00:00:00Z"),
       end_date: new Date("2025-08-20T23:59:59Z"),
@@ -95,6 +96,7 @@ async function main() {
       description: "新しいサービスのアイデアを出し合い、事業企画を形にしよう！",
       type: "planning",
       status: "active",
+      maxParticipants: 20,
       tags: ["パフォーマンス", "最適化", "フロントエンド"],
       start_date: new Date("2025-09-05T00:00:00Z"),
       end_date: new Date("2025-09-25T23:59:59Z"),
@@ -118,6 +120,7 @@ async function main() {
         "報告されている不具合を修正し、システムの安定性を向上させよう！",
       type: "maintenance",
       status: "active",
+      maxParticipants: 15,
       tags: ["バグ修正", "改善", "バックエンド", "フロントエンド"],
       start_date: new Date("2025-10-01T00:00:00Z"),
       end_date: new Date("2025-10-10T23:59:59Z"),

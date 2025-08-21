@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { apiClient } from "@/services/httpClient";
 import { Search, Sword, Book, Wrench } from "lucide-react";
 
 interface User {
@@ -26,7 +27,7 @@ interface Quest {
   status: string;
   difficulty: string;
   end_date: string;
-  maxParticipants: number;
+  maxParticipants: number | null;
   rewards?: Reward | null;
   quest_participants: QuestParticipant[];
   tags: string[];
@@ -44,11 +45,7 @@ const QuestList: React.FC = () => {
   useEffect(() => {
     const fetchQuests = async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/quests`
-        );
-        if (!res.ok) throw new Error("Failed to fetch quests");
-        const data: Quest[] = await res.json();
+        const data = await apiClient.get<Quest[]>("/api/quests");
         setQuests(data);
       } catch (err) {
         console.error(err);
@@ -303,11 +300,16 @@ const QuestList: React.FC = () => {
                   <div className="flex items-center justify-between text-xs text-slate-600 mb-1">
                     <span>参加状況</span>
                     <span>
-                      {Math.round(
-                        (quest._count.quest_participants /
-                          quest.maxParticipants) *
-                          100
-                      )}
+                      {(() => {
+                        const total = quest.maxParticipants ?? 0;
+                        const percent =
+                          total > 0
+                            ? Math.round(
+                                (quest._count.quest_participants / total) * 100
+                              )
+                            : 0;
+                        return percent;
+                      })()}
                       %
                     </span>
                   </div>
@@ -315,11 +317,14 @@ const QuestList: React.FC = () => {
                     <div
                       className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
                       style={{
-                        width: `${
-                          (quest._count.quest_participants /
-                            quest.maxParticipants) *
-                          100
-                        }%`,
+                        width: `${(() => {
+                          const total = quest.maxParticipants ?? 0;
+                          const percent =
+                            total > 0
+                              ? (quest._count.quest_participants / total) * 100
+                              : 0;
+                          return percent;
+                        })()}%`,
                       }}
                     ></div>
                   </div>

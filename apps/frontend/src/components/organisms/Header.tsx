@@ -17,8 +17,9 @@ export const Header: React.FC = () => {
       await signOut(auth);
       alert("ログアウトしました");
       router.push("/");
-    } catch (error: any) {
-      alert(`ログアウトエラー: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      alert(`ログアウトエラー: ${message}`);
     }
   };
 
