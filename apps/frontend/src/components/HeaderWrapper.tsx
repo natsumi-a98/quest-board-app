@@ -12,7 +12,7 @@ export const HeaderWrapper = () => {
   const hideHeaderPaths = ["/login", "/signUp"];
 
   // 指定されたパスではヘッダーを非表示にする
-  const isHiddenPath = hideHeaderPaths.some((path) => pathname?.includes(path));
+  const isHiddenPath = hideHeaderPaths.some((path) => pathname.includes(path));
 
   // トップページかつ未ログイン（または認証判定中）の場合はヘッダーを非表示
   const isWelcomeWithoutLogin =
