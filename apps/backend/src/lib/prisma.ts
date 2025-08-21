@@ -1,3 +1,7 @@
+import dotenv from "dotenv";
+import { join } from "node:path";
+// .env.local を優先して読み込む（なければ何もしない）
+dotenv.config({ path: join(process.cwd(), ".env.local") });
 import { PrismaClient } from "@prisma/client";
 
 // PrismaClient のシングルトンインスタンスを提供

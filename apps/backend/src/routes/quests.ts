@@ -1,5 +1,5 @@
 import express from "express";
-import { getAllQuests, getQuestById } from "../controllers/questController.js";
+import { getAllQuests, getQuestById } from "../controllers/questController";
 
 const router = express.Router();
 
