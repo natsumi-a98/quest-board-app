@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = "mysql://app_user:app_password@localhost:3306/your_project_db"
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 model User {
@@ -35,7 +36,9 @@ model Quest {
   status             String             @db.VarChar(50)
   start_date         DateTime?
   end_date           DateTime?
+  maxParticipants    Int?               @map("max_participants")
   rewards_id         Int?
+  tags               Json?
   created_at         DateTime           @default(now())
   updated_at         DateTime           @updatedAt
   clear_submissions  ClearSubmission[]
@@ -50,6 +53,7 @@ model Quest {
   @@index([rewards_id], map: "quests_rewards_id_fkey")
   @@map("quests")
 }
+
 
 model Review {
   id          Int      @id @default(autoincrement())

@@ -15,8 +15,9 @@ export default function SignupPage() {
       await signUp(name, email, password);
       alert("サインアップ成功");
       router.push("/");
-    } catch (error: any) {
-      alert(`エラー: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      alert(`エラー: ${message}`);
     }
   };
 

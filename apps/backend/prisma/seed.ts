@@ -1,318 +1,153 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from "../src/lib/prisma";
 
 async function main() {
-  console.log('🌱 Starting database seeding...');
-
-  // Clear existing data
-  await prisma.notification.deleteMany();
-  await prisma.pointTransaction.deleteMany();
-  await prisma.incentivePayment.deleteMany();
+  // ---------------------
+  // データリセット（外部キー依存関係の順序で削除）
+  // ---------------------
+  await prisma.questParticipant.deleteMany();
+  await prisma.entry.deleteMany();
+  await prisma.offer.deleteMany();
   await prisma.feedback.deleteMany();
   await prisma.clearSubmission.deleteMany();
-  await prisma.offer.deleteMany();
-  await prisma.entry.deleteMany();
-  await prisma.questParticipant.deleteMany();
+  await prisma.incentivePayment.deleteMany();
+  await prisma.pointTransaction.deleteMany();
+  await prisma.notification.deleteMany();
   await prisma.review.deleteMany();
-  await prisma.reward.deleteMany();
+  await prisma.reward.deleteMany(); // reward が quest を参照している
   await prisma.quest.deleteMany();
   await prisma.user.deleteMany();
 
-  console.log('🧹 Cleared existing data');
+  // ---------------------
+  // サンプルユーザー作成
+  // ---------------------
+  const userTaro = await prisma.user.create({
+    data: { name: "佐藤太郎", email: "taro@example.com", role: "member" },
+  });
 
-  // Create users
-  const users = await Promise.all([
-    prisma.user.create({
-      data: {
-        name: '田中太郎',
-        email: 'tanaka@example.com',
-        role: 'quest_creator',
-      },
-    }),
-    prisma.user.create({
-      data: {
-        name: '佐藤花子',
-        email: 'sato@example.com',
-        role: 'quest_participant',
-      },
-    }),
-    prisma.user.create({
-      data: {
-        name: '鈴木一郎',
-        email: 'suzuki@example.com',
-        role: 'quest_participant',
-      },
-    }),
-    prisma.user.create({
-      data: {
-        name: '高橋美咲',
-        email: 'takahashi@example.com',
-        role: 'admin',
-      },
-    }),
-  ]);
+  const userHanako = await prisma.user.create({
+    data: { name: "田中花子", email: "hanako@example.com", role: "member" },
+  });
 
-  console.log('👥 Created users');
+  const userJiro = await prisma.user.create({
+    data: { name: "鈴木次郎", email: "jiro@example.com", role: "member" },
+  });
 
-  // Create rewards
-  const rewards = await Promise.all([
-    prisma.reward.create({
-      data: {
-        incentive_amount: 5000.00,
-        point_amount: 100,
-        note: '初回クエスト達成報酬',
+  const userAsato = await prisma.user.create({
+    data: { name: "安里なつみ", email: "asato@example.com", role: "member" },
+  });
+
+  // ---------------------
+  // クエスト4件作成
+  // ---------------------
+  const quest1 = await prisma.quest.create({
+    data: {
+      title: "新しいAPI設計の勇者求む",
+      description:
+        "RESTful APIの設計・実装を通じて、システム設計スキルを向上させよう！",
+      type: "development",
+      status: "active",
+      maxParticipants: 10,
+      tags: ["API", "設計", "バックエンド"],
+      start_date: new Date("2025-07-01T00:00:00Z"),
+      end_date: new Date("2025-07-15T23:59:59Z"),
+      rewards: {
+        create: {
+          incentive_amount: 50000,
+          point_amount: 500,
+          note: "API設計完了時のボーナス報酬",
+        },
       },
-    }),
-    prisma.reward.create({
-      data: {
-        incentive_amount: 10000.00,
-        point_amount: 200,
-        note: '上級クエスト達成報酬',
+      quest_participants: {
+        create: [
+          { user: { connect: { id: userTaro.id } } },
+          { user: { connect: { id: userHanako.id } } },
+        ],
       },
-    }),
-  ]);
+    },
+  });
 
-  console.log('💰 Created rewards');
-
-  // Create quests
-  const quests = await Promise.all([
-    prisma.quest.create({
-      data: {
-        title: '初回クエスト: アプリの基本操作を学ぼう',
-        description: 'Quest Boardアプリの基本的な操作方法を学習し、最初のクエストを完了しましょう。',
-        type: 'tutorial',
-        status: 'active',
-        start_date: new Date('2024-01-01'),
-        end_date: new Date('2024-12-31'),
-        rewards_id: rewards[0].id,
+  const quest2 = await prisma.quest.create({
+    data: {
+      title: "UI/UX改善の冒険者募集",
+      description:
+        "既存アプリのデザインを改善して、より直感的で使いやすいUIを目指そう。",
+      type: "design",
+      status: "active",
+      maxParticipants: 8,
+      tags: ["TypeScript", "フロントエンド", "学習"],
+      start_date: new Date("2025-08-01T00:00:00Z"),
+      end_date: new Date("2025-08-20T23:59:59Z"),
+      rewards: {
+        create: {
+          incentive_amount: 30000,
+          point_amount: 300,
+          note: "UI改善に貢献したメンバーへの報酬",
+        },
       },
-    }),
-    prisma.quest.create({
-      data: {
-        title: '上級クエスト: データベース設計の実践',
-        description: '実際のプロジェクトで使用するデータベースの設計と実装を行います。',
-        type: 'advanced',
-        status: 'active',
-        start_date: new Date('2024-01-01'),
-        end_date: new Date('2024-12-31'),
-        rewards_id: rewards[1].id,
+      quest_participants: {
+        create: [{ user: { connect: { id: userJiro.id } } }],
       },
-    }),
-    prisma.quest.create({
-      data: {
-        title: 'チームクエスト: グループ開発体験',
-        description: 'チームでの開発プロセスを体験し、協力してプロジェクトを完成させます。',
-        type: 'team',
-        status: 'planning',
-        start_date: new Date('2024-02-01'),
-        end_date: new Date('2024-06-30'),
+    },
+  });
+
+  const quest3 = await prisma.quest.create({
+    data: {
+      title: "新規ビジネス企画の仲間を探しています",
+      description: "新しいサービスのアイデアを出し合い、事業企画を形にしよう！",
+      type: "planning",
+      status: "active",
+      maxParticipants: 20,
+      tags: ["パフォーマンス", "最適化", "フロントエンド"],
+      start_date: new Date("2025-09-05T00:00:00Z"),
+      end_date: new Date("2025-09-25T23:59:59Z"),
+      rewards: {
+        create: {
+          incentive_amount: 80000,
+          point_amount: 800,
+          note: "採用された企画に対する報酬",
+        },
       },
-    }),
-  ]);
-
-  console.log('📋 Created quests');
-
-  // Create quest participants
-  await Promise.all([
-    prisma.questParticipant.create({
-      data: {
-        user_id: users[1].id,
-        quest_id: quests[0].id,
-        joined_at: new Date('2024-01-15'),
-        completed_at: new Date('2024-01-20'),
-        cleared_at: new Date('2024-01-20'),
-        feedback_submitted: true,
+      quest_participants: {
+        create: [{ user: { connect: { id: userJiro.id } } }],
       },
-    }),
-    prisma.questParticipant.create({
-      data: {
-        user_id: users[2].id,
-        quest_id: quests[0].id,
-        joined_at: new Date('2024-01-16'),
-        completed_at: new Date('2024-01-22'),
-        cleared_at: new Date('2024-01-22'),
-        feedback_submitted: false,
+    },
+  });
+
+  const quest4 = await prisma.quest.create({
+    data: {
+      title: "既存システムのバグ修正チャレンジ",
+      description:
+        "報告されている不具合を修正し、システムの安定性を向上させよう！",
+      type: "maintenance",
+      status: "active",
+      maxParticipants: 15,
+      tags: ["バグ修正", "改善", "バックエンド", "フロントエンド"],
+      start_date: new Date("2025-10-01T00:00:00Z"),
+      end_date: new Date("2025-10-10T23:59:59Z"),
+      rewards: {
+        create: {
+          incentive_amount: 20000,
+          point_amount: 200,
+          note: "修正件数に応じてボーナスあり",
+        },
       },
-    }),
-    prisma.questParticipant.create({
-      data: {
-        user_id: users[1].id,
-        quest_id: quests[1].id,
-        joined_at: new Date('2024-01-25'),
-        completed_at: null,
-        cleared_at: null,
-        feedback_submitted: false,
+      quest_participants: {
+        create: [{ user: { connect: { id: userAsato.id } } }],
       },
-    }),
-  ]);
+    },
+  });
 
-  console.log('👥 Created quest participants');
-
-  // Create entries
-  await Promise.all([
-    prisma.entry.create({
-      data: {
-        user_id: users[2].id,
-        quest_id: quests[1].id,
-        reason: 'データベース設計のスキルを向上させたい',
-        status: 'approved',
-        applied_at: new Date('2024-01-20'),
-        approved_at: new Date('2024-01-21'),
-      },
-    }),
-    prisma.entry.create({
-      data: {
-        user_id: users[3].id,
-        quest_id: quests[2].id,
-        reason: 'チーム開発の経験を積みたい',
-        status: 'pending',
-        applied_at: new Date('2024-01-25'),
-      },
-    }),
-  ]);
-
-  console.log('📝 Created entries');
-
-  // Create offers
-  await Promise.all([
-    prisma.offer.create({
-      data: {
-        user_id: users[0].id,
-        quest_id: quests[2].id,
-        reason: 'チームクエストのメンターとして参加したい',
-        status: 'accepted',
-        sent_at: new Date('2024-01-20'),
-        responded_at: new Date('2024-01-22'),
-      },
-    }),
-  ]);
-
-  console.log('🤝 Created offers');
-
-  // Create clear submissions
-  await Promise.all([
-    prisma.clearSubmission.create({
-      data: {
-        user_id: users[1].id,
-        quest_id: quests[0].id,
-        submission_url: 'https://github.com/example/tutorial-quest',
-        status: 'approved',
-        submitted_at: new Date('2024-01-20'),
-        reviewed_at: new Date('2024-01-21'),
-      },
-    }),
-    prisma.clearSubmission.create({
-      data: {
-        user_id: users[2].id,
-        quest_id: quests[0].id,
-        submission_url: 'https://github.com/example/tutorial-quest-2',
-        status: 'pending',
-        submitted_at: new Date('2024-01-22'),
-      },
-    }),
-  ]);
-
-  console.log('📤 Created clear submissions');
-
-  // Create feedbacks
-  await Promise.all([
-    prisma.feedback.create({
-      data: {
-        user_id: users[1].id,
-        quest_id: quests[0].id,
-        comment: 'とても分かりやすいチュートリアルでした。初心者でも安心して取り組めます。',
-      },
-    }),
-  ]);
-
-  console.log('💬 Created feedbacks');
-
-  // Create reviews
-  await Promise.all([
-    prisma.review.create({
-      data: {
-        reviewer_id: users[0].id,
-        guest_id: users[1].id,
-        rating: 5.0,
-        comment: '素晴らしい参加者でした。積極的に取り組んでくれました。',
-      },
-    }),
-  ]);
-
-  console.log('⭐ Created reviews');
-
-  // Create incentive payments
-  await Promise.all([
-    prisma.incentivePayment.create({
-      data: {
-        user_id: users[1].id,
-        quest_id: quests[0].id,
-        incentive_amount: 5000.00,
-        status: 'paid',
-        paid_at: new Date('2024-01-25'),
-      },
-    }),
-  ]);
-
-  console.log('💸 Created incentive payments');
-
-  // Create point transactions
-  await Promise.all([
-    prisma.pointTransaction.create({
-      data: {
-        user_id: users[1].id,
-        quest_id: quests[0].id,
-        point_amount: 100,
-        reason_type: 'quest_completion',
-      },
-    }),
-    prisma.pointTransaction.create({
-      data: {
-        user_id: users[2].id,
-        quest_id: quests[0].id,
-        point_amount: 100,
-        reason_type: 'quest_completion',
-      },
-    }),
-  ]);
-
-  console.log('🎯 Created point transactions');
-
-  // Create notifications
-  await Promise.all([
-    prisma.notification.create({
-      data: {
-        user_id: users[1].id,
-        message: 'クエスト「初回クエスト: アプリの基本操作を学ぼう」が完了しました！',
-        is_read: false,
-      },
-    }),
-    prisma.notification.create({
-      data: {
-        user_id: users[2].id,
-        message: 'クエスト「初回クエスト: アプリの基本操作を学ぼう」が完了しました！',
-        is_read: false,
-      },
-    }),
-    prisma.notification.create({
-      data: {
-        user_id: users[1].id,
-        message: 'インセンティブ5000円が支払われました。',
-        is_read: true,
-        read_at: new Date('2024-01-26'),
-      },
-    }),
-  ]);
-
-  console.log('🔔 Created notifications');
-
-  console.log('✅ Database seeding completed successfully!');
+  console.log("Seed completed:", {
+    quest1: quest1.title,
+    quest2: quest2.title,
+    quest3: quest3.title,
+    quest4: quest4.title,
+  });
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Error during seeding:', e);
+    console.error(e);
     process.exit(1);
   })
   .finally(async () => {
