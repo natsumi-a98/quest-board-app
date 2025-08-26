@@ -72,7 +72,7 @@ async function main() {
       description:
         "既存アプリのデザインを改善して、より直感的で使いやすいUIを目指そう。",
       type: "design",
-      status: "active",
+      status: "in_progress",
       maxParticipants: 8,
       tags: ["TypeScript", "フロントエンド", "学習"],
       start_date: new Date("2025-08-01T00:00:00Z"),

@@ -74,6 +74,8 @@ const QuestList: React.FC = () => {
     switch (status) {
       case "active":
         return "bg-blue-100 text-blue-800 border-blue-200";
+      case "in_progress":
+        return "bg-amber-100 text-amber-800 border-amber-200";
       case "inactive":
         return "bg-gray-100 text-gray-800 border-gray-200";
       case "completed":
@@ -87,6 +89,8 @@ const QuestList: React.FC = () => {
     switch (status) {
       case "active":
         return "募集中";
+      case "in_progress":
+        return "進行中";
       case "inactive":
         return "停止中";
       case "completed":
@@ -170,6 +174,7 @@ const QuestList: React.FC = () => {
             >
               <option value="all">全てのクエスト</option>
               <option value="active">募集中</option>
+              <option value="in_progress">進行中</option>
               <option value="inactive">停止中</option>
               <option value="completed">完了済み</option>
             </select>
@@ -335,6 +340,8 @@ const QuestList: React.FC = () => {
                   className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg ${
                     quest.status === "active"
                       ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
+                      : quest.status === "in_progress"
+                      ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white cursor-not-allowed opacity-75"
                       : quest.status === "inactive"
                       ? "bg-gradient-to-r from-gray-500 to-gray-600 text-white cursor-not-allowed opacity-75"
                       : "bg-gradient-to-r from-green-500 to-green-600 text-white cursor-not-allowed opacity-75"
@@ -342,6 +349,7 @@ const QuestList: React.FC = () => {
                   disabled={quest.status !== "active"}
                 >
                   {quest.status === "active" && "クエストに参加する"}
+                  {quest.status === "in_progress" && "クエスト進行中"}
                   {quest.status === "inactive" && "クエスト停止中"}
                   {quest.status === "completed" && "クエスト完了済み"}
                 </button>

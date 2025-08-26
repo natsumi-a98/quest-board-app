@@ -54,3 +54,18 @@ export const getQuestByIdService = async (id: number) => {
 
   return quest;
 };
+
+// ステータス更新
+export const updateQuestStatusService = async (id: number, status: string) => {
+  const quest = await prisma.quest.update({
+    where: { id },
+    data: { status },
+    include: {
+      rewards: true,
+      quest_participants: { include: { user: true } },
+      _count: { select: { quest_participants: true } },
+    },
+  });
+
+  return quest;
+};
