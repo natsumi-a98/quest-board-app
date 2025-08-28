@@ -4,6 +4,9 @@ import { getUserEntries, getUserClearedQuests } from "../services/mypageService"
 export const getMyEntries = async (req: Request, res: Response) => {
   try {
     const userId = Number(req.user?.id); // authMiddleware で user 情報をセット
+    if (!userId || userId <= 0) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
     const entries = await getUserEntries(userId);
     res.json(entries);
   } catch (error) {
