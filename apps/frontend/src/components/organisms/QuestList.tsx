@@ -54,8 +54,6 @@ interface Quest {
 const QuestList: React.FC = () => {
   const [quests, setQuests] = useState<Quest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [quests, setQuests] = useState<Quest[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -340,7 +338,8 @@ const QuestList: React.FC = () => {
                         width: `${(() => {
                           const total = quest.maxParticipants ?? 0;
                           const percent =
-                            total > 0 && quest._count?.quest_participants !== undefined
+                            total > 0 &&
+                            quest._count?.quest_participants !== undefined
                               ? (quest._count.quest_participants / total) * 100
                               : 0;
                           return percent;
