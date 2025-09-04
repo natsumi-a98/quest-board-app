@@ -16,8 +16,9 @@ export default function LoginPage() {
       await logIn(email, password);
       alert("ログイン成功");
       router.push("/");
-    } catch (error: any) {
-      alert(`エラー: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      alert(`エラー: ${message}`);
     }
   };
 
@@ -31,8 +32,9 @@ export default function LoginPage() {
     try {
       await sendPasswordResetEmail(auth, email);
       alert("パスワード再設定用のメールを送信しました。");
-    } catch (error: any) {
-      alert(`エラー: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      alert(`エラー: ${message}`);
     }
   };
 
