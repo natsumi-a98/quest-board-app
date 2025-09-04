@@ -1,39 +1,56 @@
-import { prisma } from "../config/db";
+// src/services/mypageService.ts
+import {
+  fetchUserParticipatingQuests,
+  fetchUserClearedQuests,
+  fetchUserAppliedQuests,
+  fetchUserById,
+  fetchUserNotifications,
+} from "../dataAccessor/dbAccessor/mypageDb";
 
-// 参加中クエスト一覧を取得
 export const getUserEntries = async (userId: number) => {
-  const entries = await prisma.questParticipant.findMany({
-    where: { user_id: userId, cleared_at: null },
-    select: {
-      quest: {
-        select: {
-          id: true,
-          title: true,
-          description: true,
-          created_at: true,
-        },
-      },
-    },
-  });
+  const participating = await fetchUserParticipatingQuests(userId);
+  const cleared = await fetchUserClearedQuests(userId);
+  const applied = await fetchUserAppliedQuests(userId);
 
-  return entries.map((e) => e.quest);
+  return {
+    participating: participating.map((p) => ({
+      id: p.quest.id,
+      title: p.quest.title,
+      status: "participating",
+      joinedAt: p.joined_at,
+    })),
+    completed: cleared.map((c) => ({
+      id: c.quest.id,
+      title: c.quest.title,
+      status: "cleared",
+      clearedAt: c.cleared_at,
+    })),
+    applied: applied.map((a) => ({
+      id: a.quest.id,
+      title: a.quest.title,
+      status: "applied",
+      appliedAt: a.applied_at,
+    })),
+  };
 };
 
-// 達成済みクエスト一覧を取得
-export const getUserClearedQuests = async (userId: number) => {
-  const cleared = await prisma.questParticipant.findMany({
-    where: { user_id: userId, cleared_at: { not: null } },
-    select: {
-      quest: {
-        select: {
-          id: true,
-          title: true,
-          description: true,
-          // cleared_at: true,
-        },
-      },
-    },
-  });
+export const getUserProfile = async (userId: number) => {
+  const user = await fetchUserById(userId);
+  if (!user) return null;
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+  };
+};
 
-  return cleared.map((c) => c.quest);
+export const getUserNotifications = async (userId: number) => {
+  const notifs = await fetchUserNotifications(userId);
+  return notifs.map((n) => ({
+    id: n.id,
+    message: n.message,
+    isRead: n.is_read,
+    createdAt: n.created_at,
+  }));
 };
