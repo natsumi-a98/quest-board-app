@@ -1,4 +1,5 @@
-// components/QuestJoinDialog.tsx
+"use client";
+
 import React from "react";
 import {
   Dialog,
@@ -9,6 +10,7 @@ import {
   Button,
   Box,
 } from "@mui/material";
+import { getAuth } from "firebase/auth";
 
 interface QuestJoinDialogProps {
   quest: any | null;
@@ -26,6 +28,53 @@ const QuestJoinDialog: React.FC<QuestJoinDialogProps> = ({
   const currentParticipants = quest._count?.quest_participants || 0;
   const maxParticipants = quest.maxParticipants || "-";
 
+  // -------------------------------
+  // クエスト参加API呼び出し
+  // -------------------------------
+  const handleJoin = async () => {
+    if (!quest) return;
+
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      const idToken = user ? await user.getIdToken() : "";
+
+      if (!idToken) {
+        alert("ログイン状態を確認してください");
+        return;
+      }
+
+      const res = await fetch(`http://localhost:3001/api/quests/${quest.id}/join`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("API error:", text);
+        alert("参加に失敗しました");
+        return;
+      }
+
+      const data = await res.json();
+
+      if (data.success) {
+        alert("クエストに参加しました！");
+        onClose(); // ダイアログを閉じる
+        // 参加者数更新など必要なら state を更新
+      } else {
+        alert(data.message || "参加できませんでした");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("参加に失敗しました");
+    }
+  };
+
   return (
     <Dialog
       open={isOpen}
@@ -42,7 +91,6 @@ const QuestJoinDialog: React.FC<QuestJoinDialogProps> = ({
           color: "#374151",
         },
       }}
-
     >
       <DialogTitle
         sx={{
@@ -99,7 +147,7 @@ const QuestJoinDialog: React.FC<QuestJoinDialogProps> = ({
         </Button>
 
         <Button
-          onClick={onClose}
+          onClick={handleJoin}
           variant="contained"
           sx={{
             background: "linear-gradient(45deg, #1e3a8a, #3b82f6)",
