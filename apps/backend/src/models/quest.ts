@@ -4,6 +4,10 @@
 export enum QuestStatus {
   /** アクティブなクエスト */
   Active = "active",
+  /** 進行中のクエスト */
+  InProgress = "in_progress",
+  /** 停止中のクエスト */
+  Inactive = "inactive",
   /** 完了したクエスト */
   Completed = "completed",
 }

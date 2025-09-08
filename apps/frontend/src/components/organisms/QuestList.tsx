@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Search,
   Sword,
@@ -16,16 +16,64 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
-import { questData } from "@/mocks/questData";
 import QuestJoinDialog from "@/components/organisms/QuestJoinDialog";
+import { apiClient } from "@/services/httpClient";
+
+interface User {
+  id: number;
+  name: string;
+}
+
+interface Reward {
+  point_amount: number;
+  incentive_amount: number;
+}
+
+interface QuestParticipant {
+  user: User;
+}
+
+interface Quest {
+  id: number;
+  title: string;
+  description: string;
+  icon: string;
+  type: string;
+  status: string;
+  difficulty: string;
+  end_date: string;
+  maxParticipants: number;
+  rewards?: Reward | null;
+  quest_participants: QuestParticipant[];
+  tags: string[];
+  _count?: {
+    quest_participants: number;
+  };
+}
 
 const QuestList: React.FC = () => {
+  const [quests, setQuests] = useState<Quest[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedQuest, setSelectedQuest] = useState<any | null>(null);
 
-  // アイコン名からJSX要素を生成する関数
+  useEffect(() => {
+    const fetchQuests = async () => {
+      try {
+        const data = await apiClient.get<Quest[]>("/api/quests");
+        setQuests(data);
+      } catch (err) {
+        console.error(err);
+        setQuests([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchQuests();
+  }, []);
+
   const getIconComponent = (iconName: string) => {
     switch (iconName) {
       case "Sword":
@@ -39,10 +87,12 @@ const QuestList: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: string): string => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
         return "bg-blue-100 text-blue-800 border-blue-200";
+      case "in_progress":
+        return "bg-amber-100 text-amber-800 border-amber-200";
       case "inactive":
         return "bg-gray-100 text-gray-800 border-gray-200";
       case "completed":
@@ -52,10 +102,12 @@ const QuestList: React.FC = () => {
     }
   };
 
-  const getStatusText = (status: string): string => {
+  const getStatusText = (status: string) => {
     switch (status) {
       case "active":
         return "募集中";
+      case "in_progress":
+        return "進行中";
       case "inactive":
         return "停止中";
       case "completed":
@@ -65,7 +117,7 @@ const QuestList: React.FC = () => {
     }
   };
 
-  const getDifficultyColor = (difficulty: string): string => {
+  const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "初級":
         return "bg-green-500";
@@ -78,16 +130,15 @@ const QuestList: React.FC = () => {
     }
   };
 
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString("ja-JP", {
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString("ja-JP", {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
-  };
 
-  const formatCurrency = (amount: number): string => {
-    if (typeof amount !== "number" || isNaN(amount)) return "-";
+  const formatCurrency = (amount?: number) => {
+    if (!amount) return "-";
     return new Intl.NumberFormat("ja-JP", {
       style: "currency",
       currency: "JPY",
@@ -95,22 +146,31 @@ const QuestList: React.FC = () => {
     }).format(amount);
   };
 
-  const filteredQuests = questData.filter((quest) => {
+  const filteredQuests = quests.filter((quest) => {
     const matchesFilter =
       selectedFilter === "all" || quest.status === selectedFilter;
+
     const matchesSearch =
       quest.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       quest.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      quest.tags.some((tag) =>
+      (quest.tags ?? []).some((tag) =>
         tag.toLowerCase().includes(searchQuery.toLowerCase())
       );
+
     return matchesFilter && matchesSearch;
   });
 
+  if (loading) {
+    return (
+      <div className="text-center py-12 text-gray-400">
+        クエストを読み込み中...
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen flex flex-col">
         {/* Search and Filter */}
         <div className="mb-8 space-y-4">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -131,6 +191,7 @@ const QuestList: React.FC = () => {
             >
               <option value="all">全てのクエスト</option>
               <option value="active">募集中</option>
+              <option value="in_progress">進行中</option>
               <option value="inactive">停止中</option>
               <option value="completed">完了済み</option>
             </select>
@@ -138,7 +199,7 @@ const QuestList: React.FC = () => {
         </div>
 
         {/* Quest Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl-grid-cols-3 gap-8 md:gap-8 xl:grid-cols-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
           {filteredQuests.map((quest) => (
             <div
               key={quest.id}
@@ -182,7 +243,7 @@ const QuestList: React.FC = () => {
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {quest.tags.map((tag, index) => (
+                  {(quest.tags ?? []).map((tag, index) => (
                     <span
                       key={index}
                       className="px-2 py-1 bg-slate-200 text-slate-700 text-xs rounded-full font-medium"
@@ -208,18 +269,19 @@ const QuestList: React.FC = () => {
                     <span>報酬:</span>
                     <div className="text-right">
                       <div className="font-semibold text-yellow-600">
-                        {quest.rewards.point_amount} GP
+                        {quest.rewards?.point_amount ?? 0} GP
                       </div>
                       <div className="text-xs text-slate-500">
-                        {formatCurrency(quest.rewards.incentive_amount)}
+                        {formatCurrency(quest.rewards?.incentive_amount)}
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>参加者:</span>
                     <span className="font-semibold">
-                      {quest._count.quest_participants}/{quest.maxParticipants}
-                      名
+                      {quest._count?.quest_participants ??
+                        quest.quest_participants.length}
+                      /{quest.maxParticipants}名
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -231,13 +293,13 @@ const QuestList: React.FC = () => {
                 </div>
 
                 {/* Participants List */}
-                {quest.quest_participants.length > 0 && (
+                {(quest.quest_participants ?? []).length > 0 && (
                   <div className="mb-4">
                     <div className="text-xs text-slate-600 mb-2">
                       参加メンバー:
                     </div>
                     <div className="flex flex-wrap gap-1">
-                      {quest.quest_participants
+                      {(quest.quest_participants ?? [])
                         .slice(0, 3)
                         .map((participant, index) => (
                           <span
@@ -247,9 +309,9 @@ const QuestList: React.FC = () => {
                             {participant.user.name}
                           </span>
                         ))}
-                      {quest.quest_participants.length > 3 && (
+                      {(quest.quest_participants ?? []).length > 3 && (
                         <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
-                          +{quest.quest_participants.length - 3}名
+                          +{(quest.quest_participants ?? []).length - 3}名
                         </span>
                       )}
                     </div>
@@ -262,7 +324,7 @@ const QuestList: React.FC = () => {
                     <span>参加状況</span>
                     <span>
                       {Math.round(
-                        (quest._count.quest_participants /
+                        ((quest._count?.quest_participants || 0) /
                           quest.maxParticipants) *
                           100
                       )}
@@ -273,11 +335,15 @@ const QuestList: React.FC = () => {
                     <div
                       className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
                       style={{
-                        width: `${
-                          (quest._count.quest_participants /
-                            quest.maxParticipants) *
-                          100
-                        }%`,
+                        width: `${(() => {
+                          const total = quest.maxParticipants ?? 0;
+                          const percent =
+                            total > 0 &&
+                            quest._count?.quest_participants !== undefined
+                              ? (quest._count.quest_participants / total) * 100
+                              : 0;
+                          return percent;
+                        })()}%`,
                       }}
                     ></div>
                   </div>
@@ -292,6 +358,8 @@ const QuestList: React.FC = () => {
                   className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg ${
                     quest.status === "active"
                       ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
+                      : quest.status === "in_progress"
+                      ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white cursor-not-allowed opacity-75"
                       : quest.status === "inactive"
                       ? "bg-gradient-to-r from-gray-500 to-gray-600 text-white cursor-not-allowed opacity-75"
                       : "bg-gradient-to-r from-green-500 to-green-600 text-white cursor-not-allowed opacity-75"
@@ -299,6 +367,7 @@ const QuestList: React.FC = () => {
                   disabled={quest.status !== "active"}
                 >
                   {quest.status === "active" && "クエストに参加する"}
+                  {quest.status === "in_progress" && "クエスト進行中"}
                   {quest.status === "inactive" && "クエスト停止中"}
                   {quest.status === "completed" && "クエスト完了済み"}
                 </button>
@@ -318,12 +387,12 @@ const QuestList: React.FC = () => {
             <p className="text-gray-400">検索条件を変更してお試しください</p>
           </div>
         )}
-        <QuestJoinDialog
-  quest={selectedQuest}
-  isOpen={isDialogOpen}
-  onClose={() => setIsDialogOpen(false)}
-/>
 
+        <QuestJoinDialog
+          quest={selectedQuest}
+          isOpen={isDialogOpen}
+          onClose={() => setIsDialogOpen(false)}
+        />
       </main>
     </div>
   );
