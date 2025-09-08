@@ -8,6 +8,7 @@ import {
   getUserNotifications,
 } from "../services/mypageService";
 
+// 自分の参加中クエスト一覧
 export const getMyEntries = async (req: Request, res: Response) => {
   try {
     const userId = Number(req.user?.id);
@@ -24,6 +25,7 @@ export const getMyEntries = async (req: Request, res: Response) => {
   }
 };
 
+// 自分のプロフィール取得
 export const getMyProfile = async (req: Request, res: Response) => {
   try {
     const userId = Number(req.user?.id);
@@ -37,27 +39,30 @@ export const getMyProfile = async (req: Request, res: Response) => {
   }
 };
 
+// 自分の通知一覧取得
 export const getMyNotifications = async (req: Request, res: Response) => {
   try {
     const userId = Number(req.user?.id);
     if (!userId) return res.status(400).json({ message: "Invalid user ID" });
 
     const notifs = await getUserNotifications(userId);
-    res.json(notifs);
+
+    // 配列で返すように安全策を追加
+    res.json(Array.isArray(notifs) ? notifs : []);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to fetch notifications" });
   }
 };
 
+// 自分の達成済みクエスト一覧
 export const getMyClearedQuests = async (req: Request, res: Response) => {
   try {
     const userId = Number(req.user?.id);
     if (!userId) return res.status(400).json({ message: "Invalid user ID" });
 
     const cleared = await getUserClearedQuests(userId);
-
-    res.json(cleared ?? []);
+    res.json(Array.isArray(cleared) ? cleared : []);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to fetch cleared quests" });
