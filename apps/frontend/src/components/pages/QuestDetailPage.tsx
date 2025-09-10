@@ -22,7 +22,7 @@ interface QuestDetailPageProps {
   questId?: string;
 }
 
-// サンプルクエスト
+// サンプルクエスト（完了済み）
 const sampleQuest: Quest = {
   id: 1,
   title: "React開発スキル向上チャレンジ",
@@ -110,6 +110,25 @@ const QuestDetailPage: React.FC<QuestDetailPageProps> = ({ questId }) => {
     setReviews([review, ...reviews]);
     setNewReview({ score: 0, comment: "" });
   };
+
+  // 完了していないクエストの場合はエラー表示
+  if (!sampleQuest.completedDate) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <div className="w-12 h-12 bg-red-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+            <span className="text-white text-2xl">×</span>
+          </div>
+          <h2 className="text-xl font-bold text-red-800 mb-2">
+            レビューできません
+          </h2>
+          <p className="text-red-600">
+            このクエストはまだ完了していません。完了後にレビューを投稿できます。
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
