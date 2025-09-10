@@ -1,87 +1,70 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import StatusRibbon from "../atoms/StatusRibbon";
 import Tag from "../atoms/Tag";
 import ReviewSection, { Review, NewReview } from "../organisms/ReviewSection";
-
-interface Quest {
-  id: number;
-  title: string;
-  description: string;
-  reward: number;
-  deadline?: string;
-  progress?: number;
-  difficulty: "初級" | "中級" | "上級";
-  category: string;
-  completedDate?: string;
-  appliedDate?: string;
-}
+import { questService } from "../../services/quest";
+import { reviewService, ReviewResponse } from "../../services/review";
+import { Quest, QuestStatus } from "../../types/quest";
 
 interface QuestDetailPageProps {
   questId?: string;
 }
 
-// サンプルクエスト（完了済み）
-const sampleQuest: Quest = {
-  id: 1,
-  title: "React開発スキル向上チャレンジ",
-  description:
-    "Reactを使用したモダンなWebアプリ開発に挑戦。TypeScriptやHooksを学びます。",
-  reward: 500,
-  difficulty: "中級",
-  category: "開発",
-  deadline: "2024-12-31",
-  progress: 100,
-  completedDate: "2024-12-31",
-  appliedDate: "2024-03-01",
-};
-
-// サンプルレビュー5件
-const sampleReviews: Review[] = [
-  {
-    id: 1,
-    user: "Alice",
-    score: 5,
-    comment: "面白かった！",
-    date: "2024-03-10",
-  },
-  {
-    id: 2,
-    user: "Bob",
-    score: 4,
-    comment: "学びが多かったです。",
-    date: "2024-03-11",
-  },
-  {
-    id: 3,
-    user: "Charlie",
-    score: 3,
-    comment: "少し難しかったですが楽しかった。",
-    date: "2024-03-12",
-  },
-  {
-    id: 4,
-    user: "Diana",
-    score: 4,
-    comment: "チーム開発の練習になりました。",
-    date: "2024-03-13",
-  },
-  {
-    id: 5,
-    user: "Eve",
-    score: 5,
-    comment: "TypeScriptの理解が深まりました。",
-    date: "2024-03-14",
-  },
-];
-
 const QuestDetailPage: React.FC<QuestDetailPageProps> = ({ questId }) => {
-  const [reviews, setReviews] = useState<Review[]>(sampleReviews);
+  const [quest, setQuest] = useState<Quest | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [newReview, setNewReview] = useState<NewReview>({
     score: 0,
     comment: "",
   });
+
+  // クエストデータとレビューデータを取得
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!questId) {
+        setError("クエストIDが指定されていません");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        // クエストデータとレビューデータを並行取得
+        const [questData, reviewsData] = await Promise.all([
+          questService.getQuestById(questId),
+          reviewService.getReviewsByQuestId(questId).catch(() => []), // レビュー取得失敗時は空配列
+        ]);
+
+        setQuest(questData);
+
+        // APIから取得したレビューデータを変換
+        const convertedReviews: Review[] = reviewsData.map(
+          (review: ReviewResponse) => ({
+            id: review.id,
+            user: review.reviewer.name,
+            score: review.rating,
+            comment: review.comment || "",
+            date: new Date(review.created_at).toLocaleDateString("ja-JP"),
+          })
+        );
+
+        setReviews(convertedReviews);
+      } catch (err) {
+        console.error("データ取得エラー:", err);
+        setError("データの取得に失敗しました");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [questId]);
 
   const getDifficultyColor = (difficulty: string): string => {
     switch (difficulty) {
@@ -96,23 +79,68 @@ const QuestDetailPage: React.FC<QuestDetailPageProps> = ({ questId }) => {
     }
   };
 
-  const handleSubmitReview = () => {
-    if (!newReview.comment || newReview.score === 0) return;
+  const handleSubmitReview = async () => {
+    if (!newReview.comment || newReview.score === 0 || !questId) return;
 
-    const review: Review = {
-      id: reviews.length + 1,
-      user: "You",
-      score: newReview.score,
-      comment: newReview.comment,
-      date: new Date().toLocaleDateString("ja-JP"),
-    };
+    try {
+      // APIにレビューを投稿
+      const response = await reviewService.createReview(questId, {
+        reviewer_id: 1, // 仮のユーザーID（実際の実装では認証から取得）
+        rating: newReview.score,
+        comment: newReview.comment,
+      });
 
-    setReviews([review, ...reviews]);
-    setNewReview({ score: 0, comment: "" });
+      // 成功時はローカル状態を更新
+      const newReviewData: Review = {
+        id: response.id,
+        user: response.reviewer.name,
+        score: response.rating,
+        comment: response.comment || "",
+        date: new Date(response.created_at).toLocaleDateString("ja-JP"),
+      };
+
+      setReviews([newReviewData, ...reviews]);
+      setNewReview({ score: 0, comment: "" });
+    } catch (err) {
+      console.error("レビュー投稿エラー:", err);
+      // エラー時はアラートを表示（実際の実装ではより良いエラーハンドリングを実装）
+      alert("レビューの投稿に失敗しました。もう一度お試しください。");
+    }
   };
 
+  // ローディング状態
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">クエスト情報を読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // エラー状態
+  if (error || !quest) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <div className="w-12 h-12 bg-red-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+            <span className="text-white text-2xl">×</span>
+          </div>
+          <h2 className="text-xl font-bold text-red-800 mb-2">
+            {error || "クエストが見つかりません"}
+          </h2>
+          <p className="text-red-600">
+            クエストの情報を取得できませんでした。URLを確認してください。
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // 完了していないクエストの場合はエラー表示
-  if (!sampleQuest.completedDate) {
+  if (quest.status !== QuestStatus.Completed) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
@@ -135,18 +163,24 @@ const QuestDetailPage: React.FC<QuestDetailPageProps> = ({ questId }) => {
       {/* クエスト情報 */}
       <div className="relative bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl shadow-lg p-6 border-2 border-amber-200 space-y-4">
         <StatusRibbon status="completed" />
-        <div
-          className={`absolute top-4 left-4 w-3 h-3 rounded-full ${getDifficultyColor(
-            sampleQuest.difficulty
-          )}`}
-        ></div>
+        {quest.difficulty && (
+          <div
+            className={`absolute top-4 left-4 w-3 h-3 rounded-full ${getDifficultyColor(
+              quest.difficulty
+            )}`}
+          ></div>
+        )}
 
-        <h1 className="text-2xl font-bold text-slate-800">
-          {sampleQuest.title}
-        </h1>
-        <p className="text-slate-600">{sampleQuest.description}</p>
+        <h1 className="text-2xl font-bold text-slate-800">{quest.title}</h1>
+        <p className="text-slate-600">{quest.description}</p>
         <div className="flex flex-wrap gap-2">
-          <Tag color="blue">{sampleQuest.category}</Tag>
+          <Tag color="blue">{quest.type}</Tag>
+          {quest.tags &&
+            quest.tags.map((tag, index) => (
+              <Tag key={index} color="purple">
+                {tag}
+              </Tag>
+            ))}
         </div>
       </div>
 

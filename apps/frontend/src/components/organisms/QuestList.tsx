@@ -17,39 +17,8 @@ import {
   LogOut,
 } from "lucide-react";
 import QuestJoinDialog from "@/components/organisms/QuestJoinDialog";
-import { apiClient } from "@/services/httpClient";
-
-interface User {
-  id: number;
-  name: string;
-}
-
-interface Reward {
-  point_amount: number;
-  incentive_amount: number;
-}
-
-interface QuestParticipant {
-  user: User;
-}
-
-interface Quest {
-  id: number;
-  title: string;
-  description: string;
-  icon: string;
-  type: string;
-  status: string;
-  difficulty: string;
-  end_date: string;
-  maxParticipants: number;
-  rewards?: Reward | null;
-  quest_participants: QuestParticipant[];
-  tags: string[];
-  _count?: {
-    quest_participants: number;
-  };
-}
+import { questService } from "@/services/quest";
+import { Quest, QuestStatus, QuestDifficulty } from "@/types/quest";
 
 const QuestList: React.FC = () => {
   const [quests, setQuests] = useState<Quest[]>([]);
@@ -57,12 +26,12 @@ const QuestList: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedQuest, setSelectedQuest] = useState<any | null>(null);
+  const [selectedQuest, setSelectedQuest] = useState<Quest | null>(null);
 
   useEffect(() => {
     const fetchQuests = async () => {
       try {
-        const data = await apiClient.get<Quest[]>("/api/quests");
+        const data = await questService.getAllQuests();
         setQuests(data);
       } catch (err) {
         console.error(err);
@@ -74,14 +43,14 @@ const QuestList: React.FC = () => {
     fetchQuests();
   }, []);
 
-  const getIconComponent = (iconName: string) => {
-    switch (iconName) {
-      case "Sword":
-        return <Sword className="w-6 h-6" />;
-      case "Book":
-        return <Book className="w-6 h-6" />;
-      case "Wrench":
+  const getIconComponent = (questType: string) => {
+    switch (questType) {
+      case "development":
         return <Wrench className="w-6 h-6" />;
+      case "learning":
+        return <Book className="w-6 h-6" />;
+      case "challenge":
+        return <Sword className="w-6 h-6" />;
       default:
         return <Sword className="w-6 h-6" />;
     }
@@ -117,13 +86,13 @@ const QuestList: React.FC = () => {
     }
   };
 
-  const getDifficultyColor = (difficulty: string) => {
+  const getDifficultyColor = (difficulty?: QuestDifficulty) => {
     switch (difficulty) {
-      case "初級":
+      case QuestDifficulty.Beginner:
         return "bg-green-500";
-      case "中級":
+      case QuestDifficulty.Intermediate:
         return "bg-yellow-500";
-      case "上級":
+      case QuestDifficulty.Advanced:
         return "bg-red-500";
       default:
         return "bg-gray-500";
@@ -137,13 +106,15 @@ const QuestList: React.FC = () => {
       day: "numeric",
     });
 
-  const formatCurrency = (amount?: number) => {
+  const formatCurrency = (amount?: string | number) => {
     if (!amount) return "-";
+    const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
+    if (isNaN(numAmount)) return "-";
     return new Intl.NumberFormat("ja-JP", {
       style: "currency",
       currency: "JPY",
       maximumFractionDigits: 0,
-    }).format(amount);
+    }).format(numAmount);
   };
 
   const filteredQuests = quests.filter((quest) => {
@@ -229,7 +200,7 @@ const QuestList: React.FC = () => {
                 {/* Quest Icon and Title */}
                 <div className="flex items-start space-x-3 mb-4">
                   <div className="flex-shrink-0 w-12 h-12 bg-slate-700 rounded-lg flex items-center justify-center text-yellow-400">
-                    {getIconComponent(quest.icon)}
+                    {getIconComponent(quest.type)}
                   </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-bold text-slate-800 mb-1">
@@ -263,7 +234,9 @@ const QuestList: React.FC = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span>難易度:</span>
-                    <span className="font-semibold">{quest.difficulty}</span>
+                    <span className="font-semibold">
+                      {quest.difficulty || "未設定"}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>報酬:</span>
@@ -279,9 +252,8 @@ const QuestList: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span>参加者:</span>
                     <span className="font-semibold">
-                      {quest._count?.quest_participants ??
-                        quest.quest_participants.length}
-                      /{quest.maxParticipants}名
+                      {quest._count?.quest_participants ?? 0}/
+                      {quest.maxParticipants}名
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -293,30 +265,31 @@ const QuestList: React.FC = () => {
                 </div>
 
                 {/* Participants List */}
-                {(quest.quest_participants ?? []).length > 0 && (
-                  <div className="mb-4">
-                    <div className="text-xs text-slate-600 mb-2">
-                      参加メンバー:
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {(quest.quest_participants ?? [])
-                        .slice(0, 3)
-                        .map((participant, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium"
-                          >
-                            {participant.user.name}
+                {quest.quest_participants &&
+                  quest.quest_participants.length > 0 && (
+                    <div className="mb-4">
+                      <div className="text-xs text-slate-600 mb-2">
+                        参加メンバー:
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {quest.quest_participants
+                          .slice(0, 3)
+                          .map((participant, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium"
+                            >
+                              {participant.user.name}
+                            </span>
+                          ))}
+                        {quest.quest_participants.length > 3 && (
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
+                            +{quest.quest_participants.length - 3}名
                           </span>
-                        ))}
-                      {(quest.quest_participants ?? []).length > 3 && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
-                          +{(quest.quest_participants ?? []).length - 3}名
-                        </span>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Progress Bar */}
                 <div className="mb-4">
@@ -336,13 +309,9 @@ const QuestList: React.FC = () => {
                       className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
                       style={{
                         width: `${(() => {
-                          const total = quest.maxParticipants ?? 0;
-                          const percent =
-                            total > 0 &&
-                            quest._count?.quest_participants !== undefined
-                              ? (quest._count.quest_participants / total) * 100
-                              : 0;
-                          return percent;
+                          const total = quest.maxParticipants;
+                          const current = quest._count?.quest_participants || 0;
+                          return total > 0 ? (current / total) * 100 : 0;
                         })()}%`,
                       }}
                     ></div>
