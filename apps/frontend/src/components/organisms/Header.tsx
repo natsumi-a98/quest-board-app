@@ -47,7 +47,7 @@ export const Header: React.FC = () => {
       id: "dashboard",
       label: "ダッシュボード",
       icon: <Settings className="w-5 h-5" />,
-      href: "/dashboard",
+      href: "/admin/dashboard",
     },
   ];
 
