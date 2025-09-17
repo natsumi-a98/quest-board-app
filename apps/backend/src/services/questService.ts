@@ -49,6 +49,11 @@ export const getQuestByIdService = async (id: number) => {
           user: true,
         },
       },
+      _count: {
+        select: {
+          quest_participants: true,
+        },
+      },
     },
   });
 

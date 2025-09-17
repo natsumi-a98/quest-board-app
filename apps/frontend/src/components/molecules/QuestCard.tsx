@@ -1,5 +1,9 @@
 import React from "react";
 import StatusRibbon from "../atoms/StatusRibbon";
+import Tag from "../atoms/Tag";
+import DifficultyBadge from "../atoms/DifficultyBadge";
+import QuestTitle from "./QuestTitle";
+import { useRouter } from "next/navigation";
 
 interface Quest {
   id: number;
@@ -8,6 +12,7 @@ interface Quest {
   deadline?: string;
   progress?: number;
   difficulty: "初級" | "中級" | "上級";
+  status: string;
   category: string;
   completedDate?: string;
   appliedDate?: string;
@@ -16,62 +21,47 @@ interface Quest {
 interface QuestCardProps {
   quest: Quest;
   status: "participating" | "completed" | "applied";
+  onActionClick: (quest: Quest) => void;
 }
 
 // クエスト情報のカード
-const QuestCard: React.FC<QuestCardProps> = ({ quest, status }) => {
-  const getDifficultyColor = (difficulty: string): string => {
-    switch (difficulty) {
-      case "初級":
-        return "bg-green-500";
-      case "中級":
-        return "bg-yellow-500";
-      case "上級":
-        return "bg-red-500";
-      default:
-        return "bg-gray-500";
-    }
-  };
+const QuestCard: React.FC<QuestCardProps> = ({ quest, onActionClick }) => {
+  const router = useRouter();
 
-  const formatCurrency = (amount: number): string => {
-    if (typeof amount !== "number" || isNaN(amount)) return "-";
-    return new Intl.NumberFormat("ja-JP", {
-      style: "currency",
-      currency: "JPY",
-      maximumFractionDigits: 0,
-    }).format(amount);
+  const handleCardClick = () => {
+    router.push(`/quests/${quest.id}`); // 詳細ページへ
   };
 
   return (
-    <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border-2 border-amber-200 relative overflow-hidden">
-      <StatusRibbon status={status} />
+    <div
+      className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border-2 border-amber-200 relative overflow-hidden"
+      onClick={handleCardClick}
+    >
+      {/* Status Ribbon */}
+      <StatusRibbon
+        status={
+          quest.status === "active"
+            ? "participating"
+            : quest.status === "completed"
+            ? "completed"
+            : "applied"
+        }
+      />
 
       {/* Difficulty Badge */}
       <div className="absolute top-4 left-4">
-        <div
-          className={`w-3 h-3 rounded-full ${getDifficultyColor(
-            quest.difficulty
-          )}`}
-        ></div>
+        <DifficultyBadge difficulty={quest.difficulty} />
       </div>
 
       <div className="p-6 pt-8">
         {/* Quest Title */}
-        <div className="mb-4">
-          <h3 className="text-lg font-bold text-slate-800 mb-2">
-            {quest.title}
-          </h3>
-          <p className="text-sm text-slate-600">
-            クエストの詳細情報がここに表示されます
-          </p>
-        </div>
+        <QuestTitle
+          title={quest.title}
+          description="クエストの詳細情報がここに表示されます"
+        />
 
         {/* Category Tag */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          <span className="px-2 py-1 bg-slate-200 text-slate-700 text-xs rounded-full font-medium">
-            {quest.category}
-          </span>
-        </div>
+        <Tag>{quest.category}</Tag>
 
         {/* Quest Details */}
         <div className="space-y-2 mb-4 text-sm text-slate-600">
@@ -129,6 +119,10 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, status }) => {
 
         {/* Action Button */}
         <button
+          onClick={(e) => {
+            e.stopPropagation(); // カードクリックと分離
+            onActionClick(quest);
+          }}
           className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg ${
             status === "participating"
               ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"

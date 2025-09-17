@@ -1,6 +1,20 @@
 import { Clock, CheckCircle, AlertCircle, Crown, Bell } from "lucide-react";
 
 /**
+ * API設定
+ */
+// APIのベースURLを構築（環境変数に/apiが含まれていない場合は追加）
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001";
+// 末尾の/apiを削除してから、再度/apiを追加することで重複を防ぐ
+const cleanBaseUrl = baseUrl.replace(/\/api\/?$/, "");
+const apiBaseUrl = `${cleanBaseUrl}/api`;
+
+export const API_CONFIG = {
+  /** APIのベースURL */
+  BASE_URL: apiBaseUrl,
+} as const;
+
+/**
  * 難易度別の色設定
  * 初級: 緑、中級: オレンジ、上級: 紫
  */
