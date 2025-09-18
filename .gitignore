@@ -39,10 +39,7 @@ jspm_packages/
 dist/
 
 # VitePress
-.vitepress/dist/
-.vitepress/cache/
-docs/.vitepress/dist/
-docs/.vitepress/cache/
+apps/docs/.VitePress
 
 # Biome
 .biome/
