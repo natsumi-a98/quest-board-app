@@ -6,18 +6,34 @@ import usersRouter from "./routes/users";
 import usersRouter from "./routes/users";
 import mypageRouter from "./routes/mypage";
 
+// .env 読み込み
+import dotenv from "dotenv";
+dotenv.config();
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+// 環境変数からフロントエンド URL を取得
+const frontendBaseUrl = process.env.FRONTEND_BASE_URL || "http://localhost:3000";
+
+// CORS 設定
+app.use(
+  cors({
+    origin: frontendBaseUrl, // 環境変数から取得
+    credentials: true,       // CookieやAuthorizationヘッダーを許可
+  })
+);
+
 app.use(express.json());
 
+// ルーティング
 app.use("/api/quests", questsRouter);
 app.use("/api/reviews", reviewsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/mypage", mypageRouter);
 
+// サーバー起動
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
