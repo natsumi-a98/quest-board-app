@@ -52,7 +52,7 @@ export const createReview = async (req: Request, res: Response) => {
       error instanceof Error &&
       error.message.includes("既にレビューを投稿済み")
     ) {
-      res.status(409).json({ message: error.message });
+      res.status(400).json({ message: error.message });
     } else {
       res.status(500).json({ message: "Failed to create review" });
     }

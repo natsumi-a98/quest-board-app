@@ -1,36 +1,14 @@
-import prisma from "../lib/prisma";
+import {
+  ReviewDataAccessor,
+  CreateReviewData,
+  UpdateReviewData,
+} from "../dataAccessor/dbAccessor";
 
-interface CreateReviewData {
-  questId: number;
-  reviewer_id: number;
-  rating: number;
-  comment?: string;
-}
-
-interface UpdateReviewData {
-  rating: number;
-  comment?: string;
-}
+const reviewDataAccessor = new ReviewDataAccessor();
 
 // クエストIDでレビュー一覧取得
 export const getReviewsByQuestIdService = async (questId: number) => {
-  const reviews = await prisma.review.findMany({
-    where: {
-      quest_id: questId,
-    } as any,
-    include: {
-      reviewer: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-    },
-    orderBy: {
-      created_at: "desc",
-    },
-  });
-
+  const reviews = await reviewDataAccessor.findByQuestId(questId);
   return reviews;
 };
 
@@ -38,35 +16,16 @@ export const getReviewsByQuestIdService = async (questId: number) => {
 export const createReviewService = async (data: CreateReviewData) => {
   try {
     // 既存のレビューをチェック（1アカウント1投稿の制限）
-    const existingReview = await prisma.review.findFirst({
-      where: {
-        reviewer_id: data.reviewer_id,
-        quest_id: data.questId,
-      } as any,
-    });
+    const existingReview = await reviewDataAccessor.findByUserAndQuest(
+      data.reviewer_id,
+      data.questId
+    );
 
     if (existingReview) {
       throw new Error("このクエストには既にレビューを投稿済みです。");
     }
 
-    const review = await prisma.review.create({
-      data: {
-        reviewer_id: data.reviewer_id,
-        quest_id: data.questId,
-        guest_id: 1, // 仮の値（現在のスキーマでは必須）
-        rating: data.rating,
-        comment: data.comment,
-      } as any,
-      include: {
-        reviewer: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-    });
-
+    const review = await reviewDataAccessor.create(data);
     return review;
   } catch (error) {
     console.error("レビュー作成エラー:", error);
@@ -79,34 +38,13 @@ export const updateReviewService = async (
   reviewId: number,
   data: UpdateReviewData
 ) => {
-  const review = await prisma.review.update({
-    where: {
-      id: reviewId,
-    },
-    data: {
-      rating: data.rating,
-      comment: data.comment,
-    },
-    include: {
-      reviewer: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-    },
-  });
-
+  const review = await reviewDataAccessor.update(reviewId, data);
   return review;
 };
 
 // レビュー削除
 export const deleteReviewService = async (reviewId: number) => {
-  await prisma.review.delete({
-    where: {
-      id: reviewId,
-    },
-  });
+  await reviewDataAccessor.delete(reviewId);
 };
 
 // ユーザーが特定のクエストにレビューを投稿済みかチェック
@@ -115,13 +53,7 @@ export const checkUserReviewExistsService = async (
   questId: number
 ) => {
   try {
-    const review = await prisma.review.findFirst({
-      where: {
-        reviewer_id: userId,
-        quest_id: questId,
-      } as any,
-    });
-
+    const review = await reviewDataAccessor.findByUserAndQuest(userId, questId);
     return !!review;
   } catch (error) {
     console.error("レビュー存在チェックエラー:", error);

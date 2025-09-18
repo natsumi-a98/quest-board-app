@@ -255,7 +255,7 @@ async function main() {
     data: [
       {
         reviewer_id: userTaro.id,
-        guest_id: 1, // 仮の値
+        quest_id: completedQuest1.id,
         rating: 5,
         comment:
           "ReactとTypeScriptの理解が深まりました！とても勉強になりました。",
@@ -263,7 +263,7 @@ async function main() {
       },
       {
         reviewer_id: userHanako.id,
-        guest_id: 1,
+        quest_id: completedQuest1.id,
         rating: 4,
         comment:
           "Hooksの使い方がよく分かりました。実践的な内容で良かったです。",
@@ -271,7 +271,7 @@ async function main() {
       },
       {
         reviewer_id: userJiro.id,
-        guest_id: 1,
+        quest_id: completedQuest1.id,
         rating: 5,
         comment: "モダンなReact開発の流れを学べて大変有意義でした。",
         created_at: new Date("2024-12-26T09:20:00Z"),
@@ -284,14 +284,14 @@ async function main() {
     data: [
       {
         reviewer_id: userAsato.id,
-        guest_id: 1,
+        quest_id: completedQuest2.id,
         rating: 4,
         comment: "MySQLの設計パターンが理解できました。実務で活かせそうです。",
         created_at: new Date("2024-11-21T17:00:00Z"),
       },
       {
         reviewer_id: userTaro.id,
-        guest_id: 1,
+        quest_id: completedQuest2.id,
         rating: 5,
         comment:
           "クエリ最適化の手法が学べて、パフォーマンス改善に役立ちました。",
@@ -305,21 +305,21 @@ async function main() {
     data: [
       {
         reviewer_id: userHanako.id,
-        guest_id: 1,
+        quest_id: completedQuest3.id,
         rating: 5,
         comment: "Gitのブランチ戦略やCI/CDの設定方法が詳しく学べました。",
         created_at: new Date("2024-10-16T14:00:00Z"),
       },
       {
         reviewer_id: userJiro.id,
-        guest_id: 1,
+        quest_id: completedQuest3.id,
         rating: 4,
         comment: "チーム開発のベストプラクティスが理解できました。",
         created_at: new Date("2024-10-21T16:30:00Z"),
       },
       {
         reviewer_id: userAsato.id,
-        guest_id: 1,
+        quest_id: completedQuest3.id,
         rating: 5,
         comment: "GitHub Actionsを使った自動化の仕組みが勉強になりました。",
         created_at: new Date("2024-10-26T11:45:00Z"),

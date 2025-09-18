@@ -1,8 +1,5 @@
 import { Request, Response } from "express";
-import {
-  findUserByNameOrEmailService,
-  getUserIdByNameOrEmailService,
-} from "../services/userService";
+import { findUserByNameOrEmailService } from "../services/userService";
 
 // ユーザー検索
 export const findUserByNameOrEmail = async (req: Request, res: Response) => {
@@ -13,7 +10,7 @@ export const findUserByNameOrEmail = async (req: Request, res: Response) => {
   }
 
   try {
-    const user = await findUserByNameOrEmailService(name || "", email || "");
+    const user = await findUserByNameOrEmailService(name, email);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -39,13 +36,13 @@ export const getUserIdByNameOrEmail = async (req: Request, res: Response) => {
   }
 
   try {
-    const userId = await getUserIdByNameOrEmailService(name || "", email || "");
+    const user = await findUserByNameOrEmailService(name, email);
 
-    if (!userId) {
+    if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.json({ userId });
+    res.json({ userId: user.id });
   } catch (error) {
     console.error("ユーザーID取得エラー:", error);
     res.status(500).json({ message: "Failed to get user ID" });
