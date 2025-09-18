@@ -15,41 +15,17 @@ import {
   User,
   Settings,
   LogOut,
+  MessageSquare,
+  Eye,
 } from "lucide-react";
 import QuestJoinDialog from "@/components/organisms/QuestJoinDialog";
-import { apiClient } from "@/services/httpClient";
-
-interface User {
-  id: number;
-  name: string;
-}
-
-interface Reward {
-  point_amount: number;
-  incentive_amount: number;
-}
-
-interface QuestParticipant {
-  user: User;
-}
-
-interface Quest {
-  id: number;
-  title: string;
-  description: string;
-  icon: string;
-  type: string;
-  status: string;
-  difficulty: string;
-  end_date: string;
-  maxParticipants: number;
-  rewards?: Reward | null;
-  quest_participants: QuestParticipant[];
-  tags: string[];
-  _count?: {
-    quest_participants: number;
-  };
-}
+import StatusRibbon from "@/components/atoms/StatusRibbon";
+import { questService } from "@/services/quest";
+import { reviewService } from "@/services/review";
+import { userService } from "@/services/user";
+import { Quest, QuestStatus, QuestDifficulty } from "@/types/quest";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
 
 const QuestList: React.FC = () => {
   const [quests, setQuests] = useState<Quest[]>([]);
@@ -57,12 +33,18 @@ const QuestList: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedQuest, setSelectedQuest] = useState<any | null>(null);
+  const [selectedQuest, setSelectedQuest] = useState<Quest | null>(null);
+  const [buttonActions, setButtonActions] = useState<Map<number, any>>(
+    new Map()
+  );
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const { user, isAuthenticated } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchQuests = async () => {
       try {
-        const data = await apiClient.get<Quest[]>("/api/quests");
+        const data = await questService.getAllQuests();
         setQuests(data);
       } catch (err) {
         console.error(err);
@@ -74,56 +56,68 @@ const QuestList: React.FC = () => {
     fetchQuests();
   }, []);
 
-  const getIconComponent = (iconName: string) => {
-    switch (iconName) {
-      case "Sword":
-        return <Sword className="w-6 h-6" />;
-      case "Book":
-        return <Book className="w-6 h-6" />;
-      case "Wrench":
+  // ユーザーIDを動的に取得
+  useEffect(() => {
+    const fetchUserId = async () => {
+      if (!user || !isAuthenticated) {
+        setCurrentUserId(null);
+        return;
+      }
+
+      try {
+        const response = await userService.getUserIdByNameOrEmail({
+          name: user.displayName || undefined,
+          email: user.email || undefined,
+        });
+
+        setCurrentUserId(response.userId);
+      } catch (error) {
+        console.error("QuestList: ユーザーID取得エラー:", error);
+        setCurrentUserId(null);
+      }
+    };
+
+    fetchUserId();
+  }, [user, isAuthenticated]);
+
+  // クエストデータが取得されたら、各クエストのボタンアクションを決定
+  useEffect(() => {
+    const updateButtonActions = async () => {
+      if (quests.length === 0 || !currentUserId) return;
+
+      const newButtonActions = new Map();
+      for (const quest of quests) {
+        if (quest.status === "completed") {
+          const action = await getCompletedQuestButtonAction(quest);
+          newButtonActions.set(quest.id, action);
+        }
+      }
+      setButtonActions(newButtonActions);
+    };
+
+    updateButtonActions();
+  }, [quests, user, isAuthenticated, currentUserId]);
+
+  const getIconComponent = (questType: string) => {
+    switch (questType) {
+      case "development":
         return <Wrench className="w-6 h-6" />;
+      case "learning":
+        return <Book className="w-6 h-6" />;
+      case "challenge":
+        return <Sword className="w-6 h-6" />;
       default:
         return <Sword className="w-6 h-6" />;
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "in_progress":
-        return "bg-amber-100 text-amber-800 border-amber-200";
-      case "inactive":
-        return "bg-gray-100 text-gray-800 border-gray-200";
-      case "completed":
-        return "bg-green-100 text-green-800 border-green-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "active":
-        return "募集中";
-      case "in_progress":
-        return "進行中";
-      case "inactive":
-        return "停止中";
-      case "completed":
-        return "完了";
-      default:
-        return "不明";
-    }
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
+  const getDifficultyColor = (difficulty?: QuestDifficulty) => {
     switch (difficulty) {
-      case "初級":
+      case QuestDifficulty.Beginner:
         return "bg-green-500";
-      case "中級":
+      case QuestDifficulty.Intermediate:
         return "bg-yellow-500";
-      case "上級":
+      case QuestDifficulty.Advanced:
         return "bg-red-500";
       default:
         return "bg-gray-500";
@@ -137,13 +131,84 @@ const QuestList: React.FC = () => {
       day: "numeric",
     });
 
-  const formatCurrency = (amount?: number) => {
+  const formatCurrency = (amount?: string | number) => {
     if (!amount) return "-";
+    const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
+    if (isNaN(numAmount)) return "-";
     return new Intl.NumberFormat("ja-JP", {
       style: "currency",
       currency: "JPY",
       maximumFractionDigits: 0,
-    }).format(amount);
+    }).format(numAmount);
+  };
+
+  // ユーザーがクエストに参加しているかどうかを判定
+  const isUserParticipant = (quest: Quest): boolean => {
+    if (!user || !isAuthenticated || !currentUserId) return false;
+
+    const isParticipant =
+      quest.quest_participants?.some((participant) => {
+        return participant.user.id === currentUserId;
+      }) || false;
+
+    return isParticipant;
+  };
+
+  // ユーザーがレビューを投稿済みかどうかを判定
+  const hasUserSubmittedReview = async (quest: Quest): Promise<boolean> => {
+    if (!user || !isAuthenticated || !currentUserId) return false;
+
+    const participant = quest.quest_participants?.find((p) => {
+      return p.user.id === currentUserId;
+    });
+
+    if (!participant) return false;
+
+    // 実際のAPIを呼び出してレビュー投稿状況を確認
+    try {
+      const response = await reviewService.checkUserReviewExists(
+        currentUserId.toString(),
+        quest.id.toString()
+      );
+      return response.exists;
+    } catch (error) {
+      console.error("レビュー投稿状況確認エラー:", error);
+      return false;
+    }
+  };
+
+  // 完了したクエストのボタンアクションを決定
+  const getCompletedQuestButtonAction = async (quest: Quest) => {
+    if (!isAuthenticated) {
+      return {
+        text: "レビューを見る",
+        action: () => router.push(`/quests/${quest.id}`),
+        icon: Eye,
+        className:
+          "bg-gradient-to-r from-gray-500 to-gray-600 text-white hover:from-gray-600 hover:to-gray-700",
+      };
+    }
+
+    const isParticipant = isUserParticipant(quest);
+    const hasSubmittedReview = await hasUserSubmittedReview(quest);
+
+    if (isParticipant && !hasSubmittedReview) {
+      return {
+        text: "レビューを投稿する",
+        action: () => router.push(`/quests/${quest.id}?action=review`),
+        icon: MessageSquare,
+        className:
+          "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700",
+      };
+    } else {
+      return {
+        text: "レビューを見る",
+        action: () => router.push(`/quests/${quest.id}`),
+        icon: Eye,
+        className:
+          "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700",
+      };
+    }
   };
 
   const filteredQuests = quests.filter((quest) => {
@@ -206,15 +271,15 @@ const QuestList: React.FC = () => {
               className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border-2 border-amber-200 relative overflow-hidden"
             >
               {/* Status Ribbon */}
-              <div className="absolute top-0 right-0">
-                <div
-                  className={`px-3 py-1 text-xs font-semibold rounded-bl-lg border-l border-b ${getStatusColor(
-                    quest.status
-                  )}`}
-                >
-                  {getStatusText(quest.status)}
-                </div>
-              </div>
+              <StatusRibbon
+                status={
+                  quest.status === "active"
+                    ? "participating"
+                    : quest.status === "completed"
+                    ? "completed"
+                    : "applied"
+                }
+              />
 
               {/* Difficulty Badge */}
               <div className="absolute top-4 left-4">
@@ -229,7 +294,7 @@ const QuestList: React.FC = () => {
                 {/* Quest Icon and Title */}
                 <div className="flex items-start space-x-3 mb-4">
                   <div className="flex-shrink-0 w-12 h-12 bg-slate-700 rounded-lg flex items-center justify-center text-yellow-400">
-                    {getIconComponent(quest.icon)}
+                    {getIconComponent(quest.type)}
                   </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-bold text-slate-800 mb-1">
@@ -263,7 +328,9 @@ const QuestList: React.FC = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span>難易度:</span>
-                    <span className="font-semibold">{quest.difficulty}</span>
+                    <span className="font-semibold">
+                      {quest.difficulty || "未設定"}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>報酬:</span>
@@ -279,9 +346,8 @@ const QuestList: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span>参加者:</span>
                     <span className="font-semibold">
-                      {quest._count?.quest_participants ??
-                        quest.quest_participants.length}
-                      /{quest.maxParticipants}名
+                      {quest._count?.quest_participants ?? 0}/
+                      {quest.maxParticipants}名
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -293,30 +359,31 @@ const QuestList: React.FC = () => {
                 </div>
 
                 {/* Participants List */}
-                {(quest.quest_participants ?? []).length > 0 && (
-                  <div className="mb-4">
-                    <div className="text-xs text-slate-600 mb-2">
-                      参加メンバー:
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {(quest.quest_participants ?? [])
-                        .slice(0, 3)
-                        .map((participant, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium"
-                          >
-                            {participant.user.name}
+                {quest.quest_participants &&
+                  quest.quest_participants.length > 0 && (
+                    <div className="mb-4">
+                      <div className="text-xs text-slate-600 mb-2">
+                        参加メンバー:
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {quest.quest_participants
+                          .slice(0, 3)
+                          .map((participant, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium"
+                            >
+                              {participant.user.name}
+                            </span>
+                          ))}
+                        {quest.quest_participants.length > 3 && (
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
+                            +{quest.quest_participants.length - 3}名
                           </span>
-                        ))}
-                      {(quest.quest_participants ?? []).length > 3 && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium">
-                          +{(quest.quest_participants ?? []).length - 3}名
-                        </span>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Progress Bar */}
                 <div className="mb-4">
@@ -336,13 +403,9 @@ const QuestList: React.FC = () => {
                       className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
                       style={{
                         width: `${(() => {
-                          const total = quest.maxParticipants ?? 0;
-                          const percent =
-                            total > 0 &&
-                            quest._count?.quest_participants !== undefined
-                              ? (quest._count.quest_participants / total) * 100
-                              : 0;
-                          return percent;
+                          const total = quest.maxParticipants;
+                          const current = quest._count?.quest_participants || 0;
+                          return total > 0 ? (current / total) * 100 : 0;
                         })()}%`,
                       }}
                     ></div>
@@ -350,27 +413,55 @@ const QuestList: React.FC = () => {
                 </div>
 
                 {/* Action Button */}
-                <button
-                  onClick={() => {
-                    setSelectedQuest(quest);
-                    setIsDialogOpen(true);
-                  }}
-                  className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg ${
-                    quest.status === "active"
-                      ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
-                      : quest.status === "in_progress"
-                      ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white cursor-not-allowed opacity-75"
-                      : quest.status === "inactive"
-                      ? "bg-gradient-to-r from-gray-500 to-gray-600 text-white cursor-not-allowed opacity-75"
-                      : "bg-gradient-to-r from-green-500 to-green-600 text-white cursor-not-allowed opacity-75"
-                  }`}
-                  disabled={quest.status !== "active"}
-                >
-                  {quest.status === "active" && "クエストに参加する"}
-                  {quest.status === "in_progress" && "クエスト進行中"}
-                  {quest.status === "inactive" && "クエスト停止中"}
-                  {quest.status === "completed" && "クエスト完了済み"}
-                </button>
+                {quest.status === "active" ? (
+                  <button
+                    onClick={() => {
+                      setSelectedQuest(quest);
+                      setIsDialogOpen(true);
+                    }}
+                    className="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
+                  >
+                    クエストに参加する
+                  </button>
+                ) : quest.status === "completed" ? (
+                  (() => {
+                    const buttonAction = buttonActions.get(quest.id);
+                    if (!buttonAction) {
+                      return (
+                        <button
+                          disabled
+                          className="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 transform shadow-md bg-gray-300 text-gray-500 cursor-not-allowed"
+                        >
+                          読み込み中...
+                        </button>
+                      );
+                    }
+                    const IconComponent = buttonAction.icon;
+                    return (
+                      <button
+                        onClick={buttonAction.action}
+                        className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg ${buttonAction.className}`}
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <IconComponent className="w-4 h-4" />
+                          {buttonAction.text}
+                        </div>
+                      </button>
+                    );
+                  })()
+                ) : (
+                  <button
+                    className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg ${
+                      quest.status === "in_progress"
+                        ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white cursor-not-allowed opacity-75"
+                        : "bg-gradient-to-r from-gray-500 to-gray-600 text-white cursor-not-allowed opacity-75"
+                    }`}
+                    disabled
+                  >
+                    {quest.status === "in_progress" && "クエスト進行中"}
+                    {quest.status === "inactive" && "クエスト停止中"}
+                  </button>
+                )}
               </div>
             </div>
           ))}

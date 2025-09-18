@@ -1,4 +1,4 @@
-import prisma from "../../lib/prisma";
+import prisma from "../../config/prisma";
 import { User } from "@prisma/client";
 
 export class UserDataAccessor {
@@ -13,6 +13,22 @@ export class UserDataAccessor {
   async findByEmail(email: string): Promise<User | null> {
     return await prisma.user.findUnique({
       where: { email },
+    });
+  }
+
+  // 名前でユーザー取得
+  async findByName(name: string): Promise<User | null> {
+    return await prisma.user.findFirst({
+      where: { name },
+    });
+  }
+
+  // 名前またはメールアドレスでユーザー取得
+  async findByNameOrEmail(name: string, email: string): Promise<User | null> {
+    return await prisma.user.findFirst({
+      where: {
+        OR: [{ name }, { email }],
+      },
     });
   }
 

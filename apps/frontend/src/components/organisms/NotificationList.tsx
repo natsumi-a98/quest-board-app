@@ -10,12 +10,11 @@ type Notification = {
 };
 
 type NotificationListProps = {
-  notifications: Notification[];
+  notifications?: Notification[]; // undefined も許容
 };
 
-// 通知リスト全体のコンテナ
 const NotificationList: React.FC<NotificationListProps> = ({
-  notifications,
+  notifications = [], // デフォルトで空配列を設定
 }) => {
   return (
     <div className="bg-gradient-to-br from-blue-50 to-stone-100 p-6 rounded-xl border-4 border-blue-200 shadow-xl">
@@ -25,9 +24,16 @@ const NotificationList: React.FC<NotificationListProps> = ({
       </h3>
 
       <div className="space-y-4">
-        {notifications.map((notification) => (
-          <NotificationCard key={notification.id} notification={notification} />
-        ))}
+        {notifications.length > 0 ? (
+          notifications.map((notification) => (
+            <NotificationCard
+              key={notification.id}
+              notification={notification}
+            />
+          ))
+        ) : (
+          <p className="text-gray-500">通知はありません</p>
+        )}
       </div>
     </div>
   );

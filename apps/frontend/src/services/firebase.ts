@@ -19,5 +19,9 @@ export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getA
 // Firebase Auth
 export const auth = getAuth(app);
 
-// Firestore
-export const db = getFirestore(app);
+
+// ログイン中のユーザーのIDトークンを取得
+export const getIdToken = async (): Promise<string | null> => {
+  if (!auth.currentUser) return null;
+  return await auth.currentUser.getIdToken();
+};
