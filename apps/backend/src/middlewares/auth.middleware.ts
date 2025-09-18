@@ -3,10 +3,28 @@ import admin from "firebase-admin";
 
 // Firebase Admin 初期化（まだ初期化されていない場合のみ）
 if (!admin.apps.length) {
-	const projectId = process.env.FIREBASE_PROJECT_ID;
-	const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-	const rawPrivateKey = process.env.FIREBASE_PRIVATE_KEY;
-	const privateKey = rawPrivateKey?.replace(/\\n/g, "\n");
+	const projectId = process.env.FIREBASE_PROJECT_ID ?? "";
+	const clientEmail = process.env.FIREBASE_CLIENT_EMAIL ?? "";
+	const rawPrivateKeyEnv = process.env.FIREBASE_PRIVATE_KEY?? "";
+
+	// private key の形式を整える: base64 の可能性/\n エスケープ対策
+	let privateKey: string | undefined = undefined;
+	if (rawPrivateKeyEnv) {
+		try {
+			// 1) base64 として解釈を試みる（失敗時はそのまま使用）
+			const maybeDecoded = Buffer.from(rawPrivateKeyEnv, "base64").toString("utf8");
+			// base64 ではなさそうな場合は noop だが、簡易判定として BEGIN/END が含まれるか確認
+			if (maybeDecoded.includes("-----BEGIN") && maybeDecoded.includes("PRIVATE KEY-----")) {
+				privateKey = maybeDecoded;
+			} else {
+				// 2) 通常の env で \n がエスケープされているケース
+				privateKey = rawPrivateKeyEnv.replace(/\\n/g, "\n");
+			}
+		} catch {
+			// 3) デコードに失敗した場合も \n 置換で対応
+			privateKey = rawPrivateKeyEnv.replace(/\\n/g, "\n");
+		}
+	}
 
 	try {
 		if (projectId && clientEmail && privateKey) {
@@ -22,14 +40,24 @@ if (!admin.apps.length) {
 			admin.initializeApp({
 				credential: admin.credential.applicationDefault(),
 			});
-			// 参考ログ
 			console.warn(
 				"[auth.middleware] Using Application Default Credentials. Set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY to use service account cert."
 			);
 		}
 	} catch (e) {
 		console.error("[auth.middleware] Firebase Admin initialization failed:", e);
-		throw e;
+		// cert での初期化に失敗した場合も最終手段として ADC を試す
+		try {
+			if (!admin.apps.length) {
+				admin.initializeApp({
+					credential: admin.credential.applicationDefault(),
+				});
+				console.warn("[auth.middleware] Falling back to Application Default Credentials after cert failure.");
+			}
+		} catch (fallbackError) {
+			console.error("[auth.middleware] ADC fallback also failed:", fallbackError);
+			throw fallbackError;
+		}
 	}
 }
 
