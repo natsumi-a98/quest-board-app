@@ -44,7 +44,16 @@ const QuestJoinDialog: React.FC<QuestJoinDialogProps> = ({
         return;
       }
 
-      const res = await fetch(`http://localhost:3001/api/quests/${quest.id}/join`, {
+      // 環境変数から API のベース URL を取得
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      if (!apiBaseUrl) {
+        console.error("NEXT_PUBLIC_API_BASE_URL が設定されていません");
+        alert("API の接続先が未設定です");
+        return;
+      }
+
+      // fetch の URL を環境変数を使用して作成
+      const res = await fetch(`${apiBaseUrl}/api/quests/${quest.id}/join`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

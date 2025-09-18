@@ -4,14 +4,21 @@ import questsRouter from "./routes/quests";
 import reviewsRouter from "./routes/reviews";
 import mypageRouter from "./routes/mypage";
 
+// .env 読み込み
+import dotenv from "dotenv";
+dotenv.config();
+
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// 環境変数からフロントエンド URL を取得
+const frontendBaseUrl = process.env.FRONTEND_BASE_URL || "http://localhost:3000";
 
 // CORS 設定
 app.use(
   cors({
-    origin: "http://localhost:3000", // フロントエンドのURLを指定
-    credentials: true,               // CookieやAuthorizationヘッダーを許可
+    origin: frontendBaseUrl, // 環境変数から取得
+    credentials: true,       // CookieやAuthorizationヘッダーを許可
   })
 );
 
