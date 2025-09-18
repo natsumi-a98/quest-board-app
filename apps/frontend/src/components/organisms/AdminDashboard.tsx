@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import {
   Shield,
@@ -187,7 +189,6 @@ const AdminDashboard = () => {
 
   const handleQuestAction = (questId: number, action: string): void => {
     console.log(`${action} quest ${questId}`);
-    // 実際の処理はここに実装
   };
 
   const StatCard = ({ title, value, icon: Icon, color }: {
@@ -199,8 +200,8 @@ const AdminDashboard = () => {
     <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-6 border-2 border-amber-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-amber-800 text-sm font-medium">{title}</p>
-          <p className="text-3xl font-bold text-amber-900 mt-2">{value}</p>
+          <p className="text-slate-800 text-sm font-medium">{title}</p>
+          <p className="text-3xl font-bold text-slate-800 mt-2">{value}</p>
         </div>
         <div className={`p-3 rounded-full ${color}`}>
           <Icon className="w-6 h-6 text-white" />
@@ -220,7 +221,7 @@ const AdminDashboard = () => {
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <h3 className="font-semibold text-amber-900">{quest.title}</h3>
+            <h3 className="font-semibold text-slate-800">{quest.title}</h3>
             <span className={`px-2 py-1 rounded-full text-xs text-white ${getStatusColor(quest.status)}`}>
               {getStatusText(quest.status)}
             </span>
@@ -230,7 +231,7 @@ const AdminDashboard = () => {
                quest.priority === 'medium' ? '中' : '低'}
             </span>
           </div>
-          <div className="flex items-center gap-4 mt-2 text-sm text-amber-700">
+          <div className="flex items-center gap-4 mt-2 text-sm text-slate-800">
             <span className="flex items-center gap-1">
               <Users className="w-4 h-4" />
               {quest.participants}/{quest.maxParticipants}名
@@ -257,7 +258,7 @@ const AdminDashboard = () => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto border-4 border-amber-300">
         <div className="flex justify-between items-start mb-4">
-          <h2 className="text-2xl font-bold text-amber-900 font-serif">{quest.title}</h2>
+          <h2 className="text-2xl font-bold text-slate-800 font-serif">{quest.title}</h2>
           <button onClick={onClose} className="text-amber-600 hover:text-amber-800">
             <X className="w-6 h-6" />
           </button>
@@ -265,13 +266,13 @@ const AdminDashboard = () => {
 
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="text-sm">
-            <span className="font-medium text-amber-800">ステータス: </span>
+            <span className="font-medium text-slate-800">ステータス: </span>
             <span className={`px-2 py-1 rounded-full text-xs text-white ${getStatusColor(quest.status)}`}>
               {getStatusText(quest.status)}
             </span>
           </div>
           <div className="text-sm">
-            <span className="font-medium text-amber-800">優先度: </span>
+            <span className="font-medium text-slate-800">優先度: </span>
             <span className={`font-medium ${getPriorityColor(quest.priority)}`}>
               {quest.priority === 'critical' ? '緊急' :
                quest.priority === 'high' ? '高' :
@@ -279,22 +280,22 @@ const AdminDashboard = () => {
             </span>
           </div>
           <div className="text-sm">
-            <span className="font-medium text-amber-800">参加者: </span>
+            <span className="font-medium text-slate-800">参加者: </span>
             <span>{quest.participants}/{quest.maxParticipants}名</span>
           </div>
           <div className="text-sm">
-            <span className="font-medium text-amber-800">報酬: </span>
+            <span className="font-medium text-slate-800">報酬: </span>
             <span className="font-bold text-yellow-600">{quest.reward}P</span>
           </div>
         </div>
 
         <div className="mb-4">
-          <h3 className="font-semibold text-amber-900 mb-2">クエスト詳細</h3>
-          <p className="text-amber-800 text-sm leading-relaxed">{quest.description}</p>
+          <h3 className="font-semibold text-slate-800 mb-2">クエスト詳細</h3>
+          <p className="text-slate-800 text-sm leading-relaxed">{quest.description}</p>
         </div>
 
         <div className="mb-6">
-          <h3 className="font-semibold text-amber-900 mb-2">必要スキル</h3>
+          <h3 className="font-semibold text-slate-800 mb-2">必要スキル</h3>
           <div className="flex flex-wrap gap-2">
             {quest.requiredSkills.map((skill, index) => (
               <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
@@ -355,23 +356,6 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-700 to-slate-900">
-      {/* ヘッダー */}
-      <header className="bg-gradient-to-r from-blue-900 to-blue-800 shadow-lg border-b-4 border-yellow-400">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Shield className="w-8 h-8 text-yellow-400" />
-                <h1 className="text-2xl font-bold text-white font-serif">Quest Board 管理者画面</h1>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2 text-white">
-              <Crown className="w-5 h-5 text-yellow-400" />
-              <span className="font-medium">管理者</span>
-            </div>
-          </div>
-        </div>
-      </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* タブナビゲーション */}
@@ -389,7 +373,7 @@ const AdminDashboard = () => {
                 className={`flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-colors ${
                   activeTab === tab.id
                     ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-amber-800 hover:bg-amber-200'
+                    : 'text-slate-800 hover:bg-amber-200'
                 }`}
               >
                 <tab.icon className="w-4 h-4" />
@@ -430,21 +414,21 @@ const AdminDashboard = () => {
             </div>
 
             <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-6 border-2 border-amber-200">
-              <h2 className="text-xl font-bold text-amber-900 mb-4 font-serif">最近のアクティビティ</h2>
+              <h2 className="text-xl font-bold text-slate-800 mb-4 font-serif">最近のアクティビティ</h2>
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-sm">
                   <AlertCircle className="w-4 h-4 text-yellow-600" />
-                  <span className="text-amber-800">新しいクエスト「AIツール導入の検証」が申請されました</span>
+                  <span className="text-slate-800">新しいクエスト「AIツール導入の検証」が申請されました</span>
                   <span className="text-amber-600 text-xs">2時間前</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <Check className="w-4 h-4 text-green-600" />
-                  <span className="text-amber-800">クエスト「チームビルディングイベント企画」が完了しました</span>
+                  <span className="text-slate-800">クエスト「チームビルディングイベント企画」が完了しました</span>
                   <span className="text-amber-600 text-xs">1日前</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <Plus className="w-4 h-4 text-blue-600" />
-                  <span className="text-amber-800">新しいユーザー「山田 次郎」が参加しました</span>
+                  <span className="text-slate-800">新しいユーザー「山田 次郎」が参加しました</span>
                   <span className="text-amber-600 text-xs">3日前</span>
                 </div>
               </div>
@@ -456,7 +440,7 @@ const AdminDashboard = () => {
         {activeTab === 'quests' && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-              <h2 className="text-2xl font-bold text-white font-serif">クエスト管理</h2>
+              <h2 className="text-2xl font-bold text-slate-800 font-serif">クエスト管理</h2>
 
               <div className="flex gap-3">
                 <div className="relative">
@@ -466,14 +450,14 @@ const AdminDashboard = () => {
                     placeholder="クエストを検索..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-amber-900 placeholder-amber-600 focus:outline-none focus:border-yellow-400"
+                    className="pl-10 pr-4 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 placeholder-amber-600 focus:outline-none focus:border-yellow-400"
                   />
                 </div>
 
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value as 'all' | QuestStatus)}
-                  className="px-4 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-amber-900 focus:outline-none focus:border-yellow-400"
+                  className="px-4 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
                 >
                   <option value="all">全て</option>
                   <option value="pending">承認待ち</option>
@@ -499,10 +483,10 @@ const AdminDashboard = () => {
         {/* 報酬管理 */}
         {activeTab === 'rewards' && (
           <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-8 border-2 border-amber-200">
-            <h2 className="text-2xl font-bold text-amber-900 mb-6 font-serif">報酬管理</h2>
+            <h2 className="text-2xl font-bold text-slate-800 mb-6 font-serif">報酬管理</h2>
             <div className="text-center py-12">
               <Trophy className="w-16 h-16 text-amber-600 mx-auto mb-4" />
-              <p className="text-amber-700 text-lg">報酬管理機能は開発中です</p>
+              <p className="text-slate-800 text-lg">報酬管理機能は開発中です</p>
               <p className="text-amber-600 text-sm mt-2">ユーザーへのインセンティブ付与機能を準備中...</p>
             </div>
           </div>
@@ -511,7 +495,7 @@ const AdminDashboard = () => {
         {/* ユーザー管理 */}
         {activeTab === 'users' && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-white font-serif">ユーザー管理</h2>
+            <h2 className="text-2xl font-bold text-slate-800 font-serif">ユーザー管理</h2>
 
             <div className="grid gap-4">
               {users.map((user) => (
@@ -519,11 +503,11 @@ const AdminDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-amber-900">{user.name}</h3>
+                        <h3 className="text-lg font-semibold text-slate-800">{user.name}</h3>
                         <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">Lv.{user.level}</span>
-                        <span className="text-sm text-amber-700">{user.role}</span>
+                        <span className="text-sm text-slate-800">{user.role}</span>
                       </div>
-                      <div className="flex items-center gap-6 text-sm text-amber-700">
+                      <div className="flex items-center gap-6 text-sm text-slate-800">
                         <span className="flex items-center gap-1">
                           <Trophy className="w-4 h-4" />
                           完了: {user.completedQuests}件
