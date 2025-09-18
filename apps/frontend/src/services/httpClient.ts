@@ -1,3 +1,5 @@
+import { API_CONFIG } from "../constants/config";
+
 /**
  * - HTTP メソッドのユニオン型
  * - ラッパーのメソッド指定で使用
@@ -25,7 +27,7 @@ export interface RequestOptions<TBody = unknown> {
   init?: Omit<RequestInit, "body" | "method" | "headers">;
 }
 
-const defaultBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+const defaultBaseUrl = API_CONFIG.BASE_URL;
 
 /**
  * - クエリオブジェクトを URLSearchParams に変換してクエリ文字列を生成
