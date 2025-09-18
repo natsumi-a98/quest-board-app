@@ -6,13 +6,19 @@ import Tag from "../atoms/Tag";
 import ReviewSection, { Review, NewReview } from "../organisms/ReviewSection";
 import { questService } from "../../services/quest";
 import { reviewService, ReviewResponse } from "../../services/review";
+import { userService } from "../../services/user";
 import { Quest, QuestStatus } from "../../types/quest";
+import { useAuth } from "../../hooks/useAuth";
 
 interface QuestDetailPageProps {
   questId?: string;
+  action?: string;
 }
 
-const QuestDetailPage: React.FC<QuestDetailPageProps> = ({ questId }) => {
+const QuestDetailPage: React.FC<QuestDetailPageProps> = ({
+  questId,
+  action,
+}) => {
   const [quest, setQuest] = useState<Quest | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,6 +27,9 @@ const QuestDetailPage: React.FC<QuestDetailPageProps> = ({ questId }) => {
     score: 0,
     comment: "",
   });
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const { user, isAuthenticated } = useAuth();
 
   // クエストデータとレビューデータを取得
   useEffect(() => {
@@ -51,6 +60,7 @@ const QuestDetailPage: React.FC<QuestDetailPageProps> = ({ questId }) => {
             score: review.rating,
             comment: review.comment || "",
             date: new Date(review.created_at).toLocaleDateString("ja-JP"),
+            reviewer_id: review.reviewer_id,
           })
         );
 
@@ -66,6 +76,59 @@ const QuestDetailPage: React.FC<QuestDetailPageProps> = ({ questId }) => {
     fetchData();
   }, [questId]);
 
+  // ユーザーIDを動的に取得
+  useEffect(() => {
+    const fetchUserId = async () => {
+      if (!user || !isAuthenticated) {
+        setCurrentUserId(null);
+        return;
+      }
+
+      try {
+        const response = await userService.getUserIdByNameOrEmail({
+          name: user.displayName || undefined,
+          email: user.email || undefined,
+        });
+
+        setCurrentUserId(response.userId);
+      } catch (error) {
+        console.error("ユーザーID取得エラー:", error);
+        setCurrentUserId(null);
+      }
+    };
+
+    fetchUserId();
+  }, [user, isAuthenticated]);
+
+  // アクションパラメータに基づいてレビュー投稿フォームを表示
+  useEffect(() => {
+    const checkAndShowReviewForm = async () => {
+      if (
+        action === "review" &&
+        user &&
+        isAuthenticated &&
+        quest &&
+        currentUserId
+      ) {
+        try {
+          // 実際のAPIを呼び出してレビュー投稿状況を確認
+          const response = await reviewService.checkUserReviewExists(
+            currentUserId.toString(),
+            quest.id.toString()
+          );
+          if (!response.exists) {
+            setShowReviewForm(true);
+          }
+        } catch (error) {
+          console.error("レビュー投稿状況確認エラー:", error);
+          setShowReviewForm(true); // エラー時は表示
+        }
+      }
+    };
+
+    checkAndShowReviewForm();
+  }, [action, user, isAuthenticated, quest, currentUserId]);
+
   const getDifficultyColor = (difficulty: string): string => {
     switch (difficulty) {
       case "初級":
@@ -80,12 +143,20 @@ const QuestDetailPage: React.FC<QuestDetailPageProps> = ({ questId }) => {
   };
 
   const handleSubmitReview = async () => {
-    if (!newReview.comment || newReview.score === 0 || !questId) return;
+    if (!newReview.comment || newReview.score === 0 || !questId) {
+      return;
+    }
 
     try {
+      // 動的に取得したユーザーIDを使用
+      if (!currentUserId) {
+        alert("ユーザー情報の取得に失敗しました。もう一度お試しください。");
+        return;
+      }
+
       // APIにレビューを投稿
       const response = await reviewService.createReview(questId, {
-        reviewer_id: 1, // 仮のユーザーID（実際の実装では認証から取得）
+        reviewer_id: currentUserId,
         rating: newReview.score,
         comment: newReview.comment,
       });
@@ -97,14 +168,70 @@ const QuestDetailPage: React.FC<QuestDetailPageProps> = ({ questId }) => {
         score: response.rating,
         comment: response.comment || "",
         date: new Date(response.created_at).toLocaleDateString("ja-JP"),
+        reviewer_id: response.reviewer_id,
       };
 
       setReviews([newReviewData, ...reviews]);
       setNewReview({ score: 0, comment: "" });
+      setShowReviewForm(false);
     } catch (err) {
       console.error("レビュー投稿エラー:", err);
-      // エラー時はアラートを表示（実際の実装ではより良いエラーハンドリングを実装）
-      alert("レビューの投稿に失敗しました。もう一度お試しください。");
+
+      // エラー時はアラートを表示
+      if (
+        err instanceof Error &&
+        err.message.includes("既にレビューを投稿済み")
+      ) {
+        alert("このクエストには既にレビューを投稿済みです。");
+        setShowReviewForm(false);
+      } else {
+        alert("レビューの投稿に失敗しました。もう一度お試しください。");
+      }
+    }
+  };
+
+  // レビュー編集ハンドラー
+  const handleEditReview = async (reviewId: number, data: NewReview) => {
+    try {
+      const response = await reviewService.updateReview(reviewId.toString(), {
+        rating: data.score,
+        comment: data.comment,
+      });
+
+      // 成功時はローカル状態を更新
+      const updatedReviewData: Review = {
+        id: response.id,
+        user: response.reviewer.name,
+        score: response.rating,
+        comment: response.comment || "",
+        date: new Date(response.created_at).toLocaleDateString("ja-JP"),
+        reviewer_id: response.reviewer_id,
+      };
+
+      setReviews(
+        reviews.map((review) =>
+          review.id === reviewId ? updatedReviewData : review
+        )
+      );
+    } catch (err) {
+      console.error("レビュー編集エラー:", err);
+      alert("レビューの編集に失敗しました。もう一度お試しください。");
+    }
+  };
+
+  // レビュー削除ハンドラー
+  const handleDeleteReview = async (reviewId: number) => {
+    try {
+      await reviewService.deleteReview(reviewId.toString());
+
+      // 成功時はローカル状態から削除
+      setReviews(reviews.filter((review) => review.id !== reviewId));
+
+      // 削除後はレビュー投稿フォームを表示
+      setShowReviewForm(true);
+    } catch (err) {
+      console.error("レビュー削除エラー:", err);
+      alert("レビューの削除に失敗しました。もう一度お試しください。");
     }
   };
 
@@ -162,7 +289,15 @@ const QuestDetailPage: React.FC<QuestDetailPageProps> = ({ questId }) => {
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
       {/* クエスト情報 */}
       <div className="relative bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl shadow-lg p-6 border-2 border-amber-200 space-y-4">
-        <StatusRibbon status="completed" />
+        <StatusRibbon
+          status={
+            quest.status === QuestStatus.Completed
+              ? "completed"
+              : quest.status === QuestStatus.Active
+              ? "participating"
+              : "applied"
+          }
+        />
         {quest.difficulty && (
           <div
             className={`absolute top-4 left-4 w-3 h-3 rounded-full ${getDifficultyColor(
@@ -190,6 +325,10 @@ const QuestDetailPage: React.FC<QuestDetailPageProps> = ({ questId }) => {
         newReview={newReview}
         setNewReview={setNewReview}
         onSubmit={handleSubmitReview}
+        showReviewForm={showReviewForm}
+        onEditReview={handleEditReview}
+        onDeleteReview={handleDeleteReview}
+        currentUserId={currentUserId}
       />
     </div>
   );

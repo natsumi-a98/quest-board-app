@@ -42,6 +42,8 @@ export enum QuestType {
 export interface QuestParticipant {
   /** 参加ユーザー */
   user: {
+    /** ユーザーID */
+    id: number;
     /** ユーザー名 */
     name: string;
   };

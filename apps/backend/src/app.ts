@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import questsRouter from "./routes/quests";
 import reviewsRouter from "./routes/reviews";
+import usersRouter from "./routes/users";
+import usersRouter from "./routes/users";
 import mypageRouter from "./routes/mypage";
 
 const app = express();
@@ -12,6 +14,8 @@ app.use(express.json());
 
 app.use("/api/quests", questsRouter);
 app.use("/api/reviews", reviewsRouter);
+app.use("/api/users", usersRouter);
+app.use("/api/users", usersRouter);
 app.use("/api/mypage", mypageRouter);
 
 app.listen(PORT, () => {

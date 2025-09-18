@@ -16,6 +16,22 @@ export class UserDataAccessor {
     });
   }
 
+  // 名前でユーザー取得
+  async findByName(name: string): Promise<User | null> {
+    return await prisma.user.findFirst({
+      where: { name },
+    });
+  }
+
+  // 名前またはメールアドレスでユーザー取得
+  async findByNameOrEmail(name: string, email: string): Promise<User | null> {
+    return await prisma.user.findFirst({
+      where: {
+        OR: [{ name }, { email }],
+      },
+    });
+  }
+
   // ユーザー作成
   async create(data: any): Promise<User> {
     return await prisma.user.create({

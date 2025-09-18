@@ -31,7 +31,7 @@ const QuestHistory: React.FC<QuestHistoryProps> = ({ questData }) => {
 
   const tabs = [
     { key: "participating" as const, label: "参加中", icon: Clock },
-    { key: "completed" as const, label: "達成済み", icon: CheckCircle },
+    { key: "completed" as const, label: "完了", icon: CheckCircle },
     { key: "applied" as const, label: "応募中", icon: AlertCircle },
   ];
 

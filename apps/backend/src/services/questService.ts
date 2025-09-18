@@ -1,76 +1,29 @@
-import prisma from "../config/prisma";
+import { QuestDataAccessor } from "../dataAccessor/dbAccessor";
 
 interface GetAllQuestsParams {
   keyword?: string;
   status?: string;
 }
 
+const questDataAccessor = new QuestDataAccessor();
+
 // 全クエスト取得（オプションでキーワード・ステータスで絞り込み）
 export const getAllQuestsService = async ({
   keyword,
   status,
 }: GetAllQuestsParams) => {
-  const where: any = {};
-
-  if (keyword) {
-    where.OR = [
-      { title: { contains: keyword } },
-      { description: { contains: keyword } },
-    ];
-  }
-
-  if (status) {
-    where.status = status;
-  }
-
-  const quests = await prisma.quest.findMany({
-    where,
-    include: {
-      rewards: true,
-      quest_participants: { include: { user: true } },
-      _count: { select: { quest_participants: true } },
-    },
-    orderBy: {
-      start_date: "desc",
-    },
-  });
-
+  const quests = await questDataAccessor.findAll({ keyword, status });
   return quests;
 };
 
 // IDでクエスト取得
 export const getQuestByIdService = async (id: number) => {
-  const quest = await prisma.quest.findUnique({
-    where: { id },
-    include: {
-      rewards: true,
-      quest_participants: {
-        include: {
-          user: true,
-        },
-      },
-      _count: {
-        select: {
-          quest_participants: true,
-        },
-      },
-    },
-  });
-
+  const quest = await questDataAccessor.findById(id);
   return quest;
 };
 
 // ステータス更新
 export const updateQuestStatusService = async (id: number, status: string) => {
-  const quest = await prisma.quest.update({
-    where: { id },
-    data: { status },
-    include: {
-      rewards: true,
-      quest_participants: { include: { user: true } },
-      _count: { select: { quest_participants: true } },
-    },
-  });
-
+  const quest = await questDataAccessor.updateStatus(id, status);
   return quest;
 };

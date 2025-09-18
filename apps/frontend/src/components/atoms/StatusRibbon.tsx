@@ -28,7 +28,7 @@ const StatusRibbon: React.FC<StatusRibbonProps> = ({
       case "participating":
         return "参加中";
       case "completed":
-        return "達成済み";
+        return "完了";
       case "applied":
         return "応募中";
       default:
@@ -39,7 +39,7 @@ const StatusRibbon: React.FC<StatusRibbonProps> = ({
   return (
     <div className={`absolute top-0 right-0 ${className}`}>
       <div
-        className={`px-3 py-1 text-xs font-semibold rounded-bl-lg border-l border-b ${getStatusColor(
+        className={`px-3 py-1 text-xs font-semibold rounded-bl-lg rounded-tr-lg border-l border-b ${getStatusColor(
           status
         )}`}
       >

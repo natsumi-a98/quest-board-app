@@ -19,6 +19,11 @@ export interface CreateReviewRequest {
   comment?: string;
 }
 
+export interface UpdateReviewRequest {
+  rating: number;
+  comment?: string;
+}
+
 /**
  * レビュー関連のAPIサービス
  */
@@ -37,6 +42,41 @@ export const reviewService = {
     questId: string,
     data: CreateReviewRequest
   ): Promise<ReviewResponse> => {
-    return apiClient.post<ReviewResponse>(`/reviews/quest/${questId}`, data);
+    return apiClient.post<ReviewResponse, CreateReviewRequest>(
+      `/reviews/quest/${questId}`,
+      data
+    );
+  },
+
+  /**
+   * レビューを更新
+   */
+  updateReview: async (
+    reviewId: string,
+    data: UpdateReviewRequest
+  ): Promise<ReviewResponse> => {
+    return apiClient.put<ReviewResponse, UpdateReviewRequest>(
+      `/reviews/${reviewId}`,
+      data
+    );
+  },
+
+  /**
+   * レビューを削除
+   */
+  deleteReview: async (reviewId: string): Promise<void> => {
+    return apiClient.delete<void>(`/reviews/${reviewId}`);
+  },
+
+  /**
+   * ユーザーが特定のクエストにレビューを投稿済みかチェック
+   */
+  checkUserReviewExists: async (
+    userId: string,
+    questId: string
+  ): Promise<{ exists: boolean }> => {
+    return apiClient.get<{ exists: boolean }>(
+      `/reviews/check/${userId}/${questId}`
+    );
   },
 };
