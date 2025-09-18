@@ -1,17 +1,44 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { signOut } from "firebase/auth";
-import { auth } from "@/services/firebase";
+import { auth, db } from "@/services/firebase";
 import { Sword, Award, Bell, User, Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { doc, getDoc } from "firebase/firestore";
+
+// User型にroleを追加
+interface AppUser {
+  uid: string;
+  displayName?: string | null;
+  email?: string | null;
+  role?: "admin" | "user";
+}
 
 export const Header: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user: firebaseUser } = useAuth();
+  const [user, setUser] = useState<AppUser | null>(null);
+
+  // Firestoreからroleを取得
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (firebaseUser?.uid) {
+        const docRef = doc(db, "users", firebaseUser.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data() as AppUser;
+          setUser({ ...firebaseUser, role: data.role });
+        } else {
+          setUser(firebaseUser);
+        }
+      }
+    };
+    fetchUserRole();
+  }, [firebaseUser]);
 
   const handleLogout = async () => {
     try {
@@ -43,12 +70,17 @@ export const Header: React.FC = () => {
       icon: <Award className="w-5 h-5" />,
       href: "/rewards",
     },
-    {
-      id: "dashboard",
-      label: "ダッシュボード",
-      icon: <Settings className="w-5 h-5" />,
-      href: "/dashboard",
-    },
+    // 管理者だけに表示
+    ...(user?.role === "admin"
+      ? [
+          {
+            id: "dashboard",
+            label: "ダッシュボード",
+            icon: <Settings className="w-5 h-5" />,
+            href: "/admin/dashboard",
+          },
+        ]
+      : []),
   ];
 
   return (
