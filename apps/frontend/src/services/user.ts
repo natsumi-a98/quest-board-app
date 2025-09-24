@@ -1,9 +1,10 @@
-import { apiClient } from "./httpClient";
+import { apiClient, authenticatedApiClient } from "./httpClient";
 
 export interface UserResponse {
   id: number;
   name: string;
   email: string;
+  role?: string;
 }
 
 export interface GetUserIdResponse {
@@ -35,5 +36,12 @@ export const userService = {
       "/users/get-id",
       data
     );
+  },
+
+  /**
+   * 現在のユーザー情報を取得（認証済み）
+   */
+  getCurrentUser: async (): Promise<UserResponse> => {
+    return authenticatedApiClient.get<UserResponse>("/users/me");
   },
 };

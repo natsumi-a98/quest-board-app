@@ -30,7 +30,6 @@ app.use(express.json());
 app.use("/api/quests", questsRouter);
 app.use("/api/reviews", reviewsRouter);
 app.use("/api/users", usersRouter);
-app.use("/api/users", usersRouter);
 app.use("/api/mypage", mypageRouter);
 
 // サーバー起動

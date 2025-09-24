@@ -47,6 +47,13 @@ export class UserDataAccessor {
     });
   }
 
+  // Firebase UIDでユーザー取得
+  async findByFirebaseUid(firebaseUid: string): Promise<User | null> {
+    return await prisma.user.findUnique({
+      where: { firebase_uid: firebaseUid } as any,
+    });
+  }
+
   // ユーザー削除
   async delete(id: number): Promise<User> {
     return await prisma.user.delete({
