@@ -44,4 +44,11 @@ export const userService = {
   getCurrentUser: async (): Promise<UserResponse> => {
     return authenticatedApiClient.get<UserResponse>("/users/me");
   },
+
+  /**
+   * 全ユーザーを取得（管理者用）
+   */
+  getAllUsers: async (): Promise<UserResponse[]> => {
+    return apiClient.get<UserResponse[]>("/users/all");
+  },
 };

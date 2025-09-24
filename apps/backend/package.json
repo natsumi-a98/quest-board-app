@@ -5,6 +5,7 @@
     "dev": "nodemon --exec tsx src/app.ts",
     "build": "tsc",
     "seed": "tsx prisma/seed.ts",
+    "seed:inactive": "tsx prisma/add-inactive-quests.ts",
     "start": "node dist/app.js"
   },
   "prisma": {

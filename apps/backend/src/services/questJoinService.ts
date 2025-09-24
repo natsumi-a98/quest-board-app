@@ -43,16 +43,18 @@ export const addUserToQuest = async (userId: number, questId: number) => {
 
     // 正常終了
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     // エラーハンドリング（呼び出し側で理由別に処理できるようにする）
-    if (err.message === "Already joined") {
-      return { success: false, reason: "duplicate" };
-    }
-    if (err.message === "Quest is full") {
-      return { success: false, reason: "full" };
-    }
-    if (err.message === "Quest not found") {
-      return { success: false, reason: "not_found" };
+    if (err instanceof Error) {
+      if (err.message === "Already joined") {
+        return { success: false, reason: "duplicate" };
+      }
+      if (err.message === "Quest is full") {
+        return { success: false, reason: "full" };
+      }
+      if (err.message === "Quest not found") {
+        return { success: false, reason: "not_found" };
+      }
     }
 
     console.error(err);

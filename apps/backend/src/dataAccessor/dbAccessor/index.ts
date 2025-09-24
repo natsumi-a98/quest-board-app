@@ -1,7 +1,19 @@
-export { QuestDataAccessor, QuestWithRelations } from "./Quest";
-export { UserDataAccessor } from "./User";
-export { QuestParticipantDataAccessor } from "./QuestParticipant";
-export { RewardDataAccessor } from "./Reward";
+export {
+  QuestDataAccessor,
+  QuestWithRelations,
+  CreateQuestData,
+  QuestWhereCondition,
+} from "./Quest";
+export { UserDataAccessor, CreateUserData, UpdateUserData } from "./User";
+export {
+  QuestParticipantDataAccessor,
+  CreateQuestParticipantData,
+} from "./QuestParticipant";
+export {
+  RewardDataAccessor,
+  CreateRewardData,
+  UpdateRewardData,
+} from "./Reward";
 export {
   ReviewDataAccessor,
   ReviewWithRelations,

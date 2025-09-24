@@ -2,6 +2,10 @@
  * クエストのステータス
  */
 export enum QuestStatus {
+  /** 下書きのクエスト */
+  Draft = "draft",
+  /** 承認待ちのクエスト */
+  Pending = "pending",
   /** アクティブなクエスト */
   Active = "active",
   /** 進行中のクエスト */
@@ -30,10 +34,14 @@ export enum QuestDifficulty {
 export enum QuestType {
   /** 開発系クエスト */
   Development = "development",
-  /** 学習系クエスト */
-  Learning = "learning",
-  /** チャレンジ系クエスト */
-  Challenge = "challenge",
+  /** デザイン系クエスト */
+  Design = "design",
+  /** マーケティング系クエスト */
+  Marketing = "marketing",
+  /** リサーチ系クエスト */
+  Research = "research",
+  /** その他のクエスト */
+  Other = "other",
 }
 
 /**

@@ -27,6 +27,9 @@ import { Quest, QuestStatus, QuestDifficulty } from "@/types/quest";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 
+// 一般ユーザーに非表示にするクエストステータス
+const HIDDEN_QUEST_STATUSES: string[] = ["draft", "pending", "inactive"];
+
 const QuestList: React.FC = () => {
   const [quests, setQuests] = useState<Quest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -218,7 +221,12 @@ const QuestList: React.FC = () => {
         tag.toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-    return matchesFilter && matchesSearch;
+    // 一般ユーザーには非公開ステータスのクエストを非表示にする
+    const isHiddenStatus = HIDDEN_QUEST_STATUSES.includes(
+      quest.status as string
+    );
+
+    return matchesFilter && matchesSearch && !isHiddenStatus;
   });
 
   if (loading) {
@@ -332,7 +340,7 @@ const QuestList: React.FC = () => {
                     <span>報酬:</span>
                     <div className="text-right">
                       <div className="font-semibold text-yellow-600">
-                        {quest.rewards?.point_amount ?? 0} GP
+                        {(quest.rewards?.point_amount ?? 0).toLocaleString()} GP
                       </div>
                       <div className="text-xs text-slate-500">
                         {formatCurrency(quest.rewards?.incentive_amount)}

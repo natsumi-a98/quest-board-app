@@ -1,6 +1,26 @@
 import prisma from "../../config/prisma";
 import { Reward } from "@prisma/client";
 
+/**
+ * 報酬作成用のデータインターフェース
+ */
+export interface CreateRewardData {
+  quest_id: number;
+  incentive_amount: number;
+  point_amount: number;
+  note: string;
+}
+
+/**
+ * 報酬更新用のデータインターフェース
+ */
+export interface UpdateRewardData {
+  quest_id?: number;
+  incentive_amount?: number;
+  point_amount?: number;
+  note?: string;
+}
+
 export class RewardDataAccessor {
   // クエストIDで報酬一覧取得
   async findByQuestId(questId: number): Promise<Reward[]> {
@@ -10,14 +30,14 @@ export class RewardDataAccessor {
   }
 
   // 報酬作成
-  async create(data: any): Promise<Reward> {
+  async create(data: CreateRewardData): Promise<Reward> {
     return await prisma.reward.create({
       data,
     });
   }
 
   // 報酬更新
-  async update(id: number, data: any): Promise<Reward> {
+  async update(id: number, data: UpdateRewardData): Promise<Reward> {
     return await prisma.reward.update({
       where: { id },
       data,

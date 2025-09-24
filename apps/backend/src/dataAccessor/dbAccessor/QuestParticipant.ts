@@ -1,6 +1,16 @@
 import prisma from "../../config/prisma";
 import { QuestParticipant } from "@prisma/client";
 
+/**
+ * クエスト参加者作成用のデータインターフェース
+ */
+export interface CreateQuestParticipantData {
+  quest_id: number;
+  user_id: number;
+  joined_at?: Date;
+  cleared_at?: Date | null;
+}
+
 export class QuestParticipantDataAccessor {
   // クエストIDで参加者一覧取得
   async findByQuestId(questId: number): Promise<QuestParticipant[]> {
@@ -23,7 +33,7 @@ export class QuestParticipantDataAccessor {
   }
 
   // 参加者追加
-  async create(data: any): Promise<QuestParticipant> {
+  async create(data: CreateQuestParticipantData): Promise<QuestParticipant> {
     return await prisma.questParticipant.create({
       data,
     });

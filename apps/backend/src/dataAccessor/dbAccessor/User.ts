@@ -1,6 +1,26 @@
 import prisma from "../../config/prisma";
 import { User } from "@prisma/client";
 
+/**
+ * ユーザー作成用のデータインターフェース
+ */
+export interface CreateUserData {
+  name: string;
+  email: string;
+  role: string;
+  firebase_uid: string;
+}
+
+/**
+ * ユーザー更新用のデータインターフェース
+ */
+export interface UpdateUserData {
+  name?: string;
+  email?: string;
+  role?: string;
+  firebase_uid?: string;
+}
+
 export class UserDataAccessor {
   // IDでユーザー取得
   async findById(id: number): Promise<User | null> {
@@ -33,14 +53,14 @@ export class UserDataAccessor {
   }
 
   // ユーザー作成
-  async create(data: any): Promise<User> {
+  async create(data: CreateUserData): Promise<User> {
     return await prisma.user.create({
       data,
     });
   }
 
   // ユーザー更新
-  async update(id: number, data: any): Promise<User> {
+  async update(id: number, data: UpdateUserData): Promise<User> {
     return await prisma.user.update({
       where: { id },
       data,
@@ -51,6 +71,13 @@ export class UserDataAccessor {
   async findByFirebaseUid(firebaseUid: string): Promise<User | null> {
     return await prisma.user.findUnique({
       where: { firebase_uid: firebaseUid } as any,
+    });
+  }
+
+  // 全ユーザー取得
+  async findAll(): Promise<User[]> {
+    return await prisma.user.findMany({
+      orderBy: { id: "asc" },
     });
   }
 

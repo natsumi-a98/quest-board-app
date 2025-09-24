@@ -20,6 +20,38 @@ export interface QuestWithRelations extends Quest {
   };
 }
 
+/**
+ * クエスト作成用のデータインターフェース
+ */
+export interface CreateQuestData {
+  title: string;
+  description: string;
+  type: string;
+  status: string;
+  maxParticipants: number;
+  tags: string[];
+  start_date: Date;
+  end_date: Date;
+  rewards?: {
+    create: {
+      incentive_amount: number;
+      point_amount: number;
+      note: string;
+    };
+  };
+}
+
+/**
+ * クエスト検索用のwhere条件インターフェース
+ */
+export interface QuestWhereCondition {
+  OR?: Array<{
+    title?: { contains: string };
+    description?: { contains: string };
+  }>;
+  status?: string;
+}
+
 export class QuestDataAccessor {
   /**
    * 全クエスト取得（オプションでキーワード・ステータスで絞り込み）
@@ -33,7 +65,7 @@ export class QuestDataAccessor {
     keyword?: string;
     status?: string;
   }): Promise<QuestWithRelations[]> {
-    const where: any = {};
+    const where: QuestWhereCondition = {};
 
     // キーワード検索：タイトルまたは説明文にキーワードが含まれるものを検索
     if (params.keyword) {
@@ -137,10 +169,39 @@ export class QuestDataAccessor {
    * @param data - 作成するクエストのデータ
    * @returns 作成されたクエスト情報（基本情報のみ）
    */
-  async create(data: any): Promise<Quest> {
+  async create(data: CreateQuestData): Promise<Quest> {
     return await prisma.quest.create({
       data,
     });
+  }
+
+  /**
+   * クエスト編集
+   *
+   * @param id - 編集するクエストのID
+   * @param data - 編集するクエストのデータ
+   * @returns 編集されたクエスト情報（関連データ含む）
+   */
+  async update(id: number, data: any): Promise<QuestWithRelations> {
+    const quest = await prisma.quest.update({
+      where: { id },
+      data,
+      include: {
+        rewards: true,
+        quest_participants: {
+          include: {
+            user: true,
+          },
+        },
+        _count: {
+          select: {
+            quest_participants: true,
+          },
+        },
+      },
+    });
+
+    return quest as QuestWithRelations;
   }
 
   /**

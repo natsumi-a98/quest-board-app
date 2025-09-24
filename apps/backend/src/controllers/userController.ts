@@ -3,6 +3,7 @@ import {
   findUserByNameOrEmailService,
   createUserService,
   getUserByFirebaseUidService,
+  getAllUsersService,
 } from "../services/userService";
 
 // ユーザー検索
@@ -127,5 +128,16 @@ export const getCurrentUser = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("ユーザー情報取得エラー:", error);
     res.status(500).json({ message: "Failed to get user info" });
+  }
+};
+
+// 全ユーザー取得（管理者用）
+export const getAllUsers = async (req: Request, res: Response) => {
+  try {
+    const users = await getAllUsersService();
+    res.json(users);
+  } catch (error) {
+    console.error("全ユーザー取得エラー:", error);
+    res.status(500).json({ message: "Failed to get users" });
   }
 };
