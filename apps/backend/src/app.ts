@@ -3,8 +3,8 @@ import cors from "cors";
 import questsRouter from "./routes/quests";
 import reviewsRouter from "./routes/reviews";
 import usersRouter from "./routes/users";
-import usersRouter from "./routes/users";
 import mypageRouter from "./routes/mypage";
+import adminUsersRouter from "./routes/adminUsers";
 
 // .env 読み込み
 import dotenv from "dotenv";
@@ -32,6 +32,7 @@ app.use("/api/reviews", reviewsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/mypage", mypageRouter);
+app.use("/api/admin/users", adminUsersRouter);
 
 // サーバー起動
 app.listen(PORT, () => {
