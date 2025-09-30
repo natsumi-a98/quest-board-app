@@ -16,6 +16,18 @@ export const getAllQuestsService = async ({
   return quests;
 };
 
+// 全クエスト取得（削除済みも含む）- 管理者用
+export const getAllQuestsIncludingDeletedService = async ({
+  keyword,
+  status,
+}: GetAllQuestsParams) => {
+  const quests = await questDataAccessor.findAllIncludingDeleted({
+    keyword,
+    status,
+  });
+  return quests;
+};
+
 // IDでクエスト取得
 export const getQuestByIdService = async (id: number) => {
   const quest = await questDataAccessor.findById(id);
@@ -102,5 +114,11 @@ export const updateQuestService = async (
 // クエスト削除
 export const deleteQuestService = async (id: number) => {
   const quest = await questDataAccessor.delete(id);
+  return quest;
+};
+
+// クエスト復元
+export const restoreQuestService = async (id: number) => {
+  const quest = await questDataAccessor.restore(id);
   return quest;
 };

@@ -83,6 +83,8 @@ export interface Quest {
   created_at: string;
   /** 更新日時（ISO8601） */
   updated_at: string;
+  /** 削除日時（ISO8601、論理削除時のみ） */
+  deleted_at?: string;
   /** 報酬情報 */
   rewards: {
     /** インセンティブ金額 */

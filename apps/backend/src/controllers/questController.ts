@@ -1,12 +1,15 @@
 import { Request, Response } from "express";
 import {
   getAllQuestsService,
+  getAllQuestsIncludingDeletedService,
   getQuestByIdService,
   updateQuestStatusService,
   createQuestService,
   updateQuestService,
   deleteQuestService,
+  restoreQuestService,
 } from "../services/questService";
+import { getUserByFirebaseUidService } from "../services/userService";
 
 // 全クエスト取得
 export const getAllQuests = async (req: Request, res: Response) => {
@@ -88,7 +91,7 @@ export const createQuest = async (req: Request, res: Response) => {
     title,
     description,
     type,
-    status = "draft",
+    status,
     maxParticipants,
     tags = [],
     start_date,
@@ -114,11 +117,30 @@ export const createQuest = async (req: Request, res: Response) => {
   }
 
   try {
+    // ユーザーのロールに基づいてデフォルトステータスを決定
+    let finalStatus = status || "draft";
+
+    if (req.user?.uid) {
+      // Firebase UIDでユーザー情報を取得
+      const user = await getUserByFirebaseUidService(req.user.uid);
+
+      if (user) {
+        // 一般ユーザーの場合は自動的に承認待ち
+        if (user.role === "user" && !status) {
+          finalStatus = "pending";
+        }
+        // 管理者の場合は指定されたステータスまたは下書き
+        else if (user.role === "admin") {
+          finalStatus = status || "draft";
+        }
+      }
+    }
+
     const quest = await createQuestService({
       title,
       description,
       type,
-      status,
+      status: finalStatus,
       maxParticipants: Number(maxParticipants),
       tags,
       start_date: new Date(start_date),
@@ -197,7 +219,7 @@ export const updateQuest = async (req: Request, res: Response) => {
   }
 };
 
-// クエスト削除
+// クエスト論理削除
 export const deleteQuest = async (req: Request, res: Response) => {
   const id = Number(req.params.id);
 
@@ -207,7 +229,9 @@ export const deleteQuest = async (req: Request, res: Response) => {
 
   try {
     await deleteQuestService(id);
-    res.status(200).json({ message: "Quest deleted successfully" });
+    res
+      .status(200)
+      .json({ message: "Quest deleted successfully (soft delete)" });
   } catch (error) {
     console.error(error);
     if (error instanceof Error && error.message === "Quest not found") {
@@ -215,6 +239,107 @@ export const deleteQuest = async (req: Request, res: Response) => {
     } else {
       res.status(500).json({ message: "Failed to delete quest" });
     }
+  }
+};
+
+// 全クエスト取得（削除済みも含む）- 管理者用
+export const getAllQuestsIncludingDeleted = async (
+  req: Request,
+  res: Response
+) => {
+  const { keyword, status } = req.query;
+
+  const allowed = new Set([
+    "active",
+    "in_progress",
+    "inactive",
+    "completed",
+    "draft",
+    "pending",
+  ]);
+  const statusParam =
+    typeof status === "string" && allowed.has(status) ? status : undefined;
+
+  try {
+    const quests = await getAllQuestsIncludingDeletedService({
+      keyword: keyword as string | undefined,
+      status: statusParam,
+    });
+    res.json(quests);
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ message: "Failed to fetch quests including deleted" });
+  }
+};
+
+// クエストを承認待ちにする
+export const submitQuestForApproval = async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+
+  if (isNaN(id)) {
+    return res.status(400).json({ message: "Invalid quest ID" });
+  }
+
+  try {
+    // クエストの現在のステータスを確認
+    const quest = await getQuestByIdService(id);
+    if (!quest) {
+      return res.status(404).json({ message: "Quest not found" });
+    }
+
+    // 下書きまたは停止中のクエストのみ承認待ちにできる
+    if (quest.status !== "draft" && quest.status !== "inactive") {
+      return res.status(400).json({
+        message: "Only draft or inactive quests can be submitted for approval",
+        currentStatus: quest.status,
+      });
+    }
+
+    // ステータスを承認待ちに変更
+    const updatedQuest = await updateQuestStatusService(id, "pending");
+    res.json({
+      message: "Quest submitted for approval successfully",
+      quest: updatedQuest,
+    });
+  } catch (error) {
+    console.error("Quest submission error:", error);
+    res.status(500).json({ message: "Failed to submit quest for approval" });
+  }
+};
+
+// クエスト復元（論理削除の取り消し）
+export const restoreQuest = async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+
+  if (isNaN(id)) {
+    return res.status(400).json({ message: "Invalid quest ID" });
+  }
+
+  try {
+    // クエストの現在の状態を確認
+    const quest = await getQuestByIdService(id);
+    if (!quest) {
+      return res.status(404).json({ message: "Quest not found" });
+    }
+
+    // 削除済みクエストのみ復元可能
+    if (!quest.deleted_at) {
+      return res.status(400).json({
+        message: "Only deleted quests can be restored",
+      });
+    }
+
+    // クエストを復元
+    const restoredQuest = await restoreQuestService(id);
+    res.json({
+      message: "Quest restored successfully",
+      quest: restoredQuest,
+    });
+  } catch (error) {
+    console.error("Quest restoration error:", error);
+    res.status(500).json({ message: "Failed to restore quest" });
   }
 };
 

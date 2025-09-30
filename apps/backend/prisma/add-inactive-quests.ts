@@ -1,22 +1,39 @@
 import prisma from "../src/config/prisma";
 
 async function addInactiveQuests() {
-  console.log("停止中のクエストを追加中...");
-
-  // 既存のユーザーを取得（最初の4人を使用）
-  const existingUsers = await prisma.user.findMany({
-    take: 4,
-    orderBy: { id: "asc" },
+  // 新しいユーザー情報を取得
+  const userTaro = await prisma.user.findUnique({
+    where: { email: "taro@example.com" },
+  });
+  const userHanako = await prisma.user.findUnique({
+    where: { email: "hanako@example.com" },
+  });
+  const userJiro = await prisma.user.findUnique({
+    where: { email: "jiro@example.com" },
+  });
+  const userGeneral = await prisma.user.findUnique({
+    where: { email: "questboard+002@example.com" },
+  });
+  const userAdmin = await prisma.user.findUnique({
+    where: { email: "questboard@example.com" },
+  });
+  const userAdmin1 = await prisma.user.findUnique({
+    where: { email: "questboard+001@example.com" },
   });
 
-  if (existingUsers.length < 4) {
+  if (
+    !userTaro ||
+    !userHanako ||
+    !userJiro ||
+    !userGeneral ||
+    !userAdmin ||
+    !userAdmin1
+  ) {
     console.log(
-      "既存のユーザーが不足しています。まず基本のシードデータを実行してください。"
+      "必要なユーザーが見つかりません。まず基本のシードデータを実行してください。"
     );
     return;
   }
-
-  const [userTaro, userHanako, userJiro, userAsato] = existingUsers;
 
   // ---------------------
   // 停止中のクエスト作成
@@ -44,7 +61,7 @@ async function addInactiveQuests() {
       quest_participants: {
         create: [
           { user: { connect: { id: userTaro.id } } },
-          { user: { connect: { id: userHanako.id } } },
+          { user: { connect: { id: userAdmin.id } } },
         ],
       },
     },
@@ -70,7 +87,7 @@ async function addInactiveQuests() {
         },
       },
       quest_participants: {
-        create: [{ user: { connect: { id: userJiro.id } } }],
+        create: [{ user: { connect: { id: userGeneral.id } } }],
       },
     },
   });
@@ -96,8 +113,8 @@ async function addInactiveQuests() {
       },
       quest_participants: {
         create: [
-          { user: { connect: { id: userAsato.id } } },
-          { user: { connect: { id: userTaro.id } } },
+          { user: { connect: { id: userAdmin1.id } } },
+          { user: { connect: { id: userJiro.id } } },
         ],
       },
     },
@@ -149,8 +166,8 @@ async function addInactiveQuests() {
       },
       quest_participants: {
         create: [
-          { user: { connect: { id: userJiro.id } } },
-          { user: { connect: { id: userAsato.id } } },
+          { user: { connect: { id: userTaro.id } } },
+          { user: { connect: { id: userGeneral.id } } },
         ],
       },
     },

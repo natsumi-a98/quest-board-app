@@ -67,3 +67,39 @@ export const getAllUsersService = async () => {
     throw error;
   }
 };
+
+// ユーザー削除サービス（Firebase含む物理削除）
+export const deleteUserService = async (id: number) => {
+  try {
+    // まずユーザーを取得してFirebase UIDを確認
+    const user = await userDataAccessor.findById(id);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // 関連データの存在確認と削除
+    const relatedData = await userDataAccessor.findRelatedData(id);
+    if (Object.values(relatedData).some((count) => count > 0)) {
+      await userDataAccessor.deleteRelatedData(id);
+    }
+
+    // Firebase Admin SDKを使用してFirebaseユーザーを削除
+    if (user.firebase_uid) {
+      try {
+        const admin = require("firebase-admin");
+        await admin.auth().deleteUser(user.firebase_uid);
+      } catch (firebaseError) {
+        console.error("Firebase user deletion failed:", firebaseError);
+        // Firebase削除に失敗してもDB削除は続行（ユーザーが既に削除されている可能性）
+      }
+    }
+
+    // データベースからユーザーを削除
+    const deletedUser = await userDataAccessor.delete(id);
+    return deletedUser;
+  } catch (error) {
+    console.error("ユーザー削除エラー:", error);
+    throw error;
+  }
+};

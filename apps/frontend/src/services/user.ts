@@ -51,4 +51,15 @@ export const userService = {
   getAllUsers: async (): Promise<UserResponse[]> => {
     return apiClient.get<UserResponse[]>("/users/all");
   },
+
+  /**
+   * ユーザーを削除（管理者用）
+   */
+  deleteUser: async (
+    id: number
+  ): Promise<{ message: string; user: UserResponse }> => {
+    return apiClient.delete<{ message: string; user: UserResponse }>(
+      `/users/${id}`
+    );
+  },
 };

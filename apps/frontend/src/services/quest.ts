@@ -23,6 +23,16 @@ export const questService = {
   },
 
   /**
+   * 全クエストを取得（削除済みも含む）- 管理者用
+   */
+  getAllQuestsIncludingDeleted: async (params?: {
+    keyword?: string;
+    status?: string;
+  }): Promise<Quest[]> => {
+    return apiClient.get<Quest[]>("/quests/admin/all", params);
+  },
+
+  /**
    * クエストのステータスを更新
    */
   updateQuestStatus: async (id: string, status: string): Promise<Quest> => {
@@ -87,6 +97,30 @@ export const questService = {
   ): Promise<{ message: string; quest: Quest }> => {
     return apiClient.patch<{ message: string; quest: Quest }, {}>(
       `/quests/${id}/reactivate`,
+      {}
+    );
+  },
+
+  /**
+   * クエストを承認待ちに申請する
+   */
+  submitQuestForApproval: async (
+    id: string
+  ): Promise<{ message: string; quest: Quest }> => {
+    return apiClient.patch<{ message: string; quest: Quest }, {}>(
+      `/quests/${id}/submit`,
+      {}
+    );
+  },
+
+  /**
+   * クエストを復元する（削除の取り消し）
+   */
+  restoreQuest: async (
+    id: string
+  ): Promise<{ message: string; quest: Quest }> => {
+    return apiClient.patch<{ message: string; quest: Quest }, {}>(
+      `/quests/${id}/restore`,
       {}
     );
   },

@@ -52,6 +52,7 @@ const AdminDashboard = () => {
   const [isCreateQuestOpen, setIsCreateQuestOpen] = useState<boolean>(false);
   const [questToDelete, setQuestToDelete] = useState<Quest | null>(null);
   const [questToEdit, setQuestToEdit] = useState<Quest | null>(null);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // トースト通知を表示する関数
@@ -69,9 +70,9 @@ const AdminDashboard = () => {
         setLoading(true);
         setError(null);
 
-        // クエストデータとユーザーデータを並行取得
+        // クエストデータとユーザーデータを並行取得（管理者用：削除済みも含む）
         const [questData, userData] = await Promise.all([
-          questService.getAllQuests(),
+          questService.getAllQuestsIncludingDeleted(),
           userService.getAllUsers(),
         ]);
 
@@ -171,8 +172,19 @@ const AdminDashboard = () => {
     const matchesSearch = quest.title
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-    const matchesFilter =
-      filterStatus === "all" || quest.status === filterStatus;
+
+    let matchesFilter = false;
+    if (filterStatus === "all") {
+      matchesFilter = true;
+    } else if (filterStatus === "deleted") {
+      // 削除済みクエストのフィルタリング
+      matchesFilter =
+        quest.deleted_at !== null && quest.deleted_at !== undefined;
+    } else {
+      // 通常のステータスフィルタリング（削除済みでないクエストのみ）
+      matchesFilter = quest.status === filterStatus && !quest.deleted_at;
+    }
+
     return matchesSearch && matchesFilter;
   });
 
@@ -207,6 +219,14 @@ const AdminDashboard = () => {
         showToast("クエストを完了にしました。");
       } else if (action === "reactivate") {
         await questService.reactivateQuest(questId.toString());
+      } else if (action === "submit_for_approval") {
+        await questService.submitQuestForApproval(questId.toString());
+        // 承認待ち申請時のトースト通知表示
+        showToast("クエストを承認待ちに申請しました。");
+      } else if (action === "restore") {
+        await questService.restoreQuest(questId.toString());
+        // 復元時のトースト通知表示
+        showToast("クエストを復元しました。");
       } else if (action === "edit") {
         const quest = quests.find((q) => q.id === questId);
         if (quest) {
@@ -221,13 +241,28 @@ const AdminDashboard = () => {
         }
       }
 
-      // クエストリストを再取得
-      const questData = await questService.getAllQuests();
+      // クエストリストを再取得（管理者用：削除済みも含む）
+      const questData = await questService.getAllQuestsIncludingDeleted();
       setQuests(questData);
       setSelectedQuest(null);
     } catch (err) {
       console.error(`Failed to ${action} quest:`, err);
       setError(`クエストの${action}に失敗しました`);
+    }
+  };
+
+  const handleUserAction = async (userId: number, action: string) => {
+    try {
+      if (action === "delete") {
+        const user = users.find((u) => u.id === userId);
+        if (user) {
+          setUserToDelete(user);
+          return;
+        }
+      }
+    } catch (error) {
+      console.error("ユーザーアクションエラー:", error);
+      showToast("操作に失敗しました");
     }
   };
 
@@ -237,14 +272,39 @@ const AdminDashboard = () => {
     try {
       await questService.deleteQuest(questToDelete.id.toString());
 
-      // クエストリストを再取得
-      const questData = await questService.getAllQuests();
+      // クエストリストを再取得（管理者用：削除済みも含む）
+      const questData = await questService.getAllQuestsIncludingDeleted();
       setQuests(questData);
       setQuestToDelete(null);
       setSelectedQuest(null);
     } catch (err) {
       console.error("Failed to delete quest:", err);
       setError("クエストの削除に失敗しました");
+    }
+  };
+
+  const handleUserDeleteConfirm = async (): Promise<void> => {
+    if (!userToDelete) return;
+
+    try {
+      await userService.deleteUser(userToDelete.id);
+
+      // ユーザーリストを再取得
+      const userData = await userService.getAllUsers();
+      // UserResponseをUser型に変換（モックデータを追加）
+      const usersWithMockData: User[] = userData.map((user) => ({
+        ...user,
+        level: Math.floor(Math.random() * 10) + 1,
+        totalRewards: Math.floor(Math.random() * 1000) + 100,
+        completedQuests: Math.floor(Math.random() * 20) + 1,
+        joinDate: new Date().toLocaleDateString("ja-JP"),
+      }));
+      setUsers(usersWithMockData);
+      setUserToDelete(null);
+      showToast("ユーザーを削除しました");
+    } catch (err) {
+      console.error("Failed to delete user:", err);
+      setError("ユーザーの削除に失敗しました");
     }
   };
 
@@ -280,7 +340,11 @@ const AdminDashboard = () => {
     onClick: (quest: Quest) => void;
   }) => (
     <div
-      className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-lg p-4 border-2 border-amber-200 hover:border-amber-300 hover:shadow-md transition-all duration-300 cursor-pointer"
+      className={`rounded-lg p-4 border-2 transition-all duration-300 cursor-pointer ${
+        quest.deleted_at
+          ? "bg-gradient-to-r from-gray-50 to-gray-100 border-gray-300 hover:border-gray-400 opacity-60"
+          : "bg-gradient-to-r from-amber-50 to-amber-100 border-amber-200 hover:border-amber-300 hover:shadow-md"
+      }`}
       onClick={() => onClick(quest)}
     >
       <div className="flex items-center justify-between">
@@ -294,6 +358,11 @@ const AdminDashboard = () => {
             >
               {getStatusText(quest.status)}
             </span>
+            {quest.deleted_at && (
+              <span className="px-2 py-1 rounded-full text-xs text-white bg-red-500">
+                削除済み
+              </span>
+            )}
             {/* Priority is not available in Quest interface */}
           </div>
           <div className="flex items-center gap-4 mt-2 text-sm text-slate-800">
@@ -356,8 +425,8 @@ const AdminDashboard = () => {
           note: formData.note,
         });
 
-        // クエストリストを再取得
-        const questData = await questService.getAllQuests();
+        // クエストリストを再取得（管理者用：削除済みも含む）
+        const questData = await questService.getAllQuestsIncludingDeleted();
         setQuests(questData);
         onClose();
       } catch (err) {
@@ -652,8 +721,8 @@ const AdminDashboard = () => {
           note: formData.note,
         });
 
-        // クエストリストを再取得
-        const questData = await questService.getAllQuests();
+        // クエストリストを再取得（管理者用：削除済みも含む）
+        const questData = await questService.getAllQuestsIncludingDeleted();
         setQuests(questData);
         showToast("クエストを更新しました。");
         onClose();
@@ -936,8 +1005,63 @@ const AdminDashboard = () => {
               {quest.description}
             </p>
           </div>
+          <p className="text-orange-600 text-sm mt-4 font-medium">
+            ⚠️この操作によりクエストが削除されます。データは保持され、必要に応じて復元可能です。
+          </p>
+        </div>
+
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+          >
+            キャンセル
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            削除する
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const UserDeleteConfirmDialog = ({
+    user,
+    onConfirm,
+    onCancel,
+  }: {
+    user: User;
+    onConfirm: () => void;
+    onCancel: () => void;
+  }) => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-6 max-w-md w-full mx-4 border-4 border-amber-300">
+        <div className="flex justify-between items-start mb-4">
+          <h2 className="text-xl font-bold text-slate-800 font-serif">
+            ユーザーを削除
+          </h2>
+          <button
+            onClick={onCancel}
+            className="text-amber-600 hover:text-amber-800"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="mb-6">
+          <p className="text-slate-800 mb-4">
+            以下のユーザーを削除してもよろしいですか？
+          </p>
+          <div className="bg-white p-4 rounded-lg border-2 border-amber-200">
+            <h3 className="font-semibold text-slate-800 mb-2">{user.name}</h3>
+            <p className="text-sm text-slate-600">{user.email}</p>
+            <p className="text-sm text-slate-600">ロール: {user.role}</p>
+          </div>
           <p className="text-red-600 text-sm mt-4 font-medium">
-            ⚠️ この操作は取り消せません。関連する参加者データも削除されます。
+            ⚠️この操作によりユーザーとFirebase認証が完全に削除されます。関連するクエスト参加履歴やレビューも削除される可能性があります。
           </p>
         </div>
 
@@ -1087,6 +1211,19 @@ const AdminDashboard = () => {
               </button>
             </>
           )}
+          {(quest.status as string) === "inactive" && (
+            <>
+              <button
+                onClick={() =>
+                  handleQuestAction(quest.id, "submit_for_approval")
+                }
+                className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+              >
+                <Clock className="w-4 h-4" />
+                承認待ちにする
+              </button>
+            </>
+          )}
           {(quest.status as string) === "in_progress" && (
             <button
               onClick={() => handleQuestAction(quest.id, "complete")}
@@ -1097,28 +1234,43 @@ const AdminDashboard = () => {
             </button>
           )}
           {(quest.status as string) === "inactive" && (
+            <>
+              <button
+                onClick={() => handleQuestAction(quest.id, "reactivate")}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" />
+                再公開
+              </button>
+            </>
+          )}
+          {!quest.deleted_at && (
             <button
-              onClick={() => handleQuestAction(quest.id, "reactivate")}
+              onClick={() => handleQuestAction(quest.id, "edit")}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Edit className="w-4 h-4" />
+              編集
+            </button>
+          )}
+          {!quest.deleted_at && (
+            <button
+              onClick={() => handleQuestAction(quest.id, "delete")}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              削除
+            </button>
+          )}
+          {quest.deleted_at && (
+            <button
+              onClick={() => handleQuestAction(quest.id, "restore")}
               className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
             >
               <RefreshCw className="w-4 h-4" />
-              再公開
+              復元
             </button>
           )}
-          <button
-            onClick={() => handleQuestAction(quest.id, "edit")}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Edit className="w-4 h-4" />
-            編集
-          </button>
-          <button
-            onClick={() => handleQuestAction(quest.id, "delete")}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-            削除
-          </button>
         </div>
       </div>
     </div>
@@ -1219,9 +1371,16 @@ const AdminDashboard = () => {
         {activeTab === "quests" && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-              <h2 className="text-2xl font-bold text-slate-800 font-serif">
-                クエスト管理
-              </h2>
+              <div>
+                <h2 className="text-3xl font-bold text-gray-300 mb-2">
+                  クエスト管理
+                </h2>
+                {!loading && (
+                  <p className="text-sm text-gray-300 mt-1">
+                    {filteredQuests.length}件のクエスト
+                  </p>
+                )}
+              </div>
 
               <div className="flex gap-3">
                 <button
@@ -1238,8 +1397,17 @@ const AdminDashboard = () => {
                     placeholder="クエストを検索..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 placeholder-amber-600 focus:outline-none focus:border-yellow-400"
+                    className="pl-10 pr-10 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 placeholder-amber-600 focus:outline-none focus:border-yellow-400"
                   />
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm("")}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-amber-600 hover:text-amber-800 transition-colors"
+                      title="検索をクリア"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
 
                 <select
@@ -1254,6 +1422,7 @@ const AdminDashboard = () => {
                   <option value="draft">下書き</option>
                   <option value="in_progress">進行中</option>
                   <option value="inactive">停止中</option>
+                  <option value="deleted">削除済み</option>
                 </select>
               </div>
             </div>
@@ -1276,8 +1445,68 @@ const AdminDashboard = () => {
                   />
                 ))}
                 {filteredQuests.length === 0 && (
-                  <div className="text-center py-12 text-slate-800">
-                    クエストが見つかりませんでした
+                  <div className="text-center py-12">
+                    <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-8 border-2 border-amber-200">
+                      <Search className="w-16 h-16 text-amber-600 mx-auto mb-4 opacity-50" />
+                      <h3 className="text-xl font-semibold text-slate-800 mb-2">
+                        クエストが見つかりませんでした
+                      </h3>
+                      <p className="text-slate-600 mb-4">
+                        {searchTerm && filterStatus === "all" && (
+                          <>
+                            「
+                            <span className="font-semibold text-amber-700">
+                              {searchTerm}
+                            </span>
+                            」に一致するクエストはありません。
+                          </>
+                        )}
+                        {!searchTerm && filterStatus !== "all" && (
+                          <>
+                            <span className="font-semibold text-amber-700">
+                              {filterStatus === "pending" && "承認待ち"}
+                              {filterStatus === "active" && "公開中"}
+                              {filterStatus === "completed" && "完了"}
+                              {filterStatus === "draft" && "下書き"}
+                              {filterStatus === "in_progress" && "進行中"}
+                              {filterStatus === "inactive" && "停止中"}
+                              {filterStatus === "deleted" && "削除済み"}
+                            </span>
+                            のクエストはありません。
+                          </>
+                        )}
+                        {searchTerm && filterStatus !== "all" && (
+                          <>
+                            「
+                            <span className="font-semibold text-amber-700">
+                              {searchTerm}
+                            </span>
+                            」で
+                            <span className="font-semibold text-amber-700">
+                              {filterStatus === "pending" && "承認待ち"}
+                              {filterStatus === "active" && "公開中"}
+                              {filterStatus === "completed" && "完了"}
+                              {filterStatus === "draft" && "下書き"}
+                              {filterStatus === "in_progress" && "進行中"}
+                              {filterStatus === "inactive" && "停止中"}
+                              {filterStatus === "deleted" && "削除済み"}
+                            </span>
+                            のクエストは見つかりませんでした。
+                          </>
+                        )}
+                        {!searchTerm && filterStatus === "all" && (
+                          <>まだクエストが作成されていません。</>
+                        )}
+                      </p>
+                      <div className="text-sm text-slate-500">
+                        <p className="mb-2">以下の方法をお試しください：</p>
+                        <ul className="text-left max-w-md mx-auto space-y-1">
+                          <li>• 検索キーワードを変更する</li>
+                          <li>• フィルター条件を変更する</li>
+                          <li>• 新しいクエストを作成する</li>
+                        </ul>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1287,16 +1516,18 @@ const AdminDashboard = () => {
 
         {/* 報酬管理 */}
         {activeTab === "rewards" && (
-          <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-8 border-2 border-amber-200">
-            <h2 className="text-2xl font-bold text-slate-800 mb-6 font-serif">
-              報酬管理
-            </h2>
-            <div className="text-center py-12">
-              <Trophy className="w-16 h-16 text-amber-600 mx-auto mb-4" />
-              <p className="text-slate-800 text-lg">報酬管理機能は開発中です</p>
-              <p className="text-amber-600 text-sm mt-2">
-                ユーザーへのインセンティブ付与機能を準備中...
-              </p>
+          <div className="space-y-6">
+            <h2 className="text-3xl font-bold text-gray-300 mb-2">報酬管理</h2>
+            <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-8 border-2 border-amber-200">
+              <div className="text-center py-12">
+                <Trophy className="w-16 h-16 text-amber-600 mx-auto mb-4" />
+                <p className="text-slate-800 text-lg">
+                  報酬管理機能は開発中です
+                </p>
+                <p className="text-amber-600 text-sm mt-2">
+                  ユーザーへのインセンティブ付与機能を準備中...
+                </p>
+              </div>
             </div>
           </div>
         )}
@@ -1304,7 +1535,7 @@ const AdminDashboard = () => {
         {/* ユーザー管理 */}
         {activeTab === "users" && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-slate-800 font-serif">
+            <h2 className="text-3xl font-bold text-gray-300 mb-2">
               ユーザー管理
             </h2>
 
@@ -1339,8 +1570,15 @@ const AdminDashboard = () => {
                         <span>参加日: {user.joinDate}</span>
                       </div>
                     </div>
-                    <div className="flex items-center">
+                    <div className="flex items-center gap-2">
                       <Star className="w-5 h-5 text-yellow-500" />
+                      <button
+                        onClick={() => handleUserAction(user.id, "delete")}
+                        className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        削除
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -1377,6 +1615,15 @@ const AdminDashboard = () => {
           quest={questToDelete}
           onConfirm={handleDeleteConfirm}
           onCancel={() => setQuestToDelete(null)}
+        />
+      )}
+
+      {/* ユーザー削除確認ダイアログ */}
+      {userToDelete && (
+        <UserDeleteConfirmDialog
+          user={userToDelete}
+          onConfirm={handleUserDeleteConfirm}
+          onCancel={() => setUserToDelete(null)}
         />
       )}
 
