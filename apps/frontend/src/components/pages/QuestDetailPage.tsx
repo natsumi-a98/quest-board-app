@@ -85,12 +85,8 @@ const QuestDetailPage: React.FC<QuestDetailPageProps> = ({
       }
 
       try {
-        const response = await userService.getUserIdByNameOrEmail({
-          name: user.displayName || undefined,
-          email: user.email || undefined,
-        });
-
-        setCurrentUserId(response.userId);
+        const userData = await userService.getCurrentUser();
+        setCurrentUserId(userData.id);
       } catch (error) {
         console.error("ユーザーID取得エラー:", error);
         setCurrentUserId(null);

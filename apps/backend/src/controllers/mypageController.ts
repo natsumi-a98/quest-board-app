@@ -2,8 +2,6 @@
 import { Request, Response } from "express";
 import {
   getUserEntries,
-  getUserClearedQuests,
-  getUserAppliedQuests,
   getUserProfile,
   getUserNotifications,
 } from "../services/mypageService";
@@ -14,11 +12,8 @@ export const getMyEntries = async (req: Request, res: Response) => {
     const userId = Number(req.user?.id);
     if (!userId) return res.status(400).json({ message: "Invalid user ID" });
 
-    const participating = await getUserEntries(userId);
-    const completed = await getUserClearedQuests(userId);
-    const applied = await getUserAppliedQuests(userId);
-
-    res.json({ participating, completed, applied });
+    const entries = await getUserEntries(userId);
+    res.json(entries);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to fetch entries" });
@@ -61,8 +56,9 @@ export const getMyClearedQuests = async (req: Request, res: Response) => {
     const userId = Number(req.user?.id);
     if (!userId) return res.status(400).json({ message: "Invalid user ID" });
 
-    const cleared = await getUserClearedQuests(userId);
-    res.json(Array.isArray(cleared) ? cleared : []);
+    // getUserEntriesから達成済みクエストを取得
+    const entries = await getUserEntries(userId);
+    res.json(entries.completed || []);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to fetch cleared quests" });

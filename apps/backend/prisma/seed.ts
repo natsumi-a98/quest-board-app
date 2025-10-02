@@ -20,20 +20,50 @@ async function main() {
   // ---------------------
   // サンプルユーザー作成
   // ---------------------
-  const userTaro = await prisma.user.create({
-    data: { name: "佐藤太郎", email: "taro@example.com", role: "member" },
+  const users = await prisma.user.createMany({
+    data: [
+      { name: "佐藤太郎", email: "taro@example.com", role: "user" },
+      { name: "田中花子", email: "hanako@example.com", role: "user" },
+      { name: "鈴木次郎", email: "jiro@example.com", role: "user" },
+      {
+        name: "一般ユーザー",
+        email: "questboard+002@example.com",
+        role: "user",
+        firebase_uid: "Bw40kXMOiiRQ2gaSJTPYsv1Kkm63",
+      },
+      {
+        name: "管理者",
+        email: "questboard@example.com",
+        role: "admin",
+        firebase_uid: "CNDyBsuqPXVndMh6MFGs1ZdZC9t2",
+      },
+      {
+        name: "管理者1",
+        email: "questboard+001@example.com",
+        role: "admin",
+        firebase_uid: "lMQnnhrAsWZhaGkjhcAVZRSmfgg2",
+      },
+    ],
   });
 
-  const userHanako = await prisma.user.create({
-    data: { name: "田中花子", email: "hanako@example.com", role: "member" },
+  // ユーザーIDを取得するため、個別に取得
+  const userTaro = await prisma.user.findUnique({
+    where: { email: "taro@example.com" },
   });
-
-  const userJiro = await prisma.user.create({
-    data: { name: "鈴木次郎", email: "jiro@example.com", role: "member" },
+  const userHanako = await prisma.user.findUnique({
+    where: { email: "hanako@example.com" },
   });
-
-  const userAsato = await prisma.user.create({
-    data: { name: "安里なつみ", email: "asato@example.com", role: "member" },
+  const userJiro = await prisma.user.findUnique({
+    where: { email: "jiro@example.com" },
+  });
+  const userGeneral = await prisma.user.findUnique({
+    where: { email: "questboard+002@example.com" },
+  });
+  const userAdmin = await prisma.user.findUnique({
+    where: { email: "questboard@example.com" },
+  });
+  const userAdmin1 = await prisma.user.findUnique({
+    where: { email: "questboard+001@example.com" },
   });
 
   // ---------------------
@@ -59,8 +89,8 @@ async function main() {
       },
       quest_participants: {
         create: [
-          { user: { connect: { id: userTaro.id } } },
-          { user: { connect: { id: userHanako.id } } },
+          { user: { connect: { id: userTaro!.id } } },
+          { user: { connect: { id: userGeneral!.id } } },
         ],
       },
     },
@@ -85,7 +115,7 @@ async function main() {
         },
       },
       quest_participants: {
-        create: [{ user: { connect: { id: userJiro.id } } }],
+        create: [{ user: { connect: { id: userJiro!.id } } }],
       },
     },
   });
@@ -108,7 +138,7 @@ async function main() {
         },
       },
       quest_participants: {
-        create: [{ user: { connect: { id: userJiro.id } } }],
+        create: [{ user: { connect: { id: userAdmin!.id } } }],
       },
     },
   });
@@ -132,7 +162,7 @@ async function main() {
         },
       },
       quest_participants: {
-        create: [{ user: { connect: { id: userAsato.id } } }],
+        create: [{ user: { connect: { id: userAdmin1!.id } } }],
       },
     },
   });
@@ -161,15 +191,15 @@ async function main() {
       quest_participants: {
         create: [
           {
-            user: { connect: { id: userTaro.id } },
+            user: { connect: { id: userTaro!.id } },
             completed_at: new Date("2024-12-15T10:00:00Z"),
           },
           {
-            user: { connect: { id: userHanako.id } },
+            user: { connect: { id: userGeneral!.id } },
             completed_at: new Date("2024-12-20T14:30:00Z"),
           },
           {
-            user: { connect: { id: userJiro.id } },
+            user: { connect: { id: userAdmin!.id } },
             completed_at: new Date("2024-12-25T09:15:00Z"),
           },
         ],
@@ -198,11 +228,11 @@ async function main() {
       quest_participants: {
         create: [
           {
-            user: { connect: { id: userAsato.id } },
+            user: { connect: { id: userAdmin1!.id } },
             completed_at: new Date("2024-11-20T16:45:00Z"),
           },
           {
-            user: { connect: { id: userTaro.id } },
+            user: { connect: { id: userTaro!.id } },
             completed_at: new Date("2024-11-25T11:20:00Z"),
           },
         ],
@@ -231,15 +261,15 @@ async function main() {
       quest_participants: {
         create: [
           {
-            user: { connect: { id: userHanako.id } },
+            user: { connect: { id: userGeneral!.id } },
             completed_at: new Date("2024-10-15T13:30:00Z"),
           },
           {
-            user: { connect: { id: userJiro.id } },
+            user: { connect: { id: userJiro!.id } },
             completed_at: new Date("2024-10-20T15:45:00Z"),
           },
           {
-            user: { connect: { id: userAsato.id } },
+            user: { connect: { id: userAdmin!.id } },
             completed_at: new Date("2024-10-25T10:15:00Z"),
           },
         ],
@@ -254,7 +284,7 @@ async function main() {
   await prisma.review.createMany({
     data: [
       {
-        reviewer_id: userTaro.id,
+        reviewer_id: userTaro!.id,
         quest_id: completedQuest1.id,
         rating: 5,
         comment:
@@ -262,7 +292,7 @@ async function main() {
         created_at: new Date("2024-12-16T10:30:00Z"),
       },
       {
-        reviewer_id: userHanako.id,
+        reviewer_id: userGeneral!.id,
         quest_id: completedQuest1.id,
         rating: 4,
         comment:
@@ -270,7 +300,7 @@ async function main() {
         created_at: new Date("2024-12-21T15:45:00Z"),
       },
       {
-        reviewer_id: userJiro.id,
+        reviewer_id: userAdmin!.id,
         quest_id: completedQuest1.id,
         rating: 5,
         comment: "モダンなReact開発の流れを学べて大変有意義でした。",
@@ -283,14 +313,14 @@ async function main() {
   await prisma.review.createMany({
     data: [
       {
-        reviewer_id: userAsato.id,
+        reviewer_id: userAdmin1!.id,
         quest_id: completedQuest2.id,
         rating: 4,
         comment: "MySQLの設計パターンが理解できました。実務で活かせそうです。",
         created_at: new Date("2024-11-21T17:00:00Z"),
       },
       {
-        reviewer_id: userTaro.id,
+        reviewer_id: userTaro!.id,
         quest_id: completedQuest2.id,
         rating: 5,
         comment:
@@ -304,21 +334,21 @@ async function main() {
   await prisma.review.createMany({
     data: [
       {
-        reviewer_id: userHanako.id,
+        reviewer_id: userGeneral!.id,
         quest_id: completedQuest3.id,
         rating: 5,
         comment: "Gitのブランチ戦略やCI/CDの設定方法が詳しく学べました。",
         created_at: new Date("2024-10-16T14:00:00Z"),
       },
       {
-        reviewer_id: userJiro.id,
+        reviewer_id: userJiro!.id,
         quest_id: completedQuest3.id,
         rating: 4,
         comment: "チーム開発のベストプラクティスが理解できました。",
         created_at: new Date("2024-10-21T16:30:00Z"),
       },
       {
-        reviewer_id: userAsato.id,
+        reviewer_id: userAdmin!.id,
         quest_id: completedQuest3.id,
         rating: 5,
         comment: "GitHub Actionsを使った自動化の仕組みが勉強になりました。",

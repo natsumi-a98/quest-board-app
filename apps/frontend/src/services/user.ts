@@ -1,9 +1,10 @@
-import { apiClient } from "./httpClient";
+import { apiClient, authenticatedApiClient } from "./httpClient";
 
 export interface UserResponse {
   id: number;
   name: string;
   email: string;
+  role?: string;
 }
 
 export interface GetUserIdResponse {
@@ -34,6 +35,31 @@ export const userService = {
     return apiClient.post<GetUserIdResponse, FindUserRequest>(
       "/users/get-id",
       data
+    );
+  },
+
+  /**
+   * 現在のユーザー情報を取得（認証済み）
+   */
+  getCurrentUser: async (): Promise<UserResponse> => {
+    return authenticatedApiClient.get<UserResponse>("/users/me");
+  },
+
+  /**
+   * 全ユーザーを取得（管理者用）
+   */
+  getAllUsers: async (): Promise<UserResponse[]> => {
+    return apiClient.get<UserResponse[]>("/users/all");
+  },
+
+  /**
+   * ユーザーを削除（管理者用）
+   */
+  deleteUser: async (
+    id: number
+  ): Promise<{ message: string; user: UserResponse }> => {
+    return apiClient.delete<{ message: string; user: UserResponse }>(
+      `/users/${id}`
     );
   },
 };
