@@ -1,4 +1,5 @@
 import { API_CONFIG } from "../constants/config";
+import { auth } from "./firebase";
 
 /**
  * - HTTP メソッドのユニオン型
@@ -94,6 +95,35 @@ export async function httpRequest<TResponse = unknown, TBody = unknown>(
 }
 
 /**
+ * - 認証付きのHTTPリクエスト関数
+ * - Firebase IDトークンを自動でAuthorizationヘッダーに追加
+ */
+export async function authenticatedHttpRequest<
+  TResponse = unknown,
+  TBody = unknown
+>(options: RequestOptions<TBody>): Promise<TResponse> {
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+
+  try {
+    const idToken = await user.getIdToken();
+
+    return httpRequest<TResponse, TBody>({
+      ...options,
+      headers: {
+        ...options.headers,
+        Authorization: `Bearer ${idToken}`,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to get ID token:", error);
+    throw error;
+  }
+}
+
+/**
  * - シンプルに使える API クライアントのショートハンド
  * - 使用例:
  *   - const quests = await apiClient.get<Quest[]>("/api/quests", { status: "active" })
@@ -110,4 +140,21 @@ export const apiClient = {
     httpRequest<TResponse, TBody>({ path, body, method: "PATCH" }),
   delete: <TResponse>(path: string) =>
     httpRequest<TResponse>({ path, method: "DELETE" }),
+};
+
+/**
+ * - 認証が必要なAPI用のクライアント
+ * - Firebase IDトークンを自動で送信
+ */
+export const authenticatedApiClient = {
+  get: <TResponse>(path: string, query?: RequestOptions["query"]) =>
+    authenticatedHttpRequest<TResponse>({ path, query, method: "GET" }),
+  post: <TResponse, TBody>(path: string, body: TBody) =>
+    authenticatedHttpRequest<TResponse, TBody>({ path, body, method: "POST" }),
+  put: <TResponse, TBody>(path: string, body: TBody) =>
+    authenticatedHttpRequest<TResponse, TBody>({ path, body, method: "PUT" }),
+  patch: <TResponse, TBody>(path: string, body: TBody) =>
+    authenticatedHttpRequest<TResponse, TBody>({ path, body, method: "PATCH" }),
+  delete: <TResponse>(path: string) =>
+    authenticatedHttpRequest<TResponse>({ path, method: "DELETE" }),
 };

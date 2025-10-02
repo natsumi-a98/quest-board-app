@@ -1,17 +1,51 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { auth } from "@/services/firebase";
 import { Sword, Award, Bell, User, Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { userService } from "@/services/user";
+
+// User型にroleを追加
+interface AppUser {
+  uid: string;
+  displayName?: string | null;
+  email?: string | null;
+  role?: "admin" | "user";
+  id?: number;
+  name?: string;
+}
 
 export const Header: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user: firebaseUser } = useAuth();
+  const [user, setUser] = useState<AppUser | null>(null);
+
+  // MySQLからユーザー情報を取得
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      if (firebaseUser?.uid) {
+        try {
+          const userData = await userService.getCurrentUser();
+          setUser({
+            ...firebaseUser,
+            role: userData.role as "admin" | "user",
+            id: userData.id,
+            name: userData.name,
+          });
+        } catch (error) {
+          console.error("ユーザー情報取得エラー:", error);
+          // エラーの場合はFirebaseユーザー情報のみを使用
+          setUser(firebaseUser);
+        }
+      }
+    };
+    fetchUserInfo();
+  }, [firebaseUser]);
 
   const handleLogout = async () => {
     try {
@@ -43,12 +77,17 @@ export const Header: React.FC = () => {
       icon: <Award className="w-5 h-5" />,
       href: "/rewards",
     },
-    {
-      id: "dashboard",
-      label: "ダッシュボード",
-      icon: <Settings className="w-5 h-5" />,
-      href: "/dashboard",
-    },
+    // 管理者だけに表示
+    ...(user?.role === "admin"
+      ? [
+          {
+            id: "dashboard",
+            label: "ダッシュボード",
+            icon: <Settings className="w-5 h-5" />,
+            href: "/admin/dashboard",
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -80,7 +119,7 @@ export const Header: React.FC = () => {
               <div className="flex items-center space-x-2 bg-slate-700 px-3 py-2 rounded-lg">
                 <User className="w-5 h-5 text-yellow-400" />
                 <span className="text-yellow-400 font-semibold text-sm">
-                  {user?.displayName || user?.email || "ユーザー"}
+                  {user?.name || user?.displayName || user?.email || "ユーザー"}
                 </span>
               </div>
               <button

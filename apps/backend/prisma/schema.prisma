@@ -15,6 +15,7 @@ model User {
   role               String             @db.VarChar(50)
   created_at         DateTime           @default(now())
   updated_at         DateTime           @updatedAt
+  firebase_uid       String?            @unique @db.VarChar(255)
   clear_submissions  ClearSubmission[]
   entries            Entry[]
   feedbacks          Feedback[]
@@ -36,11 +37,12 @@ model Quest {
   status             String             @db.VarChar(50)
   start_date         DateTime?
   end_date           DateTime?
-  maxParticipants    Int?               @map("max_participants")
   rewards_id         Int?
-  tags               Json?
   created_at         DateTime           @default(now())
   updated_at         DateTime           @updatedAt
+  deleted_at         DateTime?          @map("deleted_at")
+  maxParticipants    Int?               @map("max_participants")
+  tags               Json?
   clear_submissions  ClearSubmission[]
   entries            Entry[]
   feedbacks          Feedback[]
@@ -48,24 +50,23 @@ model Quest {
   offers             Offer[]
   point_transactions PointTransaction[]
   quest_participants QuestParticipant[]
-  reviews            Review[]
   rewards            Reward?            @relation(fields: [rewards_id], references: [id])
+  reviews            Review[]
 
   @@index([rewards_id], map: "quests_rewards_id_fkey")
   @@map("quests")
 }
 
-
 model Review {
   id          Int      @id @default(autoincrement())
   reviewer_id Int
-  quest_id    Int
   guest_id    Int?
   rating      Decimal  @db.Decimal(2, 1)
   comment     String?  @db.Text
   created_at  DateTime @default(now())
-  reviewer    User     @relation(fields: [reviewer_id], references: [id])
+  quest_id    Int
   quest       Quest    @relation(fields: [quest_id], references: [id])
+  reviewer    User     @relation(fields: [reviewer_id], references: [id])
 
   @@unique([reviewer_id, quest_id], map: "reviews_reviewer_quest_unique")
   @@index([reviewer_id], map: "reviews_reviewer_id_fkey")
