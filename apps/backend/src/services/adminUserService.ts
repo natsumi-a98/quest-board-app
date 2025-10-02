@@ -1,17 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { UserDataAccessor } from "../dataAccessor/dbAccessor/User";
 
-const prisma = new PrismaClient();
+const userDataAccessor = new UserDataAccessor();
 
 export const getAllUsersForAdminService = async () => {
-  return await prisma.user.findMany({
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      created_at: true,
-    },
-    orderBy: {
-      created_at: "desc",
-    },
-  });
+  return await userDataAccessor.getAllForAdmin();
 };

@@ -53,4 +53,19 @@ export class UserDataAccessor {
       where: { id },
     });
   }
+
+  // 全ユーザー取得（管理者用）
+async getAllForAdmin() {
+  return await prisma.user.findMany({
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      created_at: true,
+    },
+    orderBy: {
+      created_at: "desc",
+    },
+  });
+}
 }
