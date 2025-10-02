@@ -53,6 +53,19 @@ export const userService = {
   },
 
   /**
+   * ユーザーのロールを更新（管理者用）
+   */
+  updateUserRole: async (
+    userId: number,
+    role: string
+  ): Promise<{ message: string; user: UserResponse }> => {
+    return apiClient.put<
+      { message: string; user: UserResponse },
+      { role: string }
+    >(`/admin/users/${userId}/role`, { role });
+  },
+
+  /**
    * ユーザーを削除（管理者用）
    */
   deleteUser: async (

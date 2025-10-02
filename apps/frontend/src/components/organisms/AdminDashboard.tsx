@@ -251,7 +251,11 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleUserAction = async (userId: number, action: string) => {
+  const handleUserAction = async (
+    userId: number,
+    action: string,
+    newRole?: string
+  ) => {
     try {
       if (action === "delete") {
         const user = users.find((u) => u.id === userId);
@@ -259,6 +263,22 @@ const AdminDashboard = () => {
           setUserToDelete(user);
           return;
         }
+      } else if (action === "updateRole" && newRole) {
+        await userService.updateUserRole(userId, newRole);
+        showToast(`ユーザーのロールを${newRole}に変更しました`);
+
+        // ユーザーリストを再取得
+        const userData = await userService.getAllUsers();
+        const usersWithStats: User[] = userData.map((user, index) => ({
+          ...user,
+          level: Math.floor(Math.random() * 10) + 1,
+          totalRewards: Math.floor(Math.random() * 1000) + 100,
+          completedQuests: Math.floor(Math.random() * 20) + 1,
+          joinDate: new Date(
+            Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000
+          ).toLocaleDateString("ja-JP"),
+        }));
+        setUsers(usersWithStats);
       }
     } catch (error) {
       console.error("ユーザーアクションエラー:", error);
@@ -1554,8 +1574,14 @@ const AdminDashboard = () => {
                         <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
                           Lv.{user.level}
                         </span>
-                        <span className="text-sm text-slate-800">
-                          {user.role}
+                        <span
+                          className={`text-sm px-2 py-1 rounded ${
+                            user.role === "admin"
+                              ? "bg-purple-100 text-purple-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {user.role === "admin" ? "管理者" : "一般ユーザー"}
                         </span>
                       </div>
                       <div className="flex items-center gap-6 text-sm text-slate-800">
@@ -1572,6 +1598,23 @@ const AdminDashboard = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <Star className="w-5 h-5 text-yellow-500" />
+
+                      {/* ロール選択ドロップダウン */}
+                      <select
+                        value={user.role}
+                        onChange={(e) =>
+                          handleUserAction(
+                            user.id,
+                            "updateRole",
+                            e.target.value
+                          )
+                        }
+                        className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg border border-blue-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="user">一般ユーザー</option>
+                        <option value="admin">管理者</option>
+                      </select>
+
                       <button
                         onClick={() => handleUserAction(user.id, "delete")}
                         className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
