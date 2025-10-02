@@ -60,7 +60,7 @@ export const createUserService = async (userData: {
 // 全ユーザー取得サービス（管理者用）
 export const getAllUsersService = async () => {
   try {
-    const users = await userDataAccessor.findAll();
+    const users = await userDataAccessor.getAllForAdmin();
     return users;
   } catch (error) {
     console.error("全ユーザー取得エラー:", error);
