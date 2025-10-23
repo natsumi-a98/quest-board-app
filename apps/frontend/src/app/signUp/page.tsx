@@ -10,21 +10,46 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
 
   const handleSignup = async () => {
+    setErrorMessage(""); // 前回のエラーをリセット
+
+    // 入力チェック
+    if (!name || !email || !password) {
+      setErrorMessage("すべての項目を入力してください。");
+      return;
+    }
+
+    // if (password.length < 6) {
+    //   setErrorMessage("パスワードは6文字以上で入力してください。");
+    //   return;
+    // }
+
     try {
       await signUp(name, email, password);
       alert("サインアップ成功");
       router.push("/");
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
-      alert(`エラー: ${message}`);
+    } catch (error: any) {
+      // Firebaseのエラーコードを日本語に変換
+      let message = "登録に失敗しました。時間をおいて再度お試しください。";
+
+      if (error.code === "auth/email-already-in-use") {
+        message = "このメールアドレスはすでに登録されています。";
+      } else if (error.code === "auth/invalid-email") {
+        message = "メールアドレスの形式が正しくありません。";
+      }
+      // else if (error.code === "auth/weak-password") {
+      //   message = "パスワードが弱すぎます。6文字以上で入力してください。";
+      // }
+
+      setErrorMessage(message);
     }
   };
 
   const handleBack = () => {
-    router.push("/"); // トップページに戻る
+    router.push("/");
   };
 
   return (
@@ -34,7 +59,12 @@ export default function SignupPage() {
           新規登録
         </h1>
 
-        {/* 名前 */}
+        {errorMessage && (
+          <p className="text-red-600 text-center mb-4 font-medium">
+            {errorMessage}
+          </p>
+        )}
+
         <input
           className="w-full bg-white border border-gray-400 p-3 mb-4 rounded focus:outline-none focus:ring-2 focus:ring-[#fbbf24] text-black"
           placeholder="名前"
@@ -42,7 +72,6 @@ export default function SignupPage() {
           onChange={(e) => setName(e.target.value)}
         />
 
-        {/* メールアドレス */}
         <input
           className="w-full bg-white border border-gray-400 p-3 mb-4 rounded focus:outline-none focus:ring-2 focus:ring-[#fbbf24] text-black"
           placeholder="メールアドレス"
@@ -50,7 +79,6 @@ export default function SignupPage() {
           onChange={(e) => setEmail(e.target.value)}
         />
 
-        {/* パスワード */}
         <div className="relative mb-6">
           <input
             className="w-full bg-white border border-gray-400 p-3 rounded focus:outline-none focus:ring-2 focus:ring-[#fbbf24] text-black pr-10"
@@ -59,7 +87,6 @@ export default function SignupPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          {/* アイコン（右端配置） */}
           <button
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
