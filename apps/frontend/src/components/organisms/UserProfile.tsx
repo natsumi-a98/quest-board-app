@@ -2,9 +2,10 @@ import React from "react";
 import UserInfo from "../molecules/UserInfo";
 
 type User = {
+  id: number;
   name: string;
-  avatar: React.ReactNode;
-  points: number;
+  email: string;
+  role: string;
 };
 
 type UserProfileProps = {

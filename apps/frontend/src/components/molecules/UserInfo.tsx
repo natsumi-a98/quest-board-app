@@ -1,26 +1,24 @@
 import React from "react";
-import Avatar from "../atoms/Avatar";
 import UserName from "../atoms/UserName";
-import UserPoints from "../atoms/UserPoints";
 
 type User = {
+  id: number;
   name: string;
-  avatar: React.ReactNode;
-  points: number;
+  email: string;
+  role: string;
 };
 
 type UserInfoProps = {
   user: User;
 };
 
-// アバター、ユーザー名、ポイントをまとめて表示するコンポーネント
+// ユーザー名、メールアドレスを表示するコンポーネント
 const UserInfo: React.FC<UserInfoProps> = ({ user }) => {
   return (
-    <div className="flex items-center gap-4">
-      <Avatar>{user.avatar}</Avatar>
-      <div>
-        <UserName name={user.name} />
-        <UserPoints points={user.points} />
+    <div className="space-y-2">
+      <UserName name={user.name} />
+      <div className="text-amber-700 text-sm">
+        <span className="font-medium">メール:</span> {user.email}
       </div>
     </div>
   );

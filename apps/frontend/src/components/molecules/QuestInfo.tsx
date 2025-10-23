@@ -41,14 +41,6 @@ const QuestInfo: React.FC<QuestInfoProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-sm text-slate-600">
-        <div className="flex justify-between items-center">
-          <span className="flex items-center gap-1">
-            <Gift className="w-4 h-4" /> ポイント報酬
-          </span>
-          <span className="font-semibold text-yellow-600">
-            {rewards?.point_amount || 0}pt
-          </span>
-        </div>
         {rewards?.incentive_amount && (
           <div className="flex justify-between items-center">
             <span>金銭インセンティブ</span>
