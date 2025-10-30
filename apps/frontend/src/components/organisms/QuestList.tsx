@@ -338,14 +338,9 @@ const QuestList: React.FC = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span>報酬:</span>
-                    <div className="text-right">
-                      <div className="font-semibold text-yellow-600">
-                        {(quest.rewards?.point_amount ?? 0).toLocaleString()} GP
-                      </div>
-                      <div className="text-xs text-slate-500">
-                        {formatCurrency(quest.rewards?.incentive_amount)}
-                      </div>
-                    </div>
+                    <span className="font-semibold text-slate-800">
+                      {formatCurrency(quest.rewards?.incentive_amount)}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>参加者:</span>

@@ -71,12 +71,6 @@ export const Header: React.FC = () => {
       icon: <User className="w-5 h-5" />,
       href: "/mypage",
     },
-    {
-      id: "rewards",
-      label: "報酬交換所",
-      icon: <Award className="w-5 h-5" />,
-      href: "/rewards",
-    },
     // 管理者だけに表示
     ...(user?.role === "admin"
       ? [
@@ -111,10 +105,6 @@ export const Header: React.FC = () => {
 
             {/* 右上メニュー */}
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 bg-slate-700 px-3 py-2 rounded-lg">
-                <Award className="w-5 h-5 text-yellow-400" />
-                <span className="text-yellow-400 font-semibold">1,250 GP</span>
-              </div>
               <Bell className="w-6 h-6 text-gray-300 hover:text-yellow-400 cursor-pointer transition-colors" />
               <div className="flex items-center space-x-2 bg-slate-700 px-3 py-2 rounded-lg">
                 <User className="w-5 h-5 text-yellow-400" />

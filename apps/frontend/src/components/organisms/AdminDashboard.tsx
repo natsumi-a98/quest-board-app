@@ -31,28 +31,21 @@ import { userService, UserResponse } from "../../services/user";
 type QuestPriority = "critical" | "high" | "medium" | "low";
 type QuestCategory = "education" | "security" | "event" | "innovation";
 
-interface User extends UserResponse {
-  level: number;
-  totalRewards: number;
-  completedQuests: number;
-  joinDate: string;
-}
-
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState<
-    "dashboard" | "quests" | "rewards" | "users"
-  >("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "quests" | "users">(
+    "dashboard"
+  );
   const [selectedQuest, setSelectedQuest] = useState<Quest | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<"all" | string>("all");
   const [quests, setQuests] = useState<Quest[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserResponse[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreateQuestOpen, setIsCreateQuestOpen] = useState<boolean>(false);
   const [questToDelete, setQuestToDelete] = useState<Quest | null>(null);
   const [questToEdit, setQuestToEdit] = useState<Quest | null>(null);
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [userToDelete, setUserToDelete] = useState<UserResponse | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // トースト通知を表示する関数
@@ -78,20 +71,7 @@ const AdminDashboard = () => {
 
         setQuests(questData);
 
-        // ユーザーデータにダミーの統計情報を追加
-        const usersWithStats: User[] = userData.map((user, index) => ({
-          ...user,
-          level: Math.floor(Math.random() * 20) + 1, // 1-20のランダムレベル
-          totalRewards: Math.floor(Math.random() * 5000) + 500, // 500-5500のランダム報酬
-          completedQuests: Math.floor(Math.random() * 15) + 1, // 1-15のランダム完了クエスト数
-          joinDate: new Date(
-            Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000
-          )
-            .toISOString()
-            .split("T")[0], // 過去1年以内のランダム日付
-        }));
-
-        setUsers(usersWithStats);
+        setUsers(userData);
       } catch (err) {
         console.error("Failed to fetch data:", err);
         setError("データの取得に失敗しました");
@@ -269,16 +249,7 @@ const AdminDashboard = () => {
 
         // ユーザーリストを再取得
         const userData = await userService.getAllUsers();
-        const usersWithStats: User[] = userData.map((user, index) => ({
-          ...user,
-          level: Math.floor(Math.random() * 10) + 1,
-          totalRewards: Math.floor(Math.random() * 1000) + 100,
-          completedQuests: Math.floor(Math.random() * 20) + 1,
-          joinDate: new Date(
-            Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000
-          ).toLocaleDateString("ja-JP"),
-        }));
-        setUsers(usersWithStats);
+        setUsers(userData);
       }
     } catch (error) {
       console.error("ユーザーアクションエラー:", error);
@@ -311,15 +282,7 @@ const AdminDashboard = () => {
 
       // ユーザーリストを再取得
       const userData = await userService.getAllUsers();
-      // UserResponseをUser型に変換（モックデータを追加）
-      const usersWithMockData: User[] = userData.map((user) => ({
-        ...user,
-        level: Math.floor(Math.random() * 10) + 1,
-        totalRewards: Math.floor(Math.random() * 1000) + 100,
-        completedQuests: Math.floor(Math.random() * 20) + 1,
-        joinDate: new Date().toLocaleDateString("ja-JP"),
-      }));
-      setUsers(usersWithMockData);
+      setUsers(userData);
       setUserToDelete(null);
       showToast("ユーザーを削除しました");
     } catch (err) {
@@ -389,10 +352,6 @@ const AdminDashboard = () => {
             <span className="flex items-center gap-1">
               <Users className="w-4 h-4" />
               {quest._count.quest_participants}/{quest.maxParticipants}名
-            </span>
-            <span className="flex items-center gap-1">
-              <Coins className="w-4 h-4" />
-              {(quest.rewards?.point_amount || 0).toLocaleString()}P
             </span>
             <span className="flex items-center gap-1">
               <Clock className="w-4 h-4" />
@@ -592,25 +551,6 @@ const AdminDashboard = () => {
                   }
                   className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
                   placeholder="例: 50,000"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-800 mb-1">
-                  ポイント数
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.point_amount || ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      point_amount: parseInt(e.target.value) || 0,
-                    })
-                  }
-                  className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-                  placeholder="例: 500"
                 />
               </div>
             </div>
@@ -900,44 +840,23 @@ const AdminDashboard = () => {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-800 mb-1">
-                  インセンティブ金額
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.incentive_amount}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      incentive_amount: parseInt(e.target.value) || 0,
-                    })
-                  }
-                  className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-                  placeholder="0"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-800 mb-1">
-                  ポイント数
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.point_amount}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      point_amount: parseInt(e.target.value) || 0,
-                    })
-                  }
-                  className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-                  placeholder="0"
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-800 mb-1">
+                インセンティブ金額
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={formData.incentive_amount}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    incentive_amount: parseInt(e.target.value) || 0,
+                  })
+                }
+                className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
+                placeholder="0"
+              />
             </div>
 
             <div>
@@ -1053,7 +972,7 @@ const AdminDashboard = () => {
     onConfirm,
     onCancel,
   }: {
-    user: User;
+    user: UserResponse;
     onConfirm: () => void;
     onCancel: () => void;
   }) => (
@@ -1143,12 +1062,6 @@ const AdminDashboard = () => {
             <span className="font-medium text-slate-800">参加者: </span>
             <span>
               {quest._count.quest_participants}/{quest.maxParticipants}名
-            </span>
-          </div>
-          <div className="text-sm">
-            <span className="font-medium text-slate-800">報酬: </span>
-            <span className="font-bold text-yellow-600">
-              {(quest.rewards?.point_amount || 0).toLocaleString()}P
             </span>
           </div>
         </div>
@@ -1306,7 +1219,6 @@ const AdminDashboard = () => {
               [
                 { id: "dashboard", label: "ダッシュボード", icon: Shield },
                 { id: "quests", label: "クエスト管理", icon: Sword },
-                { id: "rewards", label: "報酬管理", icon: Trophy },
                 { id: "users", label: "ユーザー管理", icon: Users },
               ] as const
             ).map((tab) => (
@@ -1329,7 +1241,7 @@ const AdminDashboard = () => {
         {/* ダッシュボード */}
         {activeTab === "dashboard" && (
           <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <StatCard
                 title="総クエスト数"
                 value={dashboardStats.totalQuests}
@@ -1347,12 +1259,6 @@ const AdminDashboard = () => {
                 value={dashboardStats.completedQuests}
                 icon={Trophy}
                 color="bg-green-600"
-              />
-              <StatCard
-                title="総報酬ポイント"
-                value={`${dashboardStats.totalRewards.toLocaleString()}P`}
-                icon={Coins}
-                color="bg-amber-600"
               />
             </div>
 
@@ -1534,24 +1440,6 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {/* 報酬管理 */}
-        {activeTab === "rewards" && (
-          <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-gray-300 mb-2">報酬管理</h2>
-            <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-8 border-2 border-amber-200">
-              <div className="text-center py-12">
-                <Trophy className="w-16 h-16 text-amber-600 mx-auto mb-4" />
-                <p className="text-slate-800 text-lg">
-                  報酬管理機能は開発中です
-                </p>
-                <p className="text-amber-600 text-sm mt-2">
-                  ユーザーへのインセンティブ付与機能を準備中...
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* ユーザー管理 */}
         {activeTab === "users" && (
           <div className="space-y-6">
@@ -1571,9 +1459,6 @@ const AdminDashboard = () => {
                         <h3 className="text-lg font-semibold text-slate-800">
                           {user.name}
                         </h3>
-                        <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                          Lv.{user.level}
-                        </span>
                         <span
                           className={`text-sm px-2 py-1 rounded ${
                             user.role === "admin"
@@ -1585,15 +1470,7 @@ const AdminDashboard = () => {
                         </span>
                       </div>
                       <div className="flex items-center gap-6 text-sm text-slate-800">
-                        <span className="flex items-center gap-1">
-                          <Trophy className="w-4 h-4" />
-                          完了: {user.completedQuests}件
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Coins className="w-4 h-4" />
-                          報酬: {user.totalRewards}P
-                        </span>
-                        <span>参加日: {user.joinDate}</span>
+                        <span>メール: {user.email}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
