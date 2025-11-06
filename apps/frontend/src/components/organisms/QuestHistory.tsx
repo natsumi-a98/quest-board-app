@@ -1,9 +1,12 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Button from "../atoms/Button";
 import { Sword, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import QuestCard from "../molecules/QuestCard";
 
-type Quest = {
+import type { Quest as FullQuest } from "@/types/quest";
+
+// 表示用の簡易クエスト型（QuestCardが想定する形に合わせる）
+type DisplayQuest = {
   id: number;
   title: string;
   reward: number;
@@ -13,12 +16,13 @@ type Quest = {
   category: string;
   completedDate?: string;
   appliedDate?: string;
+  status?: string;
 };
 
 type QuestData = {
-  participating: Quest[];
-  completed: Quest[];
-  applied: Quest[];
+  participating: FullQuest[];
+  completed: FullQuest[];
+  applied: FullQuest[];
 };
 
 type QuestHistoryProps = {
@@ -30,12 +34,15 @@ const QuestHistory: React.FC<QuestHistoryProps> = ({ questData }) => {
   const [activeTab, setActiveTab] = useState<keyof QuestData>("participating");
 
   const tabs = [
-    { key: "participating" as const, label: "参加中", icon: Clock },
-    { key: "completed" as const, label: "完了", icon: CheckCircle },
+    { key: "participating" as const, label: "募集中", icon: Clock },
+    { key: "completed" as const, label: "完了済み", icon: CheckCircle },
     { key: "applied" as const, label: "応募中", icon: AlertCircle },
   ];
 
-  const currentQuests = questData[activeTab] || [];
+  const currentQuests = useMemo(
+    () => questData[activeTab] || [],
+    [questData, activeTab]
+  );
 
   return (
     <div className="bg-gradient-to-br from-stone-50 to-amber-50 p-6 rounded-xl border-4 border-stone-300 shadow-xl">
@@ -60,9 +67,33 @@ const QuestHistory: React.FC<QuestHistoryProps> = ({ questData }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {currentQuests.length > 0 ? (
-          currentQuests.map((quest) => (
-            <QuestCard key={quest.id} quest={quest} status={activeTab} />
-          ))
+          currentQuests.map((quest) => {
+            const display: DisplayQuest = {
+              id: quest.id,
+              title: quest.title,
+              reward: Number(quest.rewards?.incentive_amount ?? 0),
+              deadline: quest.end_date,
+              difficulty: (quest.difficulty as any) || "初級",
+              category: String(quest.type || ""),
+              status: String(quest.status || ""),
+            };
+
+            // クエスト一覧と同じマッピングロジックを使用（直接比較）
+            const mappedStatus = (
+              quest.status === "active"
+                ? "participating"
+                : quest.status === "completed"
+                ? "completed"
+                : "applied"
+            ) as "participating" | "completed" | "applied";
+            return (
+              <QuestCard
+                key={display.id}
+                quest={display}
+                status={mappedStatus}
+              />
+            );
+          })
         ) : (
           <div className="col-span-full text-center text-stone-500 py-8">
             <Sword className="w-12 h-12 mx-auto mb-4 opacity-50" />

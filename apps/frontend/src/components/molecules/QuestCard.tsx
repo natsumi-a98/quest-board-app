@@ -12,7 +12,7 @@ interface Quest {
   deadline?: string;
   progress?: number;
   difficulty: "初級" | "中級" | "上級";
-  status: string;
+  status?: string;
   category: string;
   completedDate?: string;
   appliedDate?: string;
@@ -20,16 +20,33 @@ interface Quest {
 
 interface QuestCardProps {
   quest: Quest;
-  status: "participating" | "completed" | "applied";
-  onActionClick: (quest: Quest) => void;
+  /** 表示用のステータス（タブ側から上書き）。未指定ならquest.statusをマッピング */
+  status?: "participating" | "completed" | "applied";
+  /** 行動ボタンのクリック。未指定ならボタンは無効化/非表示 */
+  onActionClick?: (quest: Quest) => void;
 }
 
 // クエスト情報のカード
-const QuestCard: React.FC<QuestCardProps> = ({ quest, onActionClick }) => {
+const QuestCard: React.FC<QuestCardProps> = ({
+  quest,
+  status,
+  onActionClick,
+}) => {
   const router = useRouter();
 
   const handleCardClick = () => {
     router.push(`/quests/${quest.id}`); // 詳細ページへ
+  };
+
+  const formatCurrency = (amount?: number) => {
+    if (amount === undefined || amount === null) return "-";
+    const numAmount = Number(amount);
+    if (Number.isNaN(numAmount)) return "-";
+    return new Intl.NumberFormat("ja-JP", {
+      style: "currency",
+      currency: "JPY",
+      maximumFractionDigits: 0,
+    }).format(numAmount);
   };
 
   return (
@@ -39,13 +56,14 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, onActionClick }) => {
     >
       {/* Status Ribbon */}
       <StatusRibbon
-        status={
-          quest.status === "active"
-            ? "participating"
-            : quest.status === "completed"
-            ? "completed"
-            : "applied"
-        }
+        status={((): "participating" | "completed" | "applied" => {
+          if (status) return status; // タブからの指定を優先
+          // クエストの元ステータスから表示用にマッピング
+          const raw = (quest.status || "").toLowerCase();
+          if (raw === "active" || raw === "in_progress") return "participating";
+          if (raw === "completed" || raw === "cleared") return "completed";
+          return "applied";
+        })()}
       />
 
       {/* Difficulty Badge */}
@@ -73,7 +91,7 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, onActionClick }) => {
             <span>報酬:</span>
             <div className="text-right">
               <div className="font-semibold text-yellow-600">
-                {quest.reward} ポイント
+                {formatCurrency(quest.reward)}
               </div>
             </div>
           </div>
@@ -121,20 +139,22 @@ const QuestCard: React.FC<QuestCardProps> = ({ quest, onActionClick }) => {
         <button
           onClick={(e) => {
             e.stopPropagation(); // カードクリックと分離
-            onActionClick(quest);
+            onActionClick?.(quest);
           }}
           className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg ${
-            status === "participating"
+            (status || "participating") === "participating"
               ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800"
-              : status === "applied"
+              : (status || "participating") === "applied"
               ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white cursor-not-allowed opacity-75"
               : "bg-gradient-to-r from-green-500 to-green-600 text-white cursor-not-allowed opacity-75"
           }`}
-          disabled={status !== "participating"}
+          disabled={
+            (status || "participating") !== "participating" || !onActionClick
+          }
         >
-          {status === "participating" && "クエストを続行"}
-          {status === "applied" && "応募済み"}
-          {status === "completed" && "クエスト完了済み"}
+          {(status || "participating") === "participating" && "クエストを続行"}
+          {(status || "participating") === "applied" && "応募済み"}
+          {(status || "participating") === "completed" && "クエスト完了済み"}
         </button>
       </div>
     </div>

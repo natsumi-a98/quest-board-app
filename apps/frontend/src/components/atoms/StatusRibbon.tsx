@@ -26,9 +26,9 @@ const StatusRibbon: React.FC<StatusRibbonProps> = ({
   const getStatusText = (status: string): string => {
     switch (status) {
       case "participating":
-        return "参加中";
+        return "募集中";
       case "completed":
-        return "完了";
+        return "完了済み";
       case "applied":
         return "応募中";
       default:
