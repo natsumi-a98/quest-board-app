@@ -88,6 +88,9 @@ importers:
       '@types/node':
         specifier: ^24.7.2
         version: 24.7.2
+      playwright:
+        specifier: ^1.56.0
+        version: 1.56.0
 
   apps/frontend:
     dependencies:
