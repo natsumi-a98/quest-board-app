@@ -142,6 +142,39 @@ export class QuestDataAccessor {
   }
 
   /**
+   * IDでクエスト取得（削除済みも含む）
+   *
+   * 復元処理など、deleted_at の状態に関わらずクエストを取得したい場合に使用
+   *
+   * @param id - 取得するクエストのID
+   * @returns 関連データを含むクエスト情報、見つからない場合はnull
+   */
+  async findByIdIncludingDeleted(
+    id: number
+  ): Promise<QuestWithRelations | null> {
+    const quest = await prisma.quest.findFirst({
+      where: {
+        id,
+      } as any,
+      include: {
+        rewards: true,
+        quest_participants: {
+          include: {
+            user: true,
+          },
+        },
+        _count: {
+          select: {
+            quest_participants: true,
+          },
+        },
+      },
+    });
+
+    return quest as QuestWithRelations | null;
+  }
+
+  /**
    * クエストのステータス更新
    *
    * @param id - 更新するクエストのID
