@@ -1,4 +1,3 @@
-// e2e/tests/role-access.spec.ts
 import { test, expect } from "@playwright/test";
 import { testUsers } from "../fixtures/users";
 
