@@ -34,6 +34,12 @@ export const getQuestByIdService = async (id: number) => {
   return quest;
 };
 
+// IDでクエスト取得（削除済みも含む）
+export const getQuestByIdIncludingDeletedService = async (id: number) => {
+  const quest = await questDataAccessor.findByIdIncludingDeleted(id);
+  return quest;
+};
+
 // ステータス更新
 export const updateQuestStatusService = async (id: number, status: string) => {
   const quest = await questDataAccessor.updateStatus(id, status);
