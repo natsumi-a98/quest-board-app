@@ -1451,6 +1451,7 @@ const AdminDashboard = () => {
               {users.map((user) => (
                 <div
                   key={user.id}
+                  data-testid={`user-card-${user.id}`}
                   className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-lg p-6 border-2 border-amber-200"
                 >
                   <div className="flex items-center justify-between">
@@ -1478,6 +1479,7 @@ const AdminDashboard = () => {
 
                       {/* ロール選択ドロップダウン */}
                       <select
+                        data-testid={`user-role-select-${user.id}`}
                         value={user.role}
                         onChange={(e) =>
                           handleUserAction(

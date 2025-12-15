@@ -3,6 +3,7 @@ import {
   getAllQuestsService,
   getAllQuestsIncludingDeletedService,
   getQuestByIdService,
+  getQuestByIdIncludingDeletedService,
   updateQuestStatusService,
   createQuestService,
   updateQuestService,
@@ -318,8 +319,8 @@ export const restoreQuest = async (req: Request, res: Response) => {
   }
 
   try {
-    // クエストの現在の状態を確認
-    const quest = await getQuestByIdService(id);
+    // クエストの現在の状態を確認（削除済みも含めて取得）
+    const quest = await getQuestByIdIncludingDeletedService(id);
     if (!quest) {
       return res.status(404).json({ message: "Quest not found" });
     }

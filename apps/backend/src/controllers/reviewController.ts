@@ -54,7 +54,15 @@ export const createReview = async (req: Request, res: Response) => {
     ) {
       res.status(400).json({ message: error.message });
     } else {
-      res.status(500).json({ message: "Failed to create review" });
+      // より詳細なエラーメッセージを返す（開発環境用）
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      console.error("詳細エラー:", errorMessage, errorStack);
+      res.status(500).json({
+        message: "Failed to create review",
+        error: errorMessage,
+      });
     }
   }
 };
