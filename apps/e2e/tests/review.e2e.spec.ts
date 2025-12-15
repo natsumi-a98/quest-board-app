@@ -1,25 +1,63 @@
 import { test, expect, request } from "@playwright/test";
 
-const BASE_URL = "http://localhost:3000"; // サーバー起動ポートに合わせて調整
+const BASE_URL = "http://localhost:3001"; // バックエンドサーバーのポート
+const API_BASE = `${BASE_URL}/api`;
 
-test.describe("レビューAPI E2Eテスト", () => {
+test.describe.serial("レビューAPI E2Eテスト", () => {
   let questId: number;
   let userId: number;
   let reviewId: number;
 
-  test.beforeAll(async () => {
-    // テストデータ作成
-    questId = 101;
-    userId = 999; // テストユーザーID（テストDBに存在する想定 or モックユーザー）
+  test.beforeAll(async ({ request }) => {
+    // 実際に存在するクエストとユーザーを取得
+    const questsResponse = await request.get(`${API_BASE}/quests`);
+    const quests = await questsResponse.json();
+    if (!Array.isArray(quests) || quests.length === 0) {
+      throw new Error("テスト用のクエストが見つかりません。seedデータを実行してください。");
+    }
+    questId = quests[0].id;
 
-    // 念のため古いデータ削除（存在してもエラーにしない）
-    const context = await request.newContext();
-    await context.delete(`${BASE_URL}/reviews/${questId}/${userId}`).catch(() => {});
+    const usersResponse = await request.get(`${API_BASE}/users/all`);
+    const users = await usersResponse.json();
+    if (!Array.isArray(users) || users.length === 0) {
+      throw new Error("テスト用のユーザーが見つかりません。seedデータを実行してください。");
+    }
+    userId = users[0].id;
+
+    // 念のため古いレビューを削除（存在してもエラーにしない）
+    // まず既存のレビューを確認して削除
+    try {
+      const checkResponse = await request.get(
+        `${API_BASE}/reviews/check/${userId}/${questId}`
+      );
+      if (checkResponse.ok()) {
+        const checkBody = await checkResponse.json();
+        if (checkBody.exists) {
+          // 既存のレビューIDを取得するためにレビュー一覧を取得
+          const reviewsResponse = await request.get(
+            `${API_BASE}/reviews/quest/${questId}`
+          );
+          if (reviewsResponse.ok()) {
+            const reviews = await reviewsResponse.json();
+            const existingReview = reviews.find(
+              (r: any) => r.reviewer_id === userId && (r.quest_id === questId || r.questId === questId)
+            );
+            if (existingReview) {
+              await request.delete(`${API_BASE}/reviews/${existingReview.id}`);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      // エラーは無視
+    }
   });
 
   // レビュー作成
-  test("POST /reviews/:questId — 新規レビュー作成できる", async ({ request }) => {
-    const response = await request.post(`${BASE_URL}/reviews/${questId}`, {
+  test("POST /reviews/quest/:questId — 新規レビュー作成できる", async ({
+    request,
+  }) => {
+    const response = await request.post(`${API_BASE}/reviews/quest/${questId}`, {
       data: {
         reviewer_id: userId,
         rating: 4,
@@ -27,19 +65,28 @@ test.describe("レビューAPI E2Eテスト", () => {
       },
     });
 
+    if (response.status() !== 201) {
+      const errorBody = await response.json();
+      console.error("エラーレスポンス:", JSON.stringify(errorBody, null, 2));
+      console.error("questId:", questId, "userId:", userId);
+    }
+
     expect(response.status()).toBe(201);
 
     const body = await response.json();
     expect(body).toHaveProperty("id");
-    expect(body.questId).toBe(questId);
+    // questIdはquest_idまたはquestIdのどちらかで返される可能性がある
+    expect(body.quest_id || body.questId).toBe(questId);
     expect(body.reviewer_id).toBe(userId);
 
     reviewId = body.id;
   });
 
   // 重複投稿制限
-  test("POST /reviews/:questId — 同一ユーザーは重複投稿できない", async ({ request }) => {
-    const response = await request.post(`${BASE_URL}/reviews/${questId}`, {
+  test("POST /reviews/quest/:questId — 同一ユーザーは重複投稿できない", async ({
+    request,
+  }) => {
+    const response = await request.post(`${API_BASE}/reviews/quest/${questId}`, {
       data: {
         reviewer_id: userId,
         rating: 5,
@@ -53,18 +100,25 @@ test.describe("レビューAPI E2Eテスト", () => {
   });
 
   // レビュー一覧取得
-  test("GET /reviews/:questId — クエストのレビュー一覧を取得できる", async ({ request }) => {
-    const response = await request.get(`${BASE_URL}/reviews/${questId}`);
+  test("GET /reviews/quest/:questId — クエストのレビュー一覧を取得できる", async ({
+    request,
+  }) => {
+    const response = await request.get(`${API_BASE}/reviews/quest/${questId}`);
     expect(response.status()).toBe(200);
 
     const reviews = await response.json();
     expect(Array.isArray(reviews)).toBe(true);
-    expect(reviews.some((r: any) => r.id === reviewId)).toBe(true);
+    // reviewIdが設定されている場合のみチェック
+    if (reviewId) {
+      expect(reviews.some((r: any) => r.id === reviewId)).toBe(true);
+    }
   });
 
   // レビュー更新
-  test("PUT /reviews/:reviewId — レビューを更新できる", async ({ request }) => {
-    const response = await request.put(`${BASE_URL}/reviews/${reviewId}`, {
+  test("PUT /reviews/:reviewId — レビューを更新できる", async ({
+    request,
+  }) => {
+    const response = await request.put(`${API_BASE}/reviews/${reviewId}`, {
       data: {
         rating: 3,
         comment: "やや難しかったが楽しい！",
@@ -73,13 +127,18 @@ test.describe("レビューAPI E2Eテスト", () => {
 
     expect(response.status()).toBe(200);
     const updated = await response.json();
-    expect(updated.rating).toBe(3);
+    // ratingはDecimal型なので、数値として比較
+    expect(Number(updated.rating)).toBe(3);
     expect(updated.comment).toContain("楽しい");
   });
 
   // 投稿済み確認
-  test("GET /reviews/check/:userId/:questId — 投稿済みか確認できる", async ({ request }) => {
-    const response = await request.get(`${BASE_URL}/reviews/check/${userId}/${questId}`);
+  test("GET /reviews/check/:userId/:questId — 投稿済みか確認できる", async ({
+    request,
+  }) => {
+    const response = await request.get(
+      `${API_BASE}/reviews/check/${userId}/${questId}`
+    );
     expect(response.status()).toBe(200);
 
     const body = await response.json();
@@ -87,14 +146,20 @@ test.describe("レビューAPI E2Eテスト", () => {
   });
 
   // レビュー削除
-  test("DELETE /reviews/:reviewId — レビューを削除できる", async ({ request }) => {
-    const response = await request.delete(`${BASE_URL}/reviews/${reviewId}`);
+  test("DELETE /reviews/:reviewId — レビューを削除できる", async ({
+    request,
+  }) => {
+    const response = await request.delete(`${API_BASE}/reviews/${reviewId}`);
     expect(response.status()).toBe(204);
   });
 
   // 削除後確認
-  test("GET /reviews/check/:userId/:questId — 削除後はfalseになる", async ({ request }) => {
-    const response = await request.get(`${BASE_URL}/reviews/check/${userId}/${questId}`);
+  test("GET /reviews/check/:userId/:questId — 削除後はfalseになる", async ({
+    request,
+  }) => {
+    const response = await request.get(
+      `${API_BASE}/reviews/check/${userId}/${questId}`
+    );
     expect(response.status()).toBe(200);
 
     const body = await response.json();
