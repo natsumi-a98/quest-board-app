@@ -11,6 +11,8 @@ import {
   submitQuestForApproval,
   restoreQuest,
 } from "../controllers/questController";
+import { joinQuest } from "../controllers/questJoinController";
+import { authMiddleware } from "../middlewares/auth.middleware";
 
 const router = express.Router();
 
@@ -24,5 +26,7 @@ router.patch("/:id/submit", submitQuestForApproval); // PATCH /quests/:id/submit
 router.patch("/:id/restore", restoreQuest); // PATCH /quests/:id/restore (復元)
 router.patch("/:id/reactivate", reactivateQuest); // PATCH /quests/:id/reactivate
 router.delete("/:id", deleteQuest); // DELETE /quests/:id (論理削除)
+// クエスト参加
+router.post("/:questId/join", authMiddleware, joinQuest); // POST /quests/:questId/join
 
 export default router;
