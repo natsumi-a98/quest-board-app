@@ -53,8 +53,10 @@ const frontendBaseUrl =
 // CORS 設定
 app.use(
   cors({
-    origin: frontendBaseUrl, // 環境変数から取得
-    credentials: true, // CookieやAuthorizationヘッダーを許可
+    origin: frontendBaseUrl,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
