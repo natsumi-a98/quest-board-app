@@ -2,6 +2,10 @@
 
 このプロジェクトは、モノレポ構成（frontend / backend / docs）で構築されたクエスト投稿・参加アプリです。
 
+## AI 向け参照順
+
+AI エージェントは `README.md` と `AGENTS.md` を確認したあと、repo 全体の責務境界を把握するために `docs/architecture.md` を参照してください。
+
 ---
 
 ## 技術スタック
