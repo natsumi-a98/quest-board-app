@@ -19,12 +19,28 @@ type QuestData = {
   applied: QuestEntry[];
 };
 
-type Notification = {
+// バックエンド /mypage/notifications の実レスポンス型
+type ApiNotification = {
+  id: number;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+};
+
+// NotificationList/NotificationCard が要求する表示用型
+type DisplayNotification = {
   id: number;
   message: string;
   type: "success" | "reward" | "info";
   timestamp: string;
 };
+
+const toDisplayNotification = (n: ApiNotification): DisplayNotification => ({
+  id: n.id,
+  message: n.message,
+  type: "info",
+  timestamp: new Date(n.createdAt).toLocaleString("ja-JP"),
+});
 
 type FullQuestData = {
   participating: FullQuest[];
@@ -40,7 +56,7 @@ const MyPage: React.FC = () => {
     completed: [],
     applied: [],
   });
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<DisplayNotification[]>([]);
   const [fullQuests, setFullQuests] = useState<FullQuestData>({
     participating: [],
     completed: [],
@@ -57,7 +73,7 @@ const MyPage: React.FC = () => {
             method: "GET",
             path: "/mypage/entries",
           }),
-          authenticatedHttpRequest<Notification[]>({
+          authenticatedHttpRequest<ApiNotification[]>({
             method: "GET",
             path: "/mypage/notifications",
           }),
@@ -102,7 +118,9 @@ const MyPage: React.FC = () => {
           applied,
         });
         setNotifications(
-          Array.isArray(notificationsJson) ? notificationsJson : []
+          Array.isArray(notificationsJson)
+            ? notificationsJson.map(toDisplayNotification)
+            : []
         );
       } catch (error) {
         console.error("/mypage データ取得に失敗しました", error);
