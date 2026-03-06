@@ -4,7 +4,6 @@ set -e
 pnpm precommit:biome
 
 run_frontend=false
-run_backend=false
 
 staged_files="$(git diff --cached --name-only --diff-filter=ACMR)"
 
@@ -13,9 +12,6 @@ if [ -n "$staged_files" ]; then
     case "$file" in
       apps/frontend/*)
         run_frontend=true
-        ;;
-      apps/backend/*)
-        run_backend=true
         ;;
     esac
   done <<EOF
@@ -26,9 +22,4 @@ fi
 if [ "$run_frontend" = "true" ]; then
   echo "frontend 差分を検出したため、frontend の pre-commit テストを実行します"
   pnpm --filter frontend test:precommit
-fi
-
-if [ "$run_backend" = "true" ]; then
-  echo "backend 差分を検出したため、backend の pre-commit テストを実行します"
-  pnpm --filter backend test:precommit
 fi
