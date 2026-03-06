@@ -2,6 +2,26 @@
 
 このプロジェクトは、モノレポ構成（frontend / backend / docs）で構築されたクエスト投稿・参加アプリです。
 
+## AI 向け Doc Map
+
+AI エージェントが変更に着手する際は、次の順で読むと判断しやすくなります。
+
+1. `README.md`
+2. `AGENTS.md`
+3. `CLAUDE.md`
+4. `prompt/create_issue.md`
+5. `prompt/modify_issue.md`
+
+各ファイルの役割は次のとおりです。
+
+- `README.md`: リポジトリ全体の概要、セットアップ、主要コマンドの入口
+- `AGENTS.md`: 作業ルール、Issue / PR 運用、検証方針の source of truth
+- `CLAUDE.md`: 互換用の補助ファイル。詳細ルールは `AGENTS.md` を優先
+- `prompt/create_issue.md`: Issue 作成用のプロンプト
+- `prompt/modify_issue.md`: 既存 Issue 整理用のプロンプト
+
+変更対象を探すときは、まず `README.md` で repo 全体を把握し、次に `AGENTS.md` で作業ルールを確認してください。
+
 ---
 
 ## 技術スタック
