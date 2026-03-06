@@ -1,5 +1,6 @@
 import { UserDataAccessor } from "../dataAccessor/dbAccessor/User";
 import { VALID_ROLES } from "../constants/roles";
+import { logger } from "../config/logger";
 
 const userDataAccessor = new UserDataAccessor();
 
@@ -29,7 +30,7 @@ export const updateUserRoleService = async (
     });
     return updatedUser;
   } catch (error) {
-    console.error("ユーザーロール更新エラー:", error);
+    logger.error({ err: error, userId, newRole }, "ユーザーロール更新エラー");
     throw error;
   }
 };

@@ -1,5 +1,6 @@
 import "./env"; // 環境変数ロード（単一エントリポイント）
 import admin from "firebase-admin";
+import { logger } from "./logger";
 
 if (!admin.apps.length) {
   const projectId = process.env.FIREBASE_PROJECT_ID ?? "";
@@ -28,28 +29,34 @@ if (!admin.apps.length) {
       admin.initializeApp({
         credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
       });
-      console.log("[firebase] Firebase Admin SDK initialized with service account credentials");
+      logger.info(
+        "[firebase] Firebase Admin SDK initialized with service account credentials"
+      );
     } else {
       admin.initializeApp({
         credential: admin.credential.applicationDefault(),
       });
-      console.warn(
+      logger.warn(
         "[firebase] Using Application Default Credentials. Set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY to use service account cert."
       );
     }
   } catch (e) {
-    console.error("[firebase] Firebase Admin SDK initialization failed:", e);
+    logger.error({ err: e }, "[firebase] Firebase Admin SDK initialization failed");
     // サービスアカウント認証に失敗した場合は ADC にフォールバック
     try {
       if (!admin.apps.length) {
         admin.initializeApp({
           credential: admin.credential.applicationDefault(),
         });
-        console.warn("[firebase] Falling back to Application Default Credentials after cert failure.");
+        logger.warn(
+          "[firebase] Falling back to Application Default Credentials after cert failure."
+        );
       }
     } catch (fallbackError) {
-      console.error("[firebase] ADC fallback also failed:", fallbackError);
-      console.warn("[firebase] Firebase Admin SDK initialization failed. Authentication will not work properly.");
+      logger.error({ err: fallbackError }, "[firebase] ADC fallback also failed");
+      logger.warn(
+        "[firebase] Firebase Admin SDK initialization failed. Authentication will not work properly."
+      );
     }
   }
 }

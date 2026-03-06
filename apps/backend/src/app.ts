@@ -8,12 +8,15 @@ import usersRouter from "./routes/users";
 import mypageRouter from "./routes/mypage";
 import adminUsersRouter from "./routes/adminUsers";
 import { errorHandler } from "./middlewares/errorHandler";
+import { httpLogger, logger } from "./config/logger";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 const frontendBaseUrl =
   process.env.FRONTEND_BASE_URL || "http://localhost:3000";
+
+app.use(httpLogger);
 
 app.use(
   helmet({
@@ -45,5 +48,5 @@ app.use(errorHandler);
 
 // サーバー起動
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  logger.info({ port: PORT }, `Server is running on http://localhost:${PORT}`);
 });

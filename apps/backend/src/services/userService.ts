@@ -1,4 +1,5 @@
 import { UserDataAccessor } from "../dataAccessor/dbAccessor/User";
+import { logger } from "../config/logger";
 
 const userDataAccessor = new UserDataAccessor();
 
@@ -11,7 +12,7 @@ export const findUserByNameOrEmailService = async (
     const user = await userDataAccessor.findByNameOrEmail(name, email);
     return user;
   } catch (error) {
-    console.error("ユーザー検索エラー:", error);
+    logger.error({ err: error, name, email }, "ユーザー検索エラー");
     throw error;
   }
 };
@@ -31,7 +32,7 @@ export const getUserByFirebaseUidService = async (firebaseUid: string) => {
     const user = await userDataAccessor.findByFirebaseUid(firebaseUid);
     return user;
   } catch (error) {
-    console.error("Firebase UIDでユーザー取得エラー:", error);
+    logger.error({ err: error, firebaseUid }, "Firebase UIDでユーザー取得エラー");
     throw error;
   }
 };
@@ -52,7 +53,7 @@ export const createUserService = async (userData: {
     });
     return user;
   } catch (error) {
-    console.error("ユーザー作成エラー:", error);
+    logger.error({ err: error, userData }, "ユーザー作成エラー");
     throw error;
   }
 };
@@ -63,7 +64,7 @@ export const getAllUsersService = async () => {
     const users = await userDataAccessor.getAllForAdmin();
     return users;
   } catch (error) {
-    console.error("全ユーザー取得エラー:", error);
+    logger.error({ err: error }, "全ユーザー取得エラー");
     throw error;
   }
 };
@@ -90,7 +91,10 @@ export const deleteUserService = async (id: number) => {
         const admin = require("firebase-admin");
         await admin.auth().deleteUser(user.firebase_uid);
       } catch (firebaseError) {
-        console.error("Firebase user deletion failed:", firebaseError);
+        logger.error(
+          { err: firebaseError, firebaseUid: user.firebase_uid },
+          "Firebase user deletion failed"
+        );
         // Firebase削除に失敗してもDB削除は続行（ユーザーが既に削除されている可能性）
       }
     }
@@ -99,7 +103,7 @@ export const deleteUserService = async (id: number) => {
     const deletedUser = await userDataAccessor.delete(id);
     return deletedUser;
   } catch (error) {
-    console.error("ユーザー削除エラー:", error);
+    logger.error({ err: error, userId: id }, "ユーザー削除エラー");
     throw error;
   }
 };

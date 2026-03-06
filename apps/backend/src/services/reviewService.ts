@@ -3,6 +3,7 @@ import {
   CreateReviewData,
   UpdateReviewData,
 } from "../dataAccessor/dbAccessor";
+import { logger } from "../config/logger";
 
 const reviewDataAccessor = new ReviewDataAccessor();
 
@@ -28,7 +29,7 @@ export const createReviewService = async (data: CreateReviewData) => {
     const review = await reviewDataAccessor.create(data);
     return review;
   } catch (error) {
-    console.error("レビュー作成エラー:", error);
+    logger.error({ err: error, reviewData: data }, "レビュー作成エラー");
     throw error;
   }
 };
@@ -56,7 +57,7 @@ export const checkUserReviewExistsService = async (
     const review = await reviewDataAccessor.findByUserAndQuest(userId, questId);
     return !!review;
   } catch (error) {
-    console.error("レビュー存在チェックエラー:", error);
+    logger.error({ err: error, userId, questId }, "レビュー存在チェックエラー");
     throw error;
   }
 };
