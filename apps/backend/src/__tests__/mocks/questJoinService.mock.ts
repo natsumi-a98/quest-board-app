@@ -51,7 +51,7 @@ mockTransaction.questParticipant.count.mockResolvedValue(0);
 mockTransaction.questParticipant.create.mockResolvedValue(mockQuestParticipant);
 
 // Prismaクライアントをモック化
-jest.mock("../../config/prisma", () => ({
+jest.mock("../../config/db", () => ({
   __esModule: true,
-  default: mockPrismaClient,
+  prisma: mockPrismaClient,
 }));
