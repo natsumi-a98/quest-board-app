@@ -1,4 +1,4 @@
-import prisma from "../config/prisma";
+import { prisma } from "../config/db";
 
 export const addUserToQuest = async (userId: number, questId: number) => {
   try {
