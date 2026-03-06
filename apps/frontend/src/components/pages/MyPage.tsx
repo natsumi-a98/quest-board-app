@@ -6,14 +6,24 @@ import QuestHistory from "../organisms/QuestHistory";
 import NotificationList from "../organisms/NotificationList";
 import { useAuth } from "@/hooks/useAuth";
 import { userService } from "@/services/user";
+import type { UserResponse } from "@/services/user";
 import { authenticatedHttpRequest } from "@/services/httpClient";
 import { questService } from "@/services/quest";
 import type { Quest as FullQuest } from "@/types/quest";
 
+type QuestEntry = { id: number };
+
 type QuestData = {
-  participating: any[];
-  completed: any[];
-  applied: any[];
+  participating: QuestEntry[];
+  completed: QuestEntry[];
+  applied: QuestEntry[];
+};
+
+type Notification = {
+  id: number;
+  message: string;
+  type: "success" | "reward" | "info";
+  timestamp: string;
 };
 
 type FullQuestData = {
@@ -24,13 +34,13 @@ type FullQuestData = {
 
 const MyPage: React.FC = () => {
   const { user: authUser } = useAuth();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<UserResponse | null>(null);
   const [quests, setQuests] = useState<QuestData>({
     participating: [],
     completed: [],
     applied: [],
   });
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [fullQuests, setFullQuests] = useState<FullQuestData>({
     participating: [],
     completed: [],
@@ -47,7 +57,7 @@ const MyPage: React.FC = () => {
             method: "GET",
             path: "/mypage/entries",
           }),
-          authenticatedHttpRequest<any[]>({
+          authenticatedHttpRequest<Notification[]>({
             method: "GET",
             path: "/mypage/notifications",
           }),
@@ -60,9 +70,9 @@ const MyPage: React.FC = () => {
         // 履歴に出すクエストを一覧と同じ詳細カードで表示するために詳細データを取得
         const ids = Array.from(
           new Set([
-            ...(entries?.participating || []).map((q: any) => q.id),
-            ...(entries?.completed || []).map((q: any) => q.id),
-            ...(entries?.applied || []).map((q: any) => q.id),
+            ...(entries?.participating || []).map((q) => q.id),
+            ...(entries?.completed || []).map((q) => q.id),
+            ...(entries?.applied || []).map((q) => q.id),
           ])
         ).filter((id) => typeof id === "number" || typeof id === "string");
 
