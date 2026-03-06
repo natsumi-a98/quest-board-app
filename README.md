@@ -85,13 +85,31 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY----
 
 # Prisma / MySQL（docker-compose.yml のデフォルト値に合わせて設定）
 DATABASE_URL=mysql://app_user:app_password@localhost:3306/your_project_db
-SHADOW_DATABASE_URL=mysql://app_user:app_password@localhost:3306/your_project_db_shadow
+MYSQL_ROOT_PASSWORD=rootpassword
+MYSQL_DATABASE=your_project_db
+MYSQL_USER=app_user
+MYSQL_PASSWORD=app_password
 
 # Backend
 PORT=3001
 NODE_ENV=development
 FRONTEND_BASE_URL=http://localhost:3000
 ```
+
+#### E2E（任意）
+
+E2E テストを実行する場合のみ、example から `.env` を作成してください。
+
+```bash
+cp apps/e2e/.env.example apps/e2e/.env
+```
+
+| 変数名 | 説明 |
+|--------|------|
+| `FRONTEND_BASE_URL` | Playwright が開くフロントエンド URL（デフォルト: `http://localhost:3000`） |
+| `API_BASE_URL` | API テスト用のバックエンド URL（デフォルト: `http://localhost:3001`） |
+
+> `.env` / `.env.local` などの実ファイルは Git 管理しない方針です。過去に実値を含むファイルを共有していた場合は、秘密情報のローテーションも検討してください。
 
 > **Firebase Admin SDK の取得方法**
 > Firebase コンソール > プロジェクトの設定 > サービスアカウント > 「新しい秘密鍵の生成」
