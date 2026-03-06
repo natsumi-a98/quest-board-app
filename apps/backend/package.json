@@ -8,6 +8,7 @@
     "seed:inactive": "tsx prisma/add-inactive-quests.ts",
     "start": "node dist/app.js",
     "test": "jest",
+    "test:precommit": "jest --runInBand",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
   },

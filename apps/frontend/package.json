@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test:precommit": "tsc --noEmit"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
