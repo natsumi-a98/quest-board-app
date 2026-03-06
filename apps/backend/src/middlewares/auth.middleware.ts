@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import admin from "firebase-admin";
+import { ROLES } from "../constants/roles";
+import { getUserByFirebaseUidService } from "../services/userService";
 
 // Firebase Admin 初期化（まだ初期化されていない場合のみ）
 if (!admin.apps.length) {
@@ -108,5 +110,34 @@ export const authMiddleware = async (
   } catch (error) {
     console.error("Firebase token verification failed:", error);
     return res.status(401).json({ message: "Unauthorized: Invalid token" });
+  }
+};
+
+export const requireAdmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const firebaseUid = req.user?.uid;
+
+  if (!firebaseUid) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  try {
+    const appUser = await getUserByFirebaseUidService(firebaseUid);
+
+    if (!appUser) {
+      return res.status(403).json({ message: "Forbidden: user not found" });
+    }
+
+    if (appUser.role !== ROLES.ADMIN) {
+      return res.status(403).json({ message: "Forbidden: admin access required" });
+    }
+
+    next();
+  } catch (error) {
+    console.error("Admin authorization failed:", error);
+    return res.status(500).json({ message: "Failed to authorize admin user" });
   }
 };

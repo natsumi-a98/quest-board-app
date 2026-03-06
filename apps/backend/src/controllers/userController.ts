@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { ROLES } from "../constants/roles";
 import {
   findUserByNameOrEmailService,
   createUserService,
@@ -64,7 +65,7 @@ export const createUser = async (req: Request, res: Response) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const { name, role = "user" } = req.body;
+  const { name, role = ROLES.USER } = req.body;
 
   if (!name) {
     return res.status(400).json({ message: "name is required" });

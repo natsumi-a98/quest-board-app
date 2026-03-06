@@ -1,4 +1,4 @@
-import { apiClient } from "./httpClient";
+import { apiClient, authenticatedApiClient } from "./httpClient";
 import { Quest } from "../types/quest";
 
 /**
@@ -29,16 +29,19 @@ export const questService = {
     keyword?: string;
     status?: string;
   }): Promise<Quest[]> => {
-    return apiClient.get<Quest[]>("/quests/admin/all", params);
+    return authenticatedApiClient.get<Quest[]>("/quests/admin/all", params);
   },
 
   /**
    * クエストのステータスを更新
    */
   updateQuestStatus: async (id: string, status: string): Promise<Quest> => {
-    return apiClient.patch<Quest, { status: string }>(`/quests/${id}/status`, {
-      status,
-    });
+    return authenticatedApiClient.patch<Quest, { status: string }>(
+      `/quests/${id}/status`,
+      {
+        status,
+      }
+    );
   },
 
   /**
@@ -57,7 +60,10 @@ export const questService = {
     point_amount?: number;
     note?: string;
   }): Promise<Quest> => {
-    return apiClient.post<Quest, typeof questData>("/quests", questData);
+    return authenticatedApiClient.post<Quest, typeof questData>(
+      "/quests",
+      questData
+    );
   },
 
   /**
@@ -79,14 +85,17 @@ export const questService = {
       note?: string;
     }
   ): Promise<Quest> => {
-    return apiClient.put<Quest, typeof questData>(`/quests/${id}`, questData);
+    return authenticatedApiClient.put<Quest, typeof questData>(
+      `/quests/${id}`,
+      questData
+    );
   },
 
   /**
    * クエストを削除
    */
   deleteQuest: async (id: string): Promise<{ message: string }> => {
-    return apiClient.delete<{ message: string }>(`/quests/${id}`);
+    return authenticatedApiClient.delete<{ message: string }>(`/quests/${id}`);
   },
 
   /**
@@ -95,7 +104,7 @@ export const questService = {
   reactivateQuest: async (
     id: string
   ): Promise<{ message: string; quest: Quest }> => {
-    return apiClient.patch<{ message: string; quest: Quest }, {}>(
+    return authenticatedApiClient.patch<{ message: string; quest: Quest }, {}>(
       `/quests/${id}/reactivate`,
       {}
     );
@@ -107,7 +116,7 @@ export const questService = {
   submitQuestForApproval: async (
     id: string
   ): Promise<{ message: string; quest: Quest }> => {
-    return apiClient.patch<{ message: string; quest: Quest }, {}>(
+    return authenticatedApiClient.patch<{ message: string; quest: Quest }, {}>(
       `/quests/${id}/submit`,
       {}
     );
@@ -119,7 +128,7 @@ export const questService = {
   restoreQuest: async (
     id: string
   ): Promise<{ message: string; quest: Quest }> => {
-    return apiClient.patch<{ message: string; quest: Quest }, {}>(
+    return authenticatedApiClient.patch<{ message: string; quest: Quest }, {}>(
       `/quests/${id}/restore`,
       {}
     );

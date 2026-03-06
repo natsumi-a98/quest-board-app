@@ -10,6 +10,7 @@ import {
   deleteQuestService,
   restoreQuestService,
 } from "../services/questService";
+import { ROLES } from "../constants/roles";
 import { getUserByFirebaseUidService } from "../services/userService";
 
 // 全クエスト取得
@@ -118,7 +119,8 @@ export const createQuest = async (req: Request, res: Response) => {
   }
 
   try {
-    // ユーザーのロールに基づいてデフォルトステータスを決定
+    // クエスト作成はログイン済みユーザーに開放し、
+    // 一般ユーザー作成分は承認待ちへ寄せる。
     let finalStatus = status || "draft";
 
     if (req.user?.uid) {
@@ -127,11 +129,11 @@ export const createQuest = async (req: Request, res: Response) => {
 
       if (user) {
         // 一般ユーザーの場合は自動的に承認待ち
-        if (user.role === "user" && !status) {
+        if (user.role === ROLES.USER && !status) {
           finalStatus = "pending";
         }
         // 管理者の場合は指定されたステータスまたは下書き
-        else if (user.role === "admin") {
+        else if (user.role === ROLES.ADMIN) {
           finalStatus = status || "draft";
         }
       }
