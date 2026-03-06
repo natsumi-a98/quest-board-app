@@ -38,7 +38,7 @@ npm install -g pnpm
 ### 1. リポジトリをクローン
 
 ```bash
-git clone https://github.com/your-org/quest-board-app.git
+git clone https://github.com/natsumi-a98/quest-board-app.git
 cd quest-board-app
 ```
 
