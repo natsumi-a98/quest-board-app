@@ -1,0 +1,27 @@
+#!/usr/bin/env sh
+set -e
+
+run_backend=false
+
+if git rev-parse --verify '@{upstream}' >/dev/null 2>&1; then
+  changed_files="$(git diff --name-only --diff-filter=ACMR @{upstream}...HEAD)"
+else
+  changed_files="$(git diff-tree --no-commit-id --name-only -r HEAD)"
+fi
+
+if [ -n "$changed_files" ]; then
+  while IFS= read -r file; do
+    case "$file" in
+      apps/backend/*)
+        run_backend=true
+        ;;
+    esac
+  done <<EOF
+$changed_files
+EOF
+fi
+
+if [ "$run_backend" = "true" ]; then
+  echo "backend 差分を検出したため、backend の pre-push 検証を実行します"
+  pnpm --filter backend test:prepush
+fi
