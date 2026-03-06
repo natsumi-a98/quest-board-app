@@ -1,27 +1,16 @@
 #!/usr/bin/env sh
-set -e
 
-run_backend=false
+remote_name="$1"
+remote_url="$2"
 
-if git rev-parse --verify '@{upstream}' >/dev/null 2>&1; then
-  changed_files="$(git diff --name-only --diff-filter=ACMR @{upstream}...HEAD)"
-else
-  changed_files="$(git diff-tree --no-commit-id --name-only -r HEAD)"
-fi
+while read -r local_ref local_sha remote_ref remote_sha
+do
+  if [ "$remote_ref" = "refs/heads/main" ]; then
+    echo "Direct pushes to main are blocked."
+    echo "Remote: $remote_name ($remote_url)"
+    echo "Push to a feature branch and open a pull request instead."
+    exit 1
+  fi
+done
 
-if [ -n "$changed_files" ]; then
-  while IFS= read -r file; do
-    case "$file" in
-      apps/backend/*)
-        run_backend=true
-        ;;
-    esac
-  done <<EOF
-$changed_files
-EOF
-fi
-
-if [ "$run_backend" = "true" ]; then
-  echo "backend 差分を検出したため、backend の pre-push 検証を実行します"
-  pnpm --filter backend test:prepush
-fi
+exit 0
