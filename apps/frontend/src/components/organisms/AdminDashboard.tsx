@@ -58,6 +58,13 @@ const AdminDashboard = () => {
     }, 3000); // 3秒後に自動で非表示
   };
 
+  const getErrorMessage = (error: unknown) => {
+    if (error instanceof Error && error.message.startsWith("HTTP 403")) {
+      return "管理者権限が必要です";
+    }
+    return "データの取得に失敗しました";
+  };
+
   // クエストデータとユーザーデータを取得
   useEffect(() => {
     if (authLoading) {
@@ -86,7 +93,7 @@ const AdminDashboard = () => {
         setUsers(userData);
       } catch (err) {
         console.error("Failed to fetch data:", err);
-        setError("データの取得に失敗しました");
+        setError(getErrorMessage(err));
       } finally {
         setLoading(false);
       }

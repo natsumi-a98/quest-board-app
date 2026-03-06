@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import admin from "firebase-admin";
-import type { User } from "@prisma/client";
+import { ROLES } from "../constants/roles";
 import { getUserByFirebaseUidService } from "../services/userService";
 
 // Firebase Admin 初期化（まだ初期化されていない場合のみ）
@@ -83,7 +83,6 @@ declare global {
   namespace Express {
     interface Request {
       user?: admin.auth.DecodedIdToken;
-      appUser?: User;
     }
   }
 }
@@ -126,18 +125,16 @@ export const requireAdmin = async (
   }
 
   try {
-    const appUser =
-      req.appUser ?? (await getUserByFirebaseUidService(firebaseUid));
+    const appUser = await getUserByFirebaseUidService(firebaseUid);
 
     if (!appUser) {
       return res.status(403).json({ message: "Forbidden: user not found" });
     }
 
-    if (appUser.role !== "admin") {
+    if (appUser.role !== ROLES.ADMIN) {
       return res.status(403).json({ message: "Forbidden: admin access required" });
     }
 
-    req.appUser = appUser;
     next();
   } catch (error) {
     console.error("Admin authorization failed:", error);
