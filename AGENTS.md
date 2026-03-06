@@ -36,6 +36,14 @@
 - 問題がなければ「追加指摘なし」を明示する。
 - 推測を含む場合は、その旨を明記する。
 
+## Issue
+
+- issue タイトルは対象と目的が判別できる具体的な文言にする。
+- issue 本文には少なくとも `Summary` `Background` `Scope` `Acceptance Criteria` を含める。
+- 実装しない内容や保留事項がある場合は `Out of Scope` または `Notes` を明記する。
+- 検証観点や確認手順が見えている場合は `Verification` を追記する。
+- 関連 issue / PR / 設計資料がある場合は本文から参照できるようにする。
+
 ## PR
 
 - PR 本文には少なくとも `Summary` と `Verification` を含める。
