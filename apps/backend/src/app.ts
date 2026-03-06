@@ -6,6 +6,7 @@ import reviewsRouter from "./routes/reviews";
 import usersRouter from "./routes/users";
 import mypageRouter from "./routes/mypage";
 import adminUsersRouter from "./routes/adminUsers";
+import { errorHandler } from "./middlewares/errorHandler";
 
 // .env 読み込み
 import dotenv from "dotenv";
@@ -77,6 +78,7 @@ app.use("/api/reviews", reviewsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/mypage", mypageRouter);
 app.use("/api/admin/users", adminUsersRouter);
+app.use(errorHandler);
 
 // サーバー起動
 app.listen(PORT, () => {

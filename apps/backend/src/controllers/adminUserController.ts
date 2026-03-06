@@ -3,34 +3,44 @@ import {
   getAllUsersForAdminService,
   updateUserRoleService,
 } from "../services/adminUserService";
+import { asyncHandler } from "../utils/asyncHandler";
+import { badRequest, notFound } from "../utils/appError";
 
-export const getAllUsersForAdmin = async (req: Request, res: Response) => {
-  try {
+export const getAllUsersForAdmin = asyncHandler(
+  async (_req: Request, res: Response) => {
     const users = await getAllUsersForAdminService();
     res.json(users);
-  } catch (error) {
-    console.error("ユーザー一覧取得エラー:", error);
-    res.status(500).json({ error: "ユーザー一覧を取得できませんでした" });
   }
-};
+);
 
-export const updateUserRole = async (req: Request, res: Response) => {
-  try {
+export const updateUserRole = asyncHandler(
+  async (req: Request, res: Response) => {
     const { userId } = req.params;
     const { role } = req.body;
 
     if (!userId || !role) {
-      return res.status(400).json({ error: "ユーザーIDとロールが必要です" });
+      throw badRequest("ユーザーIDとロールが必要です");
     }
 
-    const userIdNumber = parseInt(userId, 10);
-    if (isNaN(userIdNumber)) {
-      return res
-        .status(400)
-        .json({ error: "有効なユーザーIDを指定してください" });
+    const userIdNumber = Number.parseInt(userId, 10);
+    if (Number.isNaN(userIdNumber)) {
+      throw badRequest("有効なユーザーIDを指定してください");
     }
 
-    const updatedUser = await updateUserRoleService(userIdNumber, role);
+    let updatedUser;
+    try {
+      updatedUser = await updateUserRoleService(userIdNumber, role);
+    } catch (error) {
+      if (error instanceof Error && error.message === "User not found") {
+        throw notFound(error.message);
+      }
+
+      if (error instanceof Error && error.message.startsWith("Invalid role")) {
+        throw badRequest(error.message);
+      }
+
+      throw error;
+    }
 
     res.json({
       message: "ユーザーのロールが正常に更新されました",
@@ -41,12 +51,5 @@ export const updateUserRole = async (req: Request, res: Response) => {
         role: updatedUser.role,
       },
     });
-  } catch (error) {
-    console.error("ユーザーロール更新エラー:", error);
-    const errorMessage =
-      error instanceof Error
-        ? error.message
-        : "ユーザーロールの更新に失敗しました";
-    res.status(500).json({ error: errorMessage });
   }
-};
+);

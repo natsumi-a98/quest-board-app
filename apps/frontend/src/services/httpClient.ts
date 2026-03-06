@@ -30,6 +30,11 @@ export interface RequestOptions<TBody = unknown> {
 
 const defaultBaseUrl = API_CONFIG.BASE_URL;
 
+interface ErrorResponseBody {
+  error?: string;
+  message?: string;
+}
+
 /**
  * - クエリオブジェクトを URLSearchParams に変換してクエリ文字列を生成
  * - 値が undefined / null のキーは除外
@@ -84,9 +89,21 @@ export async function httpRequest<TResponse = unknown, TBody = unknown>(
 
   const res = await fetch(url, init);
   if (!res.ok) {
+    const contentType = res.headers.get("content-type") || "";
+
+    if (contentType.includes("application/json")) {
+      const errorBody = (await res.json().catch(() => null)) as
+        | ErrorResponseBody
+        | null;
+      const message =
+        errorBody?.error || errorBody?.message || res.statusText;
+      throw new Error(`HTTP ${res.status}: ${message}`);
+    }
+
     const text = await res.text().catch(() => "");
     throw new Error(`HTTP ${res.status}: ${text || res.statusText}`);
   }
+
   const contentType = res.headers.get("content-type") || "";
   if (contentType.includes("application/json")) {
     return (await res.json()) as TResponse;
