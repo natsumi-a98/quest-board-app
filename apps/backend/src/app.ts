@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 import questsRouter from "./routes/quests";
 import reviewsRouter from "./routes/reviews";
 import usersRouter from "./routes/users";
@@ -49,6 +50,12 @@ const PORT = process.env.PORT || 3001;
 // 環境変数からフロントエンド URL を取得
 const frontendBaseUrl =
   process.env.FRONTEND_BASE_URL || "http://localhost:3000";
+
+app.use(
+  helmet({
+    contentSecurityPolicy: false, // Next.js のインラインスクリプトと競合するため無効化
+  })
+);
 
 // CORS 設定
 app.use(
