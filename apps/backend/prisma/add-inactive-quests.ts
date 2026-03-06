@@ -1,4 +1,4 @@
-import prisma from "../src/config/prisma";
+import { prisma } from "../src/config/db";
 
 async function addInactiveQuests() {
   // 新しいユーザー情報を取得
