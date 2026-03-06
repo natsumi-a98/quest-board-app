@@ -9,7 +9,7 @@ import { userService } from "@/services/user";
 import type { UserResponse } from "@/services/user";
 import { authenticatedHttpRequest } from "@/services/httpClient";
 import { questService } from "@/services/quest";
-import type { Quest as FullQuest } from "@/types/quest";
+import type { Quest as FullQuest } from "@quest-board/types";
 
 type QuestEntry = { id: number };
 

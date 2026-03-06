@@ -20,10 +20,15 @@ import {
 } from "lucide-react";
 import QuestJoinDialog from "@/components/organisms/QuestJoinDialog";
 import StatusRibbon from "@/components/atoms/StatusRibbon";
+import {
+  Quest,
+  QuestStatus,
+  QuestDifficulty,
+  QuestType,
+} from "@quest-board/types";
 import { questService } from "@/services/quest";
 import { reviewService } from "@/services/review";
 import { userService } from "@/services/user";
-import { Quest, QuestStatus, QuestDifficulty } from "@/types/quest";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 
@@ -99,11 +104,14 @@ const QuestList: React.FC = () => {
 
   const getIconComponent = (questType: string) => {
     switch (questType) {
-      case "development":
+      case QuestType.Development:
         return <Wrench className="w-6 h-6" />;
-      case "learning":
+      case QuestType.Learning:
         return <Book className="w-6 h-6" />;
-      case "challenge":
+      case QuestType.Challenge:
+      case QuestType.Planning:
+      case QuestType.Maintenance:
+      case QuestType.Design:
         return <Sword className="w-6 h-6" />;
       default:
         return <Sword className="w-6 h-6" />;

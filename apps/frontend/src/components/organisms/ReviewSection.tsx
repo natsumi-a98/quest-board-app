@@ -4,20 +4,7 @@ import React, { useState } from "react";
 import { Star, Send, Edit, Trash2 } from "lucide-react";
 import ReviewForm from "../molecules/ReviewForm";
 import { useAuth } from "../../hooks/useAuth";
-
-export interface Review {
-  id: number;
-  user: string;
-  score: number;
-  comment: string;
-  date: string;
-  reviewer_id?: number;
-}
-
-export interface NewReview {
-  score: number;
-  comment: string;
-}
+import type { Review, NewReview } from "@quest-board/types";
 
 interface ReviewSectionProps {
   reviews: Review[];

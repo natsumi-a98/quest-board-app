@@ -1,3 +1,4 @@
+import type { QuestStatusValue, QuestTypeValue } from "@quest-board/types";
 import { Request, Response } from "express";
 import {
   getAllQuestsService,
@@ -24,8 +25,24 @@ const QUEST_STATUS_SET = new Set([
   "pending",
 ]);
 
-const getStatusParam = (status: unknown) =>
-  typeof status === "string" && QUEST_STATUS_SET.has(status) ? status : undefined;
+const getStatusParam = (status: unknown): QuestStatusValue | undefined =>
+  typeof status === "string" && QUEST_STATUS_SET.has(status)
+    ? (status as QuestStatusValue)
+    : undefined;
+
+interface QuestMutationBody {
+  title?: string;
+  description?: string;
+  type?: QuestTypeValue;
+  status?: QuestStatusValue;
+  maxParticipants?: number;
+  tags?: string[];
+  start_date?: string;
+  end_date?: string;
+  incentive_amount?: number;
+  point_amount?: number;
+  note?: string;
+}
 
 export const getAllQuests = asyncHandler(async (req: Request, res: Response) => {
   const quests = await getAllQuestsService({
@@ -75,7 +92,7 @@ export const createQuest = asyncHandler(async (req: Request, res: Response) => {
     incentive_amount,
     point_amount,
     note,
-  } = req.body;
+  } = req.body as QuestMutationBody;
 
   if (
     !title ||
@@ -136,7 +153,7 @@ export const updateQuest = asyncHandler(async (req: Request, res: Response) => {
     incentive_amount,
     point_amount,
     note,
-  } = req.body;
+  } = req.body as QuestMutationBody;
 
   if (Number.isNaN(id)) {
     throw badRequest("Invalid quest ID");
@@ -160,7 +177,7 @@ export const updateQuest = asyncHandler(async (req: Request, res: Response) => {
       title,
       description,
       type,
-      status,
+      status: status || "draft",
       maxParticipants: Number(maxParticipants),
       tags,
       start_date: new Date(start_date),

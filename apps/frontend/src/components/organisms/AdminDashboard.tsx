@@ -23,7 +23,15 @@ import {
   RefreshCw,
   Edit,
 } from "lucide-react";
-import { Quest, QuestStatus, QuestType } from "../../types/quest";
+import {
+  Quest,
+  QuestStatus,
+  QuestType,
+  QUEST_STATUS_VALUES,
+  QUEST_STATUS_LABELS,
+  QUEST_TYPE_VALUES,
+  QUEST_TYPE_LABELS,
+} from "@quest-board/types";
 import { questService } from "../../services/quest";
 import { userService, UserResponse } from "../../services/user";
 import { useAuth } from "@/hooks/useAuth";
@@ -31,6 +39,19 @@ import { useAuth } from "@/hooks/useAuth";
 // 型定義
 type QuestPriority = "critical" | "high" | "medium" | "low";
 type QuestCategory = "education" | "security" | "event" | "innovation";
+type QuestFormData = {
+  title: string;
+  description: string;
+  type: QuestType;
+  status: QuestStatus;
+  maxParticipants: number;
+  tags: string;
+  start_date: string;
+  end_date: string;
+  incentive_amount: number;
+  point_amount: number;
+  note: string;
+};
 
 const AdminDashboard = () => {
   const { loading: authLoading, isAuthenticated } = useAuth();
@@ -384,11 +405,11 @@ const AdminDashboard = () => {
   );
 
   const CreateQuestForm = ({ onClose }: { onClose: () => void }) => {
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<QuestFormData>({
       title: "",
       description: "",
-      type: "development",
-      status: "draft",
+      type: QuestType.Development,
+      status: QuestStatus.Draft,
       maxParticipants: 5,
       tags: "",
       start_date: "",
@@ -475,16 +496,18 @@ const AdminDashboard = () => {
                 <select
                   value={formData.type}
                   onChange={(e) =>
-                    setFormData({ ...formData, type: e.target.value })
+                    setFormData({
+                      ...formData,
+                      type: e.target.value as QuestType,
+                    })
                   }
                   className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
                 >
-                  <option value="development">開発</option>
-                  <option value="learning">学習</option>
-                  <option value="challenge">チャレンジ</option>
-                  <option value="design">デザイン</option>
-                  <option value="planning">企画</option>
-                  <option value="maintenance">保守</option>
+                  {QUEST_TYPE_VALUES.map((type) => (
+                    <option key={type} value={type}>
+                      {QUEST_TYPE_LABELS[type]}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -495,13 +518,18 @@ const AdminDashboard = () => {
                 <select
                   value={formData.status}
                   onChange={(e) =>
-                    setFormData({ ...formData, status: e.target.value })
+                    setFormData({
+                      ...formData,
+                      status: e.target.value as QuestStatus,
+                    })
                   }
                   className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
                 >
-                  <option value="draft">下書き</option>
-                  <option value="pending">承認待ち</option>
-                  <option value="active">公開中</option>
+                  {QUEST_STATUS_VALUES.map((status) => (
+                    <option key={status} value={status}>
+                      {QUEST_STATUS_LABELS[status]}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -649,19 +677,7 @@ const AdminDashboard = () => {
     quest: Quest;
     onClose: () => void;
   }) => {
-    const [formData, setFormData] = useState<{
-      title: string;
-      description: string;
-      type: string;
-      status: string;
-      maxParticipants: number;
-      tags: string;
-      start_date: string;
-      end_date: string;
-      incentive_amount: number;
-      point_amount: number;
-      note: string;
-    }>({
+    const [formData, setFormData] = useState<QuestFormData>({
       title: quest.title,
       description: quest.description,
       type: quest.type,
@@ -777,11 +793,11 @@ const AdminDashboard = () => {
                   }
                   className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
                 >
-                  <option value="development">開発</option>
-                  <option value="design">デザイン</option>
-                  <option value="marketing">マーケティング</option>
-                  <option value="research">リサーチ</option>
-                  <option value="other">その他</option>
+                  {QUEST_TYPE_VALUES.map((type) => (
+                    <option key={type} value={type}>
+                      {QUEST_TYPE_LABELS[type]}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -800,12 +816,11 @@ const AdminDashboard = () => {
                   }
                   className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
                 >
-                  <option value="draft">下書き</option>
-                  <option value="pending">承認待ち</option>
-                  <option value="active">公開中</option>
-                  <option value="in_progress">進行中</option>
-                  <option value="completed">完了</option>
-                  <option value="inactive">停止中</option>
+                  {QUEST_STATUS_VALUES.map((status) => (
+                    <option key={status} value={status}>
+                      {QUEST_STATUS_LABELS[status]}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
