@@ -23,7 +23,7 @@ export const userService = {
   findUserByNameOrEmail: async (
     data: FindUserRequest
   ): Promise<UserResponse> => {
-    return apiClient.post<UserResponse, FindUserRequest>("/users/find", data);
+    return authenticatedApiClient.post<UserResponse, FindUserRequest>("/users/find", data);
   },
 
   /**
@@ -32,7 +32,7 @@ export const userService = {
   getUserIdByNameOrEmail: async (
     data: FindUserRequest
   ): Promise<GetUserIdResponse> => {
-    return apiClient.post<GetUserIdResponse, FindUserRequest>(
+    return authenticatedApiClient.post<GetUserIdResponse, FindUserRequest>(
       "/users/get-id",
       data
     );
