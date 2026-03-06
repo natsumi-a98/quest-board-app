@@ -40,9 +40,6 @@ jobs:
   test-frontend:
     name: Test (frontend)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/frontend
 
     steps:
       - uses: actions/checkout@v4
@@ -58,10 +55,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        working-directory: .
 
       - name: Run tests
-        run: pnpm test
+        run: pnpm --filter frontend run test
 
   audit:
     name: Security Audit
