@@ -56,7 +56,9 @@ app.use(
     origin: frontendBaseUrl,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    // カスタムヘッダーを追加する場合はここにも明示的に追記する。
     allowedHeaders: ["Content-Type", "Authorization"],
+    maxAge: 86400,
   })
 );
 
