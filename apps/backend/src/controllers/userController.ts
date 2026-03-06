@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { ROLES } from "../constants/roles";
 import {
   findUserByNameOrEmailService,
   createUserService,
@@ -58,7 +59,7 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
     throw unauthorized();
   }
 
-  const { name, role = "user" } = req.body;
+  const { name, role = ROLES.USER } = req.body;
   if (!name) {
     throw badRequest("name is required");
   }

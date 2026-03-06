@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 import questsRouter from "./routes/quests";
 import reviewsRouter from "./routes/reviews";
 import usersRouter from "./routes/users";
@@ -51,11 +52,21 @@ const PORT = process.env.PORT || 3001;
 const frontendBaseUrl =
   process.env.FRONTEND_BASE_URL || "http://localhost:3000";
 
+app.use(
+  helmet({
+    contentSecurityPolicy: false, // Next.js のインラインスクリプトと競合するため無効化
+  })
+);
+
 // CORS 設定
 app.use(
   cors({
-    origin: frontendBaseUrl, // 環境変数から取得
-    credentials: true, // CookieやAuthorizationヘッダーを許可
+    origin: frontendBaseUrl,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    // カスタムヘッダーを追加する場合はここにも明示的に追記する。
+    allowedHeaders: ["Content-Type", "Authorization"],
+    maxAge: 86400,
   })
 );
 

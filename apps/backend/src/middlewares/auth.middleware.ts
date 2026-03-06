@@ -1,5 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import admin from "firebase-admin";
+import { ROLES } from "../constants/roles";
+import { getUserByFirebaseUidService } from "../services/userService";
+import {
+  forbidden,
+  unauthorized,
+  AppError,
+} from "../utils/appError";
 
 // Firebase Admin 初期化（まだ初期化されていない場合のみ）
 if (!admin.apps.length) {
@@ -88,15 +95,13 @@ declare global {
 // 認証ミドルウェア
 export const authMiddleware = async (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith("Bearer ")) {
-    return res
-      .status(401)
-      .json({ message: "Unauthorized: Bearer token missing" });
+    return next(unauthorized("Unauthorized: Bearer token missing"));
   }
 
   const idToken = authHeader.split("Bearer ")[1];
@@ -104,9 +109,46 @@ export const authMiddleware = async (
   try {
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     req.user = decodedToken; // デコードしたユーザー情報をリクエストに付与
-    next();
+    return next();
   } catch (error) {
     console.error("Firebase token verification failed:", error);
-    return res.status(401).json({ message: "Unauthorized: Invalid token" });
+    return next(unauthorized("Unauthorized: Invalid token"));
+  }
+};
+
+export const requireAdmin = async (
+  req: Request,
+  _res: Response,
+  next: NextFunction
+) => {
+  const firebaseUid = req.user?.uid;
+
+  if (!firebaseUid) {
+    return next(unauthorized());
+  }
+
+  try {
+    const appUser = await getUserByFirebaseUidService(firebaseUid);
+
+    if (!appUser) {
+      return next(forbidden("Forbidden: user not found"));
+    }
+
+    if (appUser.role !== ROLES.ADMIN) {
+      return next(forbidden("Forbidden: admin access required"));
+    }
+
+    return next();
+  } catch (error) {
+    console.error("Admin authorization failed:", error);
+    return next(
+      error instanceof AppError
+        ? error
+        : new AppError(
+            "Failed to authorize admin user",
+            500,
+            "ADMIN_AUTHORIZATION_FAILED"
+          )
+    );
   }
 };

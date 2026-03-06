@@ -20,3 +20,4 @@ export {
   CreateReviewData,
   UpdateReviewData,
 } from "./Review";
+export { MypageDataAccessor } from "./mypageDb";

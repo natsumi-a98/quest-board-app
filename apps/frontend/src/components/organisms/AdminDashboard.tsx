@@ -26,12 +26,14 @@ import {
 import { Quest, QuestStatus, QuestType } from "../../types/quest";
 import { questService } from "../../services/quest";
 import { userService, UserResponse } from "../../services/user";
+import { useAuth } from "@/hooks/useAuth";
 
 // 型定義
 type QuestPriority = "critical" | "high" | "medium" | "low";
 type QuestCategory = "education" | "security" | "event" | "innovation";
 
 const AdminDashboard = () => {
+  const { loading: authLoading, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<"dashboard" | "quests" | "users">(
     "dashboard"
   );
@@ -56,8 +58,25 @@ const AdminDashboard = () => {
     }, 3000); // 3秒後に自動で非表示
   };
 
+  const getErrorMessage = (error: unknown) => {
+    if (error instanceof Error && error.message.startsWith("HTTP 403")) {
+      return "管理者権限が必要です";
+    }
+    return "データの取得に失敗しました";
+  };
+
   // クエストデータとユーザーデータを取得
   useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setLoading(false);
+      setError("管理画面の表示にはログインが必要です");
+      return;
+    }
+
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -74,14 +93,14 @@ const AdminDashboard = () => {
         setUsers(userData);
       } catch (err) {
         console.error("Failed to fetch data:", err);
-        setError("データの取得に失敗しました");
+        setError(getErrorMessage(err));
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [authLoading, isAuthenticated]);
 
   const dashboardStats = {
     totalQuests: quests.length,

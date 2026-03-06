@@ -1,4 +1,5 @@
 import { UserDataAccessor } from "../dataAccessor/dbAccessor/User";
+import { VALID_ROLES } from "../constants/roles";
 
 const userDataAccessor = new UserDataAccessor();
 
@@ -12,8 +13,7 @@ export const updateUserRoleService = async (
 ) => {
   try {
     // 有効なロールかチェック
-    const validRoles = ["admin", "user"];
-    if (!validRoles.includes(newRole)) {
+    if (!VALID_ROLES.includes(newRole as (typeof VALID_ROLES)[number])) {
       throw new Error("Invalid role. Must be 'admin' or 'user'");
     }
 

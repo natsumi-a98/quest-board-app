@@ -10,6 +10,7 @@ import {
   deleteQuestService,
   restoreQuestService,
 } from "../services/questService";
+import { ROLES } from "../constants/roles";
 import { getUserByFirebaseUidService } from "../services/userService";
 import { asyncHandler } from "../utils/asyncHandler";
 import { badRequest, notFound } from "../utils/appError";
@@ -95,9 +96,10 @@ export const createQuest = asyncHandler(async (req: Request, res: Response) => {
     const user = await getUserByFirebaseUidService(req.user.uid);
 
     if (user) {
-      if (user.role === "user" && !status) {
+      // 一般ユーザー作成分は自動的に承認待ちへ寄せる。
+      if (user.role === ROLES.USER && !status) {
         finalStatus = "pending";
-      } else if (user.role === "admin") {
+      } else if (user.role === ROLES.ADMIN) {
         finalStatus = status || "draft";
       }
     }

@@ -49,7 +49,7 @@ export const userService = {
    * 全ユーザーを取得（管理者用）
    */
   getAllUsers: async (): Promise<UserResponse[]> => {
-    return apiClient.get<UserResponse[]>("/users/all");
+    return authenticatedApiClient.get<UserResponse[]>("/users/all");
   },
 
   /**
@@ -59,7 +59,7 @@ export const userService = {
     userId: number,
     role: string
   ): Promise<{ message: string; user: UserResponse }> => {
-    return apiClient.put<
+    return authenticatedApiClient.put<
       { message: string; user: UserResponse },
       { role: string }
     >(`/admin/users/${userId}/role`, { role });
@@ -71,7 +71,7 @@ export const userService = {
   deleteUser: async (
     id: number
   ): Promise<{ message: string; user: UserResponse }> => {
-    return apiClient.delete<{ message: string; user: UserResponse }>(
+    return authenticatedApiClient.delete<{ message: string; user: UserResponse }>(
       `/users/${id}`
     );
   },

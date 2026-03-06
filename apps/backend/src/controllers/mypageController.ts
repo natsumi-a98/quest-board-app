@@ -1,9 +1,5 @@
 import { Request, Response } from "express";
-import {
-  getUserEntries,
-  getUserProfile,
-  getUserNotifications,
-} from "../services/mypageService";
+import { mypageService } from "../services/mypageService";
 import { getUserByFirebaseUidService } from "../services/userService";
 import { asyncHandler } from "../utils/asyncHandler";
 import { notFound, unauthorized } from "../utils/appError";
@@ -24,20 +20,20 @@ const getCurrentAppUserId = async (req: Request) => {
 
 export const getMyEntries = asyncHandler(async (req: Request, res: Response) => {
   const userId = await getCurrentAppUserId(req);
-  const entries = await getUserEntries(userId);
+  const entries = await mypageService.getUserEntries(userId);
   res.json(entries);
 });
 
 export const getMyProfile = asyncHandler(async (req: Request, res: Response) => {
   const userId = await getCurrentAppUserId(req);
-  const profile = await getUserProfile(userId);
+  const profile = await mypageService.getUserProfile(userId);
   res.json(profile ?? {});
 });
 
 export const getMyNotifications = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = await getCurrentAppUserId(req);
-    const notifications = await getUserNotifications(userId);
+    const notifications = await mypageService.getUserNotifications(userId);
     res.json(Array.isArray(notifications) ? notifications : []);
   }
 );
@@ -45,7 +41,7 @@ export const getMyNotifications = asyncHandler(
 export const getMyClearedQuests = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = await getCurrentAppUserId(req);
-    const entries = await getUserEntries(userId);
+    const entries = await mypageService.getUserEntries(userId);
     res.json(entries.completed || []);
   }
 );
