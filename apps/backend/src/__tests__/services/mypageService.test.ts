@@ -7,14 +7,11 @@ import {
   mockNotification,
 } from "../mocks/mypageDb.mock";
 
-// mypageDbをモック化
-jest.mock("../../dataAccessor/dbAccessor/mypageDb", () => mockMypageDb);
+jest.mock("../../dataAccessor/dbAccessor", () => ({
+  MypageDataAccessor: jest.fn(() => mockMypageDb),
+}));
 
-import {
-  getUserEntries,
-  getUserProfile,
-  getUserNotifications,
-} from "../../services/mypageService";
+import { mypageService } from "../../services/mypageService";
 
 describe("mypageService", () => {
   beforeEach(() => {
@@ -25,7 +22,7 @@ describe("mypageService", () => {
   describe("getUserEntries", () => {
     it("ユーザーの参加中・達成済み・応募中のクエストを取得できる", async () => {
       const userId = 1;
-      const result = await getUserEntries(userId);
+      const result = await mypageService.getUserEntries(userId);
 
       expect(mockMypageDb.fetchUserParticipatingQuests).toHaveBeenCalledWith(
         userId
@@ -67,7 +64,7 @@ describe("mypageService", () => {
       mockMypageDb.fetchUserAppliedQuests.mockResolvedValueOnce([]);
 
       const userId = 1;
-      const result = await getUserEntries(userId);
+      const result = await mypageService.getUserEntries(userId);
 
       expect(result).toEqual({
         participating: [],
@@ -105,7 +102,7 @@ describe("mypageService", () => {
       mockMypageDb.fetchUserAppliedQuests.mockResolvedValueOnce([]);
 
       const userId = 1;
-      const result = await getUserEntries(userId);
+      const result = await mypageService.getUserEntries(userId);
 
       expect(result.participating).toHaveLength(2);
       expect(result.participating[0].title).toBe("クエスト1");
@@ -116,7 +113,7 @@ describe("mypageService", () => {
   describe("getUserProfile", () => {
     it("ユーザー情報を取得できる", async () => {
       const userId = 1;
-      const result = await getUserProfile(userId);
+      const result = await mypageService.getUserProfile(userId);
 
       expect(mockMypageDb.fetchUserById).toHaveBeenCalledWith(userId);
       expect(result).toEqual({
@@ -131,7 +128,7 @@ describe("mypageService", () => {
       mockMypageDb.fetchUserById.mockResolvedValueOnce(null);
 
       const userId = 999;
-      const result = await getUserProfile(userId);
+      const result = await mypageService.getUserProfile(userId);
 
       expect(mockMypageDb.fetchUserById).toHaveBeenCalledWith(userId);
       expect(result).toBeNull();
@@ -147,7 +144,7 @@ describe("mypageService", () => {
       mockMypageDb.fetchUserById.mockResolvedValueOnce(adminUser);
 
       const userId = 1;
-      const result = await getUserProfile(userId);
+      const result = await mypageService.getUserProfile(userId);
 
       expect(result).toEqual({
         id: 1,
@@ -161,7 +158,7 @@ describe("mypageService", () => {
   describe("getUserNotifications", () => {
     it("ユーザーの通知一覧を取得できる", async () => {
       const userId = 1;
-      const result = await getUserNotifications(userId);
+      const result = await mypageService.getUserNotifications(userId);
 
       expect(mockMypageDb.fetchUserNotifications).toHaveBeenCalledWith(userId);
       expect(result).toEqual([
@@ -178,7 +175,7 @@ describe("mypageService", () => {
       mockMypageDb.fetchUserNotifications.mockResolvedValueOnce([]);
 
       const userId = 1;
-      const result = await getUserNotifications(userId);
+      const result = await mypageService.getUserNotifications(userId);
 
       expect(result).toEqual([]);
     });
@@ -200,7 +197,7 @@ describe("mypageService", () => {
       );
 
       const userId = 1;
-      const result = await getUserNotifications(userId);
+      const result = await mypageService.getUserNotifications(userId);
 
       expect(result).toHaveLength(2);
       expect(result[0].isRead).toBe(false);
@@ -228,7 +225,7 @@ describe("mypageService", () => {
       );
 
       const userId = 1;
-      const result = await getUserNotifications(userId);
+      const result = await mypageService.getUserNotifications(userId);
 
       expect(result[0].isRead).toBe(false);
       expect(result[1].isRead).toBe(true);
@@ -240,21 +237,25 @@ describe("mypageService", () => {
       const error = new Error("データベースエラー");
       mockMypageDb.fetchUserParticipatingQuests.mockRejectedValueOnce(error);
 
-      await expect(getUserEntries(1)).rejects.toThrow("データベースエラー");
+      await expect(mypageService.getUserEntries(1)).rejects.toThrow(
+        "データベースエラー"
+      );
     });
 
     it("getUserProfileでエラーが発生した場合、エラーが再スローされる", async () => {
       const error = new Error("データベースエラー");
       mockMypageDb.fetchUserById.mockRejectedValueOnce(error);
 
-      await expect(getUserProfile(1)).rejects.toThrow("データベースエラー");
+      await expect(mypageService.getUserProfile(1)).rejects.toThrow(
+        "データベースエラー"
+      );
     });
 
     it("getUserNotificationsでエラーが発生した場合、エラーが再スローされる", async () => {
       const error = new Error("データベースエラー");
       mockMypageDb.fetchUserNotifications.mockRejectedValueOnce(error);
 
-      await expect(getUserNotifications(1)).rejects.toThrow(
+      await expect(mypageService.getUserNotifications(1)).rejects.toThrow(
         "データベースエラー"
       );
     });
@@ -278,7 +279,7 @@ describe("mypageService", () => {
       mockMypageDb.fetchUserClearedQuests.mockResolvedValueOnce([]);
       mockMypageDb.fetchUserAppliedQuests.mockResolvedValueOnce([]);
 
-      const result = await getUserEntries(1);
+      const result = await mypageService.getUserEntries(1);
 
       expect(result.participating[0]).toEqual({
         id: 10,
@@ -305,7 +306,7 @@ describe("mypageService", () => {
       ]);
       mockMypageDb.fetchUserAppliedQuests.mockResolvedValueOnce([]);
 
-      const result = await getUserEntries(1);
+      const result = await mypageService.getUserEntries(1);
 
       expect(result.completed[0]).toEqual({
         id: 20,
@@ -332,7 +333,7 @@ describe("mypageService", () => {
         customAppliedQuest,
       ]);
 
-      const result = await getUserEntries(1);
+      const result = await mypageService.getUserEntries(1);
 
       expect(result.applied[0]).toEqual({
         id: 30,

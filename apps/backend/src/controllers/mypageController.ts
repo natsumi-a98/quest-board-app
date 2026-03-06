@@ -1,10 +1,6 @@
 // controllers/mypageController.ts
 import { Request, Response } from "express";
-import {
-  getUserEntries,
-  getUserProfile,
-  getUserNotifications,
-} from "../services/mypageService";
+import { mypageService } from "../services/mypageService";
 import { getUserByFirebaseUidService } from "../services/userService";
 
 // 自分の参加中クエスト一覧
@@ -18,7 +14,7 @@ export const getMyEntries = async (req: Request, res: Response) => {
 
     const userId = user.id;
 
-    const entries = await getUserEntries(userId);
+    const entries = await mypageService.getUserEntries(userId);
     res.json(entries);
   } catch (err) {
     console.error(err);
@@ -35,7 +31,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
     const user = await getUserByFirebaseUidService(firebaseUid);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const profile = await getUserProfile(user.id);
+    const profile = await mypageService.getUserProfile(user.id);
     res.json(profile ?? {});
   } catch (err) {
     console.error(err);
@@ -52,7 +48,7 @@ export const getMyNotifications = async (req: Request, res: Response) => {
     const user = await getUserByFirebaseUidService(firebaseUid);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const notifs = await getUserNotifications(user.id);
+    const notifs = await mypageService.getUserNotifications(user.id);
 
     // 配列で返すように安全策を追加
     res.json(Array.isArray(notifs) ? notifs : []);
@@ -72,7 +68,7 @@ export const getMyClearedQuests = async (req: Request, res: Response) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     // getUserEntriesから達成済みクエストを取得
-    const entries = await getUserEntries(user.id);
+    const entries = await mypageService.getUserEntries(user.id);
     res.json(entries.completed || []);
   } catch (err) {
     console.error(err);
