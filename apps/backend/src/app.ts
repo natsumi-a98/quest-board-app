@@ -51,7 +51,11 @@ const PORT = process.env.PORT || 3001;
 const frontendBaseUrl =
   process.env.FRONTEND_BASE_URL || "http://localhost:3000";
 
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: false, // Next.js のインラインスクリプトと競合するため無効化
+  })
+);
 
 // CORS 設定
 app.use(
