@@ -26,12 +26,14 @@ import {
 import { Quest, QuestStatus, QuestType } from "../../types/quest";
 import { questService } from "../../services/quest";
 import { userService, UserResponse } from "../../services/user";
+import { useAuth } from "@/hooks/useAuth";
 
 // 型定義
 type QuestPriority = "critical" | "high" | "medium" | "low";
 type QuestCategory = "education" | "security" | "event" | "innovation";
 
 const AdminDashboard = () => {
+  const { loading: authLoading, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<"dashboard" | "quests" | "users">(
     "dashboard"
   );
@@ -58,6 +60,16 @@ const AdminDashboard = () => {
 
   // クエストデータとユーザーデータを取得
   useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setLoading(false);
+      setError("管理画面の表示にはログインが必要です");
+      return;
+    }
+
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -81,7 +93,7 @@ const AdminDashboard = () => {
     };
 
     fetchData();
-  }, []);
+  }, [authLoading, isAuthenticated]);
 
   const dashboardStats = {
     totalQuests: quests.length,
