@@ -93,7 +93,7 @@ export const deleteUserService = async (id: number) => {
       } catch (firebaseError) {
         logger.error(
           { err: firebaseError, firebaseUid: user.firebase_uid },
-          "Firebase user deletion failed"
+          "Firebase ユーザーの削除に失敗しました"
         );
         // Firebase削除に失敗してもDB削除は続行（ユーザーが既に削除されている可能性）
       }

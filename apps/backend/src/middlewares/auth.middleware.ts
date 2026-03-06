@@ -35,7 +35,7 @@ export const authMiddleware = async (
     req.user = decodedToken;
     next();
   } catch (error) {
-    logger.warn({ err: error }, "Firebase token verification failed");
+    logger.warn({ err: error }, "Firebase トークンの検証に失敗しました");
     return next(unauthorized("Unauthorized: Invalid token"));
   }
 };
@@ -64,7 +64,7 @@ export const requireAdmin = async (
 
     return next();
   } catch (error) {
-    logger.error({ err: error }, "Admin authorization failed");
+    logger.error({ err: error }, "管理者権限の検証に失敗しました");
     return next(
       error instanceof AppError
         ? error

@@ -48,5 +48,8 @@ app.use(errorHandler);
 
 // サーバー起動
 app.listen(PORT, () => {
-  logger.info({ port: PORT }, `Server is running on http://localhost:${PORT}`);
+  logger.info(
+    { port: PORT },
+    `サーバーを http://localhost:${PORT} で起動しました`
+  );
 });

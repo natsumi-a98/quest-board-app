@@ -33,10 +33,10 @@ export const httpLogger = pinoHttp({
     return "info";
   },
   customSuccessMessage(req, res) {
-    return `${req.method} ${req.url} completed with ${res.statusCode}`;
+    return `${req.method} ${req.url} を ${res.statusCode} で処理しました`;
   },
   customErrorMessage(req, res, error) {
-    return `${req.method} ${req.url} failed with ${res.statusCode}: ${error.message}`;
+    return `${req.method} ${req.url} の処理に失敗しました (${res.statusCode}): ${error.message}`;
   },
   serializers: {
     req(req) {

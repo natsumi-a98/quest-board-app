@@ -21,7 +21,7 @@ export const errorHandler = (
         code: error.code,
         details: error.details,
       },
-      error.message
+      `アプリケーションエラーが発生しました: ${error.message}`
     );
 
     return res.status(error.statusCode).json({
@@ -32,7 +32,7 @@ export const errorHandler = (
     });
   }
 
-  requestLogger.error({ err: error }, "Unhandled error");
+  requestLogger.error({ err: error }, "未処理の例外が発生しました");
 
   return res.status(500).json({
     success: false,
