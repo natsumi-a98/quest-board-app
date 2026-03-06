@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { userService } from "@/services/user";
 import { authenticatedHttpRequest } from "@/services/httpClient";
 import { questService } from "@/services/quest";
-import type { Quest as FullQuest } from "@/types/quest";
+import type { Quest as FullQuest } from "@quest-board/types";
 
 type QuestData = {
   participating: any[];

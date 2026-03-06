@@ -29,6 +29,9 @@ importers:
       '@prisma/client':
         specifier: 5.22.0
         version: 5.22.0(prisma@5.22.0)
+      '@quest-board/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -111,6 +114,9 @@ importers:
       '@mui/material':
         specifier: ^7.3.1
         version: 7.3.1(@emotion/react@11.14.0(@types/react@19.1.8)(react@19.1.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.1.8)(react@19.1.0))(@types/react@19.1.8)(react@19.1.0))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@quest-board/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       firebase:
         specifier: ^12.0.0
         version: 12.0.0
@@ -145,6 +151,8 @@ importers:
       typescript:
         specifier: ^5
         version: 5.8.3
+
+  packages/types: {}
 
 packages:
 

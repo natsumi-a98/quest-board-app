@@ -1,5 +1,5 @@
 import { apiClient, authenticatedApiClient } from "./httpClient";
-import { Quest } from "../types/quest";
+import type { Quest, QuestStatusValue, QuestTypeValue } from "@quest-board/types";
 
 /**
  * クエスト関連のAPIサービス
@@ -50,8 +50,8 @@ export const questService = {
   createQuest: async (questData: {
     title: string;
     description: string;
-    type: string;
-    status?: string;
+    type: QuestTypeValue;
+    status?: QuestStatusValue;
     maxParticipants: number;
     tags: string[];
     start_date: string;
@@ -74,8 +74,8 @@ export const questService = {
     questData: {
       title: string;
       description: string;
-      type: string;
-      status?: string;
+      type: QuestTypeValue;
+      status?: QuestStatusValue;
       maxParticipants: number;
       tags: string[];
       start_date: string;

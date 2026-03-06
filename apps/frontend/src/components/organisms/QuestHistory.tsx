@@ -2,8 +2,7 @@ import React, { useMemo, useState } from "react";
 import Button from "../atoms/Button";
 import { Sword, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import QuestCard from "../molecules/QuestCard";
-
-import type { Quest as FullQuest } from "@/types/quest";
+import type { Quest as FullQuest } from "@quest-board/types";
 
 // 表示用の簡易クエスト型（QuestCardが想定する形に合わせる）
 type DisplayQuest = {
