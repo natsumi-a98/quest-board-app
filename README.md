@@ -75,22 +75,26 @@ cp apps/frontend/.env.local.example apps/frontend/.env.local
 cp apps/backend/.env.local.example apps/backend/.env.local
 ```
 
-`apps/backend/.env.local` を開き、Firebase Admin SDK の設定値を入力してください。
+`apps/backend/.env.local` を開き、各項目を設定してください。
 
-| 変数名 | 説明 |
-|--------|------|
-| `FIREBASE_PROJECT_ID` | Firebase プロジェクトID |
-| `FIREBASE_CLIENT_EMAIL` | Firebase Admin SDK のサービスアカウントメール |
-| `FIREBASE_PRIVATE_KEY` | Firebase Admin SDK の秘密鍵 |
-| `DATABASE_URL` | MySQL の接続URL（Docker使用時は下記参照） |
+```env
+# Firebase Admin SDK（Firebase コンソール > プロジェクトの設定 > サービスアカウント から取得）
+FIREBASE_PROJECT_ID=your-project-id
+FIREBASE_CLIENT_EMAIL=your-client-email@your-project.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+
+# Prisma / MySQL（docker-compose.yml のデフォルト値に合わせて設定）
+DATABASE_URL=mysql://app_user:app_password@localhost:3306/your_project_db
+SHADOW_DATABASE_URL=mysql://app_user:app_password@localhost:3306/your_project_db_shadow
+
+# Backend
+PORT=3001
+NODE_ENV=development
+FRONTEND_BASE_URL=http://localhost:3000
+```
 
 > **Firebase Admin SDK の取得方法**
 > Firebase コンソール > プロジェクトの設定 > サービスアカウント > 「新しい秘密鍵の生成」
-
-`DATABASE_URL`（Docker使用時）:
-```
-DATABASE_URL=mysql://app_user:app_password@localhost:3306/your_project_db
-```
 
 ### 4. MySQL を起動（Docker）
 
@@ -169,6 +173,18 @@ pnpm dev:docs
 2. **Authentication** を有効化し、ログイン方法を設定（メール/パスワード など）
 3. **ウェブアプリ** を追加し、設定値を `apps/frontend/.env.local` に記入
 4. **サービスアカウント** の秘密鍵を生成し、`apps/backend/.env.local` に記入
+
+---
+
+## 🗄 DB 操作
+
+```bash
+# Prisma Studio（GUIでDBを確認）
+pnpm db:studio
+
+# シードデータを投入
+pnpm --filter backend seed
+```
 
 ---
 
