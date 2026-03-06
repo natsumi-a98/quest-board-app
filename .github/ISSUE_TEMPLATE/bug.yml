@@ -1,0 +1,73 @@
+name: Bug report
+description: 不具合調査や修正の issue を作成する
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: 発生している不具合を簡潔に書いてください。
+      placeholder: 例: ログイン後にプロフィール画面へ遷移できない
+    validations:
+      required: true
+  - type: textarea
+    id: background
+    attributes:
+      label: Background
+      description: 発生条件や影響範囲を書いてください。
+      placeholder: 例: 本番環境で Google ログイン時のみ発生し、新規ユーザーが利用開始できない
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps To Reproduce
+      description: 再現手順を書いてください。
+      placeholder: |-
+        例:
+        1. ログイン画面を開く
+        2. Google ログインを選ぶ
+        3. 認証完了後の画面を確認する
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: 本来どうなるべきかを書いてください。
+      placeholder: 例: 認証後にプロフィール画面へ遷移する
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: 実際に何が起きているかを書いてください。
+      placeholder: 例: 404 画面に遷移する
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: 修正完了条件を箇条書きで書いてください。
+      placeholder: |-
+        例:
+        - [ ] 再現手順で 404 が発生しない
+        - [ ] 既存ログイン導線に回帰がない
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification
+      description: 想定している確認方法があれば書いてください。
+      placeholder: 例: ローカルとステージングで再現手順を実施する
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: 関連 issue / PR / ログ / 資料があれば書いてください。
+      placeholder: 例: Sentry URL, #123, PR #456
