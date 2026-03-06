@@ -37,10 +37,52 @@ jobs:
       - name: Run tests
         run: pnpm test
 
+  audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run security audit
+        id: audit
+        run: pnpm audit --audit-level=high > audit-result.txt 2>&1
+        continue-on-error: true
+
+      - name: Post audit comment on PR
+        if: steps.audit.outcome == 'failure' && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          AUDIT_RESULT=$(cat audit-result.txt)
+          gh pr comment "${{ github.event.pull_request.number }}" --body "## ⚠️ セキュリティ監査の警告
+
+          Critical / High の脆弱性が検出されました。マージ前に対応を検討してください。
+
+          \`\`\`
+          ${AUDIT_RESULT}
+          \`\`\`"
+
+      - name: Fail if vulnerabilities found
+        if: steps.audit.outcome == 'failure'
+        run: exit 1
+
   build:
     name: Build (frontend / backend / docs)
     runs-on: ubuntu-latest
-    needs: test
+    needs: [test, audit]
 
     steps:
       - uses: actions/checkout@v4
