@@ -31,7 +31,7 @@ export const signUp = async (name: string, email: string, password: string) => {
         };
 
         await setDoc(userDocRef, userData);
-      } catch (firestoreError: any) {
+      } catch (firestoreError: unknown) {
         console.error("Firestore保存エラー:", firestoreError);
         console.warn(
           "Firestoreへの保存に失敗しましたが、アカウント作成は成功しています"
@@ -64,7 +64,7 @@ export const signUp = async (name: string, email: string, password: string) => {
             "Firebaseでのアカウント作成は成功しましたが、バックエンドとの同期に失敗しました"
           );
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("バックエンド同期エラー:", error);
         console.warn(
           "Firebaseでのアカウント作成は成功しましたが、バックエンドとの同期に失敗しました"
@@ -73,7 +73,7 @@ export const signUp = async (name: string, email: string, password: string) => {
     }
 
     return userCredential;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("サインアップエラー:", error);
     throw error;
   }

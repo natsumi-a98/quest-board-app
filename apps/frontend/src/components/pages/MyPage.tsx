@@ -6,15 +6,41 @@ import QuestHistory from "../organisms/QuestHistory";
 import NotificationList from "../organisms/NotificationList";
 import { useAuth } from "@/hooks/useAuth";
 import { userService } from "@/services/user";
+import type { UserResponse } from "@/services/user";
 import { authenticatedHttpRequest } from "@/services/httpClient";
 import { questService } from "@/services/quest";
 import type { Quest as FullQuest } from "@quest-board/types";
 
+type QuestEntry = { id: number };
+
 type QuestData = {
-  participating: any[];
-  completed: any[];
-  applied: any[];
+  participating: QuestEntry[];
+  completed: QuestEntry[];
+  applied: QuestEntry[];
 };
+
+// バックエンド /mypage/notifications の実レスポンス型
+type ApiNotification = {
+  id: number;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+};
+
+// NotificationList/NotificationCard が要求する表示用型
+type DisplayNotification = {
+  id: number;
+  message: string;
+  type: "success" | "reward" | "info";
+  timestamp: string;
+};
+
+const toDisplayNotification = (n: ApiNotification): DisplayNotification => ({
+  id: n.id,
+  message: n.message,
+  type: "info",
+  timestamp: new Date(n.createdAt).toLocaleString("ja-JP"),
+});
 
 type FullQuestData = {
   participating: FullQuest[];
@@ -24,13 +50,13 @@ type FullQuestData = {
 
 const MyPage: React.FC = () => {
   const { user: authUser } = useAuth();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<UserResponse | null>(null);
   const [quests, setQuests] = useState<QuestData>({
     participating: [],
     completed: [],
     applied: [],
   });
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<DisplayNotification[]>([]);
   const [fullQuests, setFullQuests] = useState<FullQuestData>({
     participating: [],
     completed: [],
@@ -47,7 +73,7 @@ const MyPage: React.FC = () => {
             method: "GET",
             path: "/mypage/entries",
           }),
-          authenticatedHttpRequest<any[]>({
+          authenticatedHttpRequest<ApiNotification[]>({
             method: "GET",
             path: "/mypage/notifications",
           }),
@@ -60,9 +86,9 @@ const MyPage: React.FC = () => {
         // 履歴に出すクエストを一覧と同じ詳細カードで表示するために詳細データを取得
         const ids = Array.from(
           new Set([
-            ...(entries?.participating || []).map((q: any) => q.id),
-            ...(entries?.completed || []).map((q: any) => q.id),
-            ...(entries?.applied || []).map((q: any) => q.id),
+            ...(entries?.participating || []).map((q) => q.id),
+            ...(entries?.completed || []).map((q) => q.id),
+            ...(entries?.applied || []).map((q) => q.id),
           ])
         ).filter((id) => typeof id === "number" || typeof id === "string");
 
@@ -92,7 +118,9 @@ const MyPage: React.FC = () => {
           applied,
         });
         setNotifications(
-          Array.isArray(notificationsJson) ? notificationsJson : []
+          Array.isArray(notificationsJson)
+            ? notificationsJson.map(toDisplayNotification)
+            : []
         );
       } catch (error) {
         console.error("/mypage データ取得に失敗しました", error);

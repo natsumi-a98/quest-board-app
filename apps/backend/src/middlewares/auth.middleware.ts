@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import admin from "../config/firebase"; // 初期化済みの Firebase Admin SDK を利用
 import type { User } from "@prisma/client";
 import { ROLES } from "../constants/roles";
+import { logger } from "../config/logger";
 import { getUserByFirebaseUidService } from "../services/userService";
 import { forbidden, unauthorized, AppError } from "../utils/appError";
 
@@ -34,7 +35,7 @@ export const authMiddleware = async (
     req.user = decodedToken;
     next();
   } catch (error) {
-    console.error("Firebase token verification failed:", error);
+    logger.warn({ err: error }, "Firebase トークンの検証に失敗しました");
     return next(unauthorized("Unauthorized: Invalid token"));
   }
 };
@@ -63,7 +64,7 @@ export const requireAdmin = async (
 
     return next();
   } catch (error) {
-    console.error("Admin authorization failed:", error);
+    logger.error({ err: error }, "管理者権限の検証に失敗しました");
     return next(
       error instanceof AppError
         ? error
@@ -72,6 +73,6 @@ export const requireAdmin = async (
             500,
             "ADMIN_AUTHORIZATION_FAILED"
           )
-    );
+      );
   }
 };

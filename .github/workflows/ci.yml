@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  test-backend:
     name: Test (backend)
     runs-on: ubuntu-latest
     defaults:
@@ -36,6 +36,28 @@ jobs:
 
       - name: Run tests
         run: pnpm test
+
+  test-frontend:
+    name: Test (frontend)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests
+        run: pnpm --filter frontend run test
 
   audit:
     name: Security Audit
@@ -78,7 +100,7 @@ jobs:
   build:
     name: Build (frontend / backend / docs)
     runs-on: ubuntu-latest
-    needs: [test, audit]
+    needs: [test-backend, test-frontend, audit]
 
     steps:
       - uses: actions/checkout@v4

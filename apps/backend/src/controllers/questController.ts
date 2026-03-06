@@ -46,7 +46,7 @@ interface QuestMutationBody {
 
 export const getAllQuests = asyncHandler(async (req: Request, res: Response) => {
   const quests = await getAllQuestsService({
-    keyword: req.query.keyword as string | undefined,
+    keyword: typeof req.query.keyword === "string" ? req.query.keyword : undefined,
     status: getStatusParam(req.query.status),
   });
   res.json(quests);
@@ -218,7 +218,7 @@ export const deleteQuest = asyncHandler(async (req: Request, res: Response) => {
 export const getAllQuestsIncludingDeleted = asyncHandler(
   async (req: Request, res: Response) => {
     const quests = await getAllQuestsIncludingDeletedService({
-      keyword: req.query.keyword as string | undefined,
+      keyword: typeof req.query.keyword === "string" ? req.query.keyword : undefined,
       status: getStatusParam(req.query.status),
     });
     res.json(quests);
