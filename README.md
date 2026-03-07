@@ -157,7 +157,6 @@ cp apps/backend/.env.local.example apps/backend/.env.local
 ```
 
 `apps/backend/.env.local` を開き、各項目を設定してください。
-
 ```env
 # Firebase Admin SDK（Firebase コンソール > プロジェクトの設定 > サービスアカウント から取得）
 FIREBASE_PROJECT_ID=your-project-id
