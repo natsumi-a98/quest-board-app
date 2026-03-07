@@ -25,33 +25,15 @@ import {
 } from "lucide-react";
 import {
   Quest,
-  QuestStatus,
-  QuestType,
-  QUEST_STATUS_VALUES,
-  QUEST_STATUS_LABELS,
-  QUEST_TYPE_VALUES,
-  QUEST_TYPE_LABELS,
 } from "@quest-board/types";
 import { questService } from "../../services/quest";
 import { userService, UserResponse } from "../../services/user";
 import { useAuth } from "@/hooks/useAuth";
+import { QuestEditorForm } from "./QuestEditorForm";
+import { DEFAULT_QUEST_FORM_DATA, type QuestFormData } from "./questEditorUtils";
 
-// 型定義
 type QuestPriority = "critical" | "high" | "medium" | "low";
 type QuestCategory = "education" | "security" | "event" | "innovation";
-type QuestFormData = {
-  title: string;
-  description: string;
-  type: QuestType;
-  status: QuestStatus;
-  maxParticipants: number;
-  tags: string;
-  start_date: string;
-  end_date: string;
-  incentive_amount: number;
-  point_amount: number;
-  note: string;
-};
 
 const AdminDashboard = () => {
   const { loading: authLoading, isAuthenticated } = useAuth();
@@ -405,25 +387,7 @@ const AdminDashboard = () => {
   );
 
   const CreateQuestForm = ({ onClose }: { onClose: () => void }) => {
-    const [formData, setFormData] = useState<QuestFormData>({
-      title: "",
-      description: "",
-      type: QuestType.Development,
-      status: QuestStatus.Draft,
-      maxParticipants: 5,
-      tags: "",
-      start_date: "",
-      end_date: "",
-      incentive_amount: 0,
-      point_amount: 0,
-      note: "",
-    });
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setIsSubmitting(true);
-
+    const handleSubmit = async (formData: QuestFormData) => {
       try {
         const tagsArray = formData.tags
           .split(",")
@@ -451,222 +415,19 @@ const AdminDashboard = () => {
       } catch (err) {
         console.error("Failed to create quest:", err);
         setError("クエストの作成に失敗しました");
-      } finally {
-        setIsSubmitting(false);
       }
     };
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border-4 border-amber-300">
-          <div className="flex justify-between items-start mb-4">
-            <h2 className="text-2xl font-bold text-slate-800 font-serif">
-              新しいクエストを作成
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-amber-600 hover:text-amber-800"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-800 mb-1">
-                  タイトル *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-                  placeholder="クエストのタイトル"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-800 mb-1">
-                  タイプ *
-                </label>
-                <select
-                  value={formData.type}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      type: e.target.value as QuestType,
-                    })
-                  }
-                  className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-                >
-                  {QUEST_TYPE_VALUES.map((type) => (
-                    <option key={type} value={type}>
-                      {QUEST_TYPE_LABELS[type]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-800 mb-1">
-                  ステータス
-                </label>
-                <select
-                  value={formData.status}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      status: e.target.value as QuestStatus,
-                    })
-                  }
-                  className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-                >
-                  {QUEST_STATUS_VALUES.map((status) => (
-                    <option key={status} value={status}>
-                      {QUEST_STATUS_LABELS[status]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-800 mb-1">
-                  最大参加者数 *
-                </label>
-                <input
-                  type="number"
-                  required
-                  min="1"
-                  value={formData.maxParticipants}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      maxParticipants: parseInt(e.target.value) || 1,
-                    })
-                  }
-                  className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-800 mb-1">
-                  開始日 *
-                </label>
-                <input
-                  type="date"
-                  required
-                  value={formData.start_date}
-                  onChange={(e) =>
-                    setFormData({ ...formData, start_date: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-800 mb-1">
-                  終了日 *
-                </label>
-                <input
-                  type="date"
-                  required
-                  value={formData.end_date}
-                  onChange={(e) =>
-                    setFormData({ ...formData, end_date: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-800 mb-1">
-                  インセンティブ金額（円）
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.incentive_amount || ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      incentive_amount: parseInt(e.target.value) || 0,
-                    })
-                  }
-                  className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-                  placeholder="例: 50,000"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-800 mb-1">
-                説明 *
-              </label>
-              <textarea
-                required
-                rows={4}
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-                placeholder="クエストの詳細説明"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-800 mb-1">
-                タグ（カンマ区切り）
-              </label>
-              <input
-                type="text"
-                value={formData.tags}
-                onChange={(e) =>
-                  setFormData({ ...formData, tags: e.target.value })
-                }
-                className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-                placeholder="例: React, TypeScript, フロントエンド"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-800 mb-1">
-                報酬備考
-              </label>
-              <input
-                type="text"
-                value={formData.note}
-                onChange={(e) =>
-                  setFormData({ ...formData, note: e.target.value })
-                }
-                className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-                placeholder="報酬に関する備考"
-              />
-            </div>
-
-            <div className="flex gap-2 justify-end">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-              >
-                キャンセル
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                {isSubmitting ? "作成中..." : "クエストを作成"}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+      <QuestEditorForm
+        title="新しいクエストを作成"
+        submitLabel="クエストを作成"
+        submittingLabel="作成中..."
+        draftStorageKey="quest-editor:create"
+        initialData={DEFAULT_QUEST_FORM_DATA}
+        onSubmit={handleSubmit}
+        onClose={onClose}
+      />
     );
   };
 
@@ -677,7 +438,7 @@ const AdminDashboard = () => {
     quest: Quest;
     onClose: () => void;
   }) => {
-    const [formData, setFormData] = useState<QuestFormData>({
+    const initialData: QuestFormData = {
       title: quest.title,
       description: quest.description,
       type: quest.type,
@@ -689,13 +450,9 @@ const AdminDashboard = () => {
       incentive_amount: Number(quest.rewards?.incentive_amount) || 0,
       point_amount: Number(quest.rewards?.point_amount) || 0,
       note: quest.rewards?.note || "",
-    });
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setIsSubmitting(true);
-
+    const handleSubmit = async (formData: QuestFormData) => {
       try {
         const tagsArray = formData.tags
           .split(",")
@@ -724,224 +481,19 @@ const AdminDashboard = () => {
       } catch (err) {
         console.error("Failed to update quest:", err);
         setError("クエストの更新に失敗しました");
-      } finally {
-        setIsSubmitting(false);
       }
     };
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto border-4 border-amber-300">
-          <div className="flex justify-between items-start mb-4">
-            <h2 className="text-2xl font-bold text-slate-800 font-serif">
-              クエストを編集
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-amber-600 hover:text-amber-800"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-800 mb-1">
-                タイトル *
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.title}
-                onChange={(e) =>
-                  setFormData({ ...formData, title: e.target.value })
-                }
-                className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-                placeholder="クエストのタイトル"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-800 mb-1">
-                説明 *
-              </label>
-              <textarea
-                required
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                rows={3}
-                className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-                placeholder="クエストの詳細説明"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-800 mb-1">
-                  タイプ *
-                </label>
-                <select
-                  required
-                  value={formData.type}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      type: e.target.value as QuestType,
-                    })
-                  }
-                  className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-                >
-                  {QUEST_TYPE_VALUES.map((type) => (
-                    <option key={type} value={type}>
-                      {QUEST_TYPE_LABELS[type]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-800 mb-1">
-                  ステータス *
-                </label>
-                <select
-                  required
-                  value={formData.status}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      status: e.target.value as QuestStatus,
-                    })
-                  }
-                  className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-                >
-                  {QUEST_STATUS_VALUES.map((status) => (
-                    <option key={status} value={status}>
-                      {QUEST_STATUS_LABELS[status]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-800 mb-1">
-                最大参加者数 *
-              </label>
-              <input
-                type="number"
-                required
-                min="1"
-                value={formData.maxParticipants}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    maxParticipants: parseInt(e.target.value) || 1,
-                  })
-                }
-                className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-800 mb-1">
-                開始日 *
-              </label>
-              <input
-                type="date"
-                required
-                value={formData.start_date}
-                onChange={(e) =>
-                  setFormData({ ...formData, start_date: e.target.value })
-                }
-                className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-800 mb-1">
-                終了日 *
-              </label>
-              <input
-                type="date"
-                required
-                value={formData.end_date}
-                onChange={(e) =>
-                  setFormData({ ...formData, end_date: e.target.value })
-                }
-                className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-800 mb-1">
-                インセンティブ金額
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={formData.incentive_amount}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    incentive_amount: parseInt(e.target.value) || 0,
-                  })
-                }
-                className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-                placeholder="0"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-800 mb-1">
-                タグ
-              </label>
-              <input
-                type="text"
-                value={formData.tags}
-                onChange={(e) =>
-                  setFormData({ ...formData, tags: e.target.value })
-                }
-                className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-                placeholder="例: React, TypeScript, フロントエンド"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-800 mb-1">
-                報酬備考
-              </label>
-              <input
-                type="text"
-                value={formData.note}
-                onChange={(e) =>
-                  setFormData({ ...formData, note: e.target.value })
-                }
-                className="w-full px-3 py-2 border-2 border-amber-300 rounded-lg bg-amber-50 text-slate-800 focus:outline-none focus:border-yellow-400"
-                placeholder="報酬に関する備考"
-              />
-            </div>
-
-            <div className="flex gap-2 justify-end">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-              >
-                キャンセル
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                {isSubmitting ? "更新中..." : "クエストを更新"}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+      <QuestEditorForm
+        title="クエストを編集"
+        submitLabel="クエストを更新"
+        submittingLabel="更新中..."
+        draftStorageKey={`quest-editor:edit:${quest.id}`}
+        initialData={initialData}
+        onSubmit={handleSubmit}
+        onClose={onClose}
+      />
     );
   };
 
