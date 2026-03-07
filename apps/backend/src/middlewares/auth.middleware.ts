@@ -52,7 +52,8 @@ export const requireAdmin = async (
   }
 
   try {
-    const appUser = await getUserByFirebaseUidService(firebaseUid);
+    const appUser =
+      req.appUser ?? (await getUserByFirebaseUidService(firebaseUid));
 
     if (!appUser) {
       return next(forbidden("Forbidden: user not found"));
@@ -62,7 +63,9 @@ export const requireAdmin = async (
       return next(forbidden("Forbidden: admin access required"));
     }
 
-    return next();
+    req.appUser = appUser;
+    next();
+    return;
   } catch (error) {
     logger.error({ err: error }, "管理者権限の検証に失敗しました");
     return next(
