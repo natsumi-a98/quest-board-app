@@ -1,4 +1,5 @@
-import prisma from "../config/prisma";
+import { prisma } from "../config/db";
+import { logger } from "../config/logger";
 
 export const addUserToQuest = async (userId: number, questId: number) => {
   try {
@@ -57,7 +58,7 @@ export const addUserToQuest = async (userId: number, questId: number) => {
       }
     }
 
-    console.error(err);
+    logger.error({ err, userId, questId }, "クエスト参加エラー");
     return { success: false, reason: "error" };
   }
 };

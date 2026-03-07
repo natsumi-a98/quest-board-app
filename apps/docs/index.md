@@ -31,5 +31,8 @@ hero:
     - theme: alt
       text: レビュー規約
       link: /review_standards 
-               
+    - theme: alt
+      text: ログ設計書
+      link: /logging-design
+                
 ---

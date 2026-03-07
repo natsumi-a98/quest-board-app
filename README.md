@@ -2,6 +2,87 @@
 
 このプロジェクトは、モノレポ構成（frontend / backend / docs）で構築されたクエスト投稿・参加アプリです。
 
+## プロダクト概要
+
+クエスト掲示板は、ユーザーがクエストを投稿し、参加し、レビューできるアプリです。
+
+主なユースケース:
+
+- クエスト一覧の閲覧
+- クエスト詳細の確認
+- クエストの作成、編集、削除
+- クエストへの参加
+- レビュー投稿
+- マイページでの自分の活動確認
+- 管理者によるユーザー管理
+
+主要なデータフロー:
+
+```text
+ブラウザ
+  -> apps/frontend (Next.js)
+  -> apps/backend (Express API)
+  -> Prisma
+  -> MySQL
+
+認証:
+Firebase Authentication
+  -> frontend でログイン状態を管理
+  -> backend でトークンを検証
+```
+
+## リポジトリ全体像
+
+AI エージェントはまず次の単位でリポジトリを見ると全体像を把握しやすいです。
+
+```text
+repo
+├─ apps
+│  ├─ frontend   # UI、画面、hooks、API client
+│  ├─ backend    # API、service、Prisma、認証
+│  ├─ docs       # 開発ドキュメントサイト
+│  └─ e2e        # Playwright E2E テスト
+├─ packages
+│  └─ types      # 共有型
+├─ docs          # AI / 開発運用の正本ドキュメント
+├─ prompt        # エージェント用テンプレート
+├─ AGENTS.md     # AI 共通ルール
+└─ README.md     # セットアップと全体像
+```
+
+## 変更箇所の当たり方
+
+変更内容ごとの主な確認先:
+
+| 変更内容 | 主な確認先 |
+|--------|------|
+| 画面、導線、表示 | `apps/frontend/src/app`, `apps/frontend/src/components` |
+| API 呼び出し | `apps/frontend/src/services` |
+| 認証 | `apps/frontend/src/hooks`, `apps/frontend/src/services/firebase.ts`, `apps/backend/src/middlewares/auth.middleware.ts` |
+| API 追加、修正 | `apps/backend/src/routes`, `apps/backend/src/controllers`, `apps/backend/src/services` |
+| DB 変更 | `apps/backend/prisma/schema.prisma`, `apps/backend/src/dataAccessor` |
+| テスト | `apps/frontend/src/__tests__`, `apps/backend/src/__tests__`, `apps/e2e/tests` |
+| ルール、設計 | `AGENTS.md`, `docs/architecture.md`, `docs/ai-execution.md` |
+
+## AI向けドキュメント導線
+
+AIエージェント向けの正本は以下です。
+
+1. `README.md`
+2. `AGENTS.md`
+3. `docs/architecture.md`
+4. `docs/ai-execution.md`
+5. `prompt/agent.md`
+6. 関連コード / テスト
+
+役割は次のとおりです。
+
+- `README.md`: セットアップ、開発コマンド、リポジトリ全体像
+- `AGENTS.md`: AIエージェント共通ルール
+- `docs/architecture.md`: 実装対象の構造、責務、変更時の判断基準
+- `docs/ai-execution.md`: AIの調査、実装、検証フロー
+- `prompt/agent.md`: 他エージェントにも渡せる実行テンプレート
+
 ---
 
 ## 技術スタック
@@ -76,7 +157,6 @@ cp apps/backend/.env.local.example apps/backend/.env.local
 ```
 
 `apps/backend/.env.local` を開き、各項目を設定してください。
-
 ```env
 # Firebase Admin SDK（Firebase コンソール > プロジェクトの設定 > サービスアカウント から取得）
 FIREBASE_PROJECT_ID=your-project-id
@@ -85,13 +165,31 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY----
 
 # Prisma / MySQL（docker-compose.yml のデフォルト値に合わせて設定）
 DATABASE_URL=mysql://app_user:app_password@localhost:3306/your_project_db
-SHADOW_DATABASE_URL=mysql://app_user:app_password@localhost:3306/your_project_db_shadow
+MYSQL_ROOT_PASSWORD=rootpassword
+MYSQL_DATABASE=your_project_db
+MYSQL_USER=app_user
+MYSQL_PASSWORD=app_password
 
 # Backend
 PORT=3001
 NODE_ENV=development
 FRONTEND_BASE_URL=http://localhost:3000
 ```
+
+#### E2E（任意）
+
+E2E テストを実行する場合のみ、example から `.env` を作成してください。
+
+```bash
+cp apps/e2e/.env.example apps/e2e/.env
+```
+
+| 変数名 | 説明 |
+|--------|------|
+| `FRONTEND_BASE_URL` | Playwright が開くフロントエンド URL（デフォルト: `http://localhost:3000`） |
+| `API_BASE_URL` | API テスト用のバックエンド URL（デフォルト: `http://localhost:3001`） |
+
+> `.env` / `.env.local` などの実ファイルは Git 管理しない方針です。過去に実値を含むファイルを共有していた場合は、秘密情報のローテーションも検討してください。
 
 > **Firebase Admin SDK の取得方法**
 > Firebase コンソール > プロジェクトの設定 > サービスアカウント > 「新しい秘密鍵の生成」

@@ -4,6 +4,7 @@ import { signUp } from "@/services/auth/signUp";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
+import { FirebaseError } from "firebase/app";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
@@ -31,14 +32,16 @@ export default function SignupPage() {
       await signUp(name, email, password);
       alert("サインアップ成功");
       router.push("/");
-    } catch (error: any) {
+    } catch (error) {
       // Firebaseのエラーコードを日本語に変換
       let message = "登録に失敗しました。時間をおいて再度お試しください。";
 
-      if (error.code === "auth/email-already-in-use") {
-        message = "このメールアドレスはすでに登録されています。";
-      } else if (error.code === "auth/invalid-email") {
-        message = "メールアドレスの形式が正しくありません。";
+      if (error instanceof FirebaseError) {
+        if (error.code === "auth/email-already-in-use") {
+          message = "このメールアドレスはすでに登録されています。";
+        } else if (error.code === "auth/invalid-email") {
+          message = "メールアドレスの形式が正しくありません。";
+        }
       }
       // else if (error.code === "auth/weak-password") {
       //   message = "パスワードが弱すぎます。6文字以上で入力してください。";

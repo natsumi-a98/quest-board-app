@@ -3,11 +3,11 @@
 import React, { useState, useEffect } from "react";
 import StatusRibbon from "../atoms/StatusRibbon";
 import Tag from "../atoms/Tag";
-import ReviewSection, { Review, NewReview } from "../organisms/ReviewSection";
+import ReviewSection from "../organisms/ReviewSection";
+import { Quest, QuestStatus, Review, NewReview } from "@quest-board/types";
 import { questService } from "../../services/quest";
 import { reviewService, ReviewResponse } from "../../services/review";
 import { userService } from "../../services/user";
-import { Quest, QuestStatus } from "../../types/quest";
 import { useAuth } from "../../hooks/useAuth";
 
 interface QuestDetailPageProps {

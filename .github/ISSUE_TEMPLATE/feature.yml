@@ -1,0 +1,65 @@
+name: Feature request
+description: 新機能や改善の issue を作成する
+title: "[Feature] "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: 何を実現したい issue かを簡潔に書いてください。
+      placeholder: 例: 投稿一覧に絞り込み UI を追加する
+    validations:
+      required: true
+  - type: textarea
+    id: background
+    attributes:
+      label: Background
+      description: 変更が必要になった背景や現状の問題を書いてください。
+      placeholder: 例: 投稿数が増え、目的の募集を見つけにくくなっている
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: 今回の対象範囲を書いてください。
+      placeholder: |-
+        例:
+        - フロントエンドの絞り込みフォーム追加
+        - API のクエリ条件追加
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: 完了条件を箇条書きで書いてください。
+      placeholder: |-
+        例:
+        - [ ] カテゴリで絞り込みできる
+        - [ ] 絞り込み条件が URL に反映される
+    validations:
+      required: true
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of Scope
+      description: 今回は対応しない内容があれば書いてください。
+      placeholder: 例: デザインの全面改修は別 issue で扱う
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification
+      description: 想定している確認方法があれば書いてください。
+      placeholder: |-
+        例:
+        - 絞り込み条件ごとに一覧件数が変わること
+        - クエリ付き URL を再読込しても状態が復元されること
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: 関連 issue / PR / 資料があれば書いてください。
+      placeholder: 例: #123, PR #456, Figma URL
