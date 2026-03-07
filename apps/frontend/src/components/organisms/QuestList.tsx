@@ -23,11 +23,65 @@ import QuestListCard, {
 // 一般ユーザーに非表示にするクエストステータス
 const HIDDEN_QUEST_STATUSES: string[] = ["draft", "pending", "inactive"];
 
+const normalizeDate = (dateValue: string) => {
+  const date = new Date(dateValue);
+  date.setHours(0, 0, 0, 0);
+  return date;
+};
+
+const QuestListSkeleton = () => (
+  <div className="w-full">
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen flex flex-col">
+      <div className="mb-8 space-y-4 animate-pulse">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="h-12 flex-1 rounded-lg bg-slate-700/80" />
+          <div className="h-12 w-full rounded-lg bg-slate-700/70 sm:w-56" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div
+            key={index}
+            className="overflow-hidden rounded-3xl border border-slate-700 bg-slate-800/70 shadow-lg"
+          >
+            <div className="space-y-4 p-6">
+              <div className="flex items-center justify-between">
+                <div className="h-8 w-8 rounded-full bg-slate-700" />
+                <div className="h-6 w-24 rounded-full bg-slate-700" />
+              </div>
+              <div className="space-y-2">
+                <div className="h-6 w-3/4 rounded bg-slate-600" />
+                <div className="h-4 w-full rounded bg-slate-700" />
+                <div className="h-4 w-5/6 rounded bg-slate-700" />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <div className="h-6 w-16 rounded-full bg-slate-700" />
+                <div className="h-6 w-20 rounded-full bg-slate-700" />
+                <div className="h-6 w-14 rounded-full bg-slate-700" />
+              </div>
+              <div className="grid grid-cols-2 gap-3 pt-3">
+                <div className="h-16 rounded-2xl bg-slate-700/80" />
+                <div className="h-16 rounded-2xl bg-slate-700/80" />
+              </div>
+              <div className="h-11 rounded-2xl bg-slate-600/80" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  </div>
+);
+
 const QuestList: React.FC = () => {
   const [quests, setQuests] = useState<Quest[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [startDateFilter, setStartDateFilter] = useState("");
+  const [endDateFilter, setEndDateFilter] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedQuest, setSelectedQuest] = useState<Quest | null>(null);
   const [buttonActions, setButtonActions] = useState<
@@ -51,6 +105,14 @@ const QuestList: React.FC = () => {
     };
     fetchQuests();
   }, []);
+
+  useEffect(() => {
+    const timerId = window.setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery.trim());
+    }, 200);
+
+    return () => window.clearTimeout(timerId);
+  }, [searchQuery]);
 
   // ユーザーIDを動的に取得
   useEffect(() => {
@@ -213,31 +275,53 @@ const QuestList: React.FC = () => {
     setIsDialogOpen(true);
   };
 
+  const normalizedSearchQuery = debouncedSearchQuery.toLowerCase();
+
+  const suggestedQuests = quests
+    .filter((quest) => {
+      const isHiddenStatus = HIDDEN_QUEST_STATUSES.includes(quest.status as string);
+      return (
+        !isHiddenStatus &&
+        normalizedSearchQuery.length > 0 &&
+        quest.title.toLowerCase().includes(normalizedSearchQuery)
+      );
+    })
+    .slice(0, 5);
+
   const filteredQuests = quests.filter((quest) => {
     const matchesFilter =
       selectedFilter === "all" || quest.status === selectedFilter;
 
     const matchesSearch =
-      quest.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      quest.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      normalizedSearchQuery.length === 0 ||
+      quest.title.toLowerCase().includes(normalizedSearchQuery) ||
+      quest.description.toLowerCase().includes(normalizedSearchQuery) ||
       (quest.tags ?? []).some((tag) =>
-        tag.toLowerCase().includes(searchQuery.toLowerCase())
+        tag.toLowerCase().includes(normalizedSearchQuery)
       );
+
+    const questStartDate = normalizeDate(quest.start_date);
+    const matchesStartDate =
+      !startDateFilter || questStartDate >= normalizeDate(startDateFilter);
+    const matchesEndDate =
+      !endDateFilter || questStartDate <= normalizeDate(endDateFilter);
 
     // 一般ユーザーには非公開ステータスのクエストを非表示にする
     const isHiddenStatus = HIDDEN_QUEST_STATUSES.includes(
       quest.status as string
     );
 
-    return matchesFilter && matchesSearch && !isHiddenStatus;
+    return (
+      matchesFilter &&
+      matchesSearch &&
+      matchesStartDate &&
+      matchesEndDate &&
+      !isHiddenStatus
+    );
   });
 
   if (loading) {
-    return (
-      <div className="text-center py-12 text-gray-400">
-        クエストを読み込み中...
-      </div>
-    );
+    return <QuestListSkeleton />;
   }
 
   return (
@@ -245,28 +329,116 @@ const QuestList: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen flex flex-col">
         {/* Search and Filter */}
         <div className="mb-8 space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="クエストを検索..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-              />
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="クエストを検索..."
+                  value={searchQuery}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => {
+                    window.setTimeout(() => setShowSuggestions(false), 120);
+                  }}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+                />
+
+                {showSuggestions && normalizedSearchQuery.length > 0 && (
+                  <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-xl border border-slate-600 bg-slate-800 shadow-xl">
+                    {suggestedQuests.length > 0 ? (
+                      <ul className="divide-y divide-slate-700">
+                        {suggestedQuests.map((quest) => (
+                          <li key={quest.id}>
+                            <button
+                              type="button"
+                              className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left transition hover:bg-slate-700/80"
+                              onMouseDown={(event) => event.preventDefault()}
+                              onClick={() => {
+                                setSearchQuery(quest.title);
+                                setDebouncedSearchQuery(quest.title);
+                                setShowSuggestions(false);
+                              }}
+                            >
+                              <div>
+                                <p className="font-medium text-white">{quest.title}</p>
+                                <p className="mt-1 text-xs text-slate-300">
+                                  開始日: {formatDate(quest.start_date)}
+                                </p>
+                              </div>
+                              <span className="rounded-full bg-slate-700 px-2 py-1 text-xs text-slate-200">
+                                {quest.type}
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="px-4 py-3 text-sm text-slate-300">
+                        タイトル一致する候補はありません
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <select
+                value={selectedFilter}
+                onChange={(e) => setSelectedFilter(e.target.value)}
+                className="px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
+              >
+                <option value="all">全てのクエスト</option>
+                <option value="active">募集中</option>
+                <option value="in_progress">進行中</option>
+                <option value="inactive">停止中</option>
+                <option value="completed">完了済み</option>
+              </select>
             </div>
-            <select
-              value={selectedFilter}
-              onChange={(e) => setSelectedFilter(e.target.value)}
-              className="px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-            >
-              <option value="all">全てのクエスト</option>
-              <option value="active">募集中</option>
-              <option value="in_progress">進行中</option>
-              <option value="inactive">停止中</option>
-              <option value="completed">完了済み</option>
-            </select>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <label className="space-y-2">
+                <span className="text-sm font-medium text-slate-200">
+                  公開開始日 From
+                </span>
+                <input
+                  type="date"
+                  value={startDateFilter}
+                  onChange={(e) => setStartDateFilter(e.target.value)}
+                  className="w-full rounded-lg border border-slate-600 bg-slate-700 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                />
+              </label>
+
+              <label className="space-y-2">
+                <span className="text-sm font-medium text-slate-200">
+                  公開開始日 To
+                </span>
+                <input
+                  type="date"
+                  value={endDateFilter}
+                  min={startDateFilter || undefined}
+                  onChange={(e) => setEndDateFilter(e.target.value)}
+                  className="w-full rounded-lg border border-slate-600 bg-slate-700 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                />
+              </label>
+
+              <div className="flex items-end sm:col-span-2 xl:justify-end">
+                <button
+                  type="button"
+                  className="w-full rounded-lg border border-slate-500 px-4 py-3 text-sm font-medium text-slate-200 transition hover:border-yellow-400 hover:text-yellow-300 xl:w-auto"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setDebouncedSearchQuery("");
+                    setSelectedFilter("all");
+                    setStartDateFilter("");
+                    setEndDateFilter("");
+                    setShowSuggestions(false);
+                  }}
+                >
+                  フィルタをリセット
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
