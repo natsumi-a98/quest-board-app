@@ -1,10 +1,11 @@
 import type { Request, Response } from "express";
 import {
 	QuestJoinParamSchema,
-	ReviewCheckParamSchema,
+	ReviewExistsQuerySchema,
 	ReviewCreateBodySchema,
 	ReviewIdParamSchema,
 	ReviewUpdateBodySchema,
+	UserReviewParamSchema,
 } from "../schemas/api";
 import {
 	checkUserReviewExistsService,
@@ -100,8 +101,15 @@ export const deleteReview = asyncHandler(
  */
 export const checkUserReviewExists = asyncHandler(
 	async (req: Request, res: Response) => {
-		const { params } = validateRequest(req, { params: ReviewCheckParamSchema });
-		const { userId, questId } = params;
+		const { params, query } = validateRequest(req, {
+			params: UserReviewParamSchema,
+			query: ReviewExistsQuerySchema,
+		});
+		const { userId } = params;
+		const { questId } = query;
+		if (!questId) {
+			throw badRequest("questId is required");
+		}
 		const exists = await checkUserReviewExistsService(userId, questId);
 
 		res.json({ exists });

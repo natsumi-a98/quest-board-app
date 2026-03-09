@@ -18,7 +18,7 @@ import {
 	updateQuestStatusService,
 } from "../services/questService";
 import { getUserByFirebaseUidService } from "../services/userService";
-import { badRequest, notFound } from "../utils/appError";
+import { badRequest, forbidden, unauthorized, notFound } from "../utils/appError";
 import { asyncHandler } from "../utils/asyncHandler";
 import { validateRequest } from "../utils/validate";
 
@@ -28,10 +28,27 @@ import { validateRequest } from "../utils/validate";
 export const getAllQuests = asyncHandler(
 	async (req: Request, res: Response) => {
 		const { query } = validateRequest(req, { query: QuestListQuerySchema });
-		const quests = await getAllQuestsService({
+		const filters = {
 			keyword: query.keyword,
 			status: query.status,
-		});
+		};
+
+		if (query.includeDeleted) {
+			if (!req.user?.uid) {
+				throw unauthorized();
+			}
+
+			const user = await getUserByFirebaseUidService(req.user.uid);
+			if (!user || user.role !== ROLES.ADMIN) {
+				throw forbidden("Forbidden: admin access required");
+			}
+
+			const quests = await getAllQuestsIncludingDeletedService(filters);
+			res.json(quests);
+			return;
+		}
+
+		const quests = await getAllQuestsService(filters);
 		res.json(quests);
 	},
 );
@@ -188,20 +205,6 @@ export const deleteQuest = asyncHandler(async (req: Request, res: Response) => {
 		throw error;
 	}
 });
-
-/**
- * 削除済みを含むクエスト一覧を管理者向けに返す。
- */
-export const getAllQuestsIncludingDeleted = asyncHandler(
-	async (req: Request, res: Response) => {
-		const { query } = validateRequest(req, { query: QuestListQuerySchema });
-		const quests = await getAllQuestsIncludingDeletedService({
-			keyword: query.keyword,
-			status: query.status,
-		});
-		res.json(quests);
-	},
-);
 
 /**
  * 下書きまたは非公開クエストを承認待ちへ送る。

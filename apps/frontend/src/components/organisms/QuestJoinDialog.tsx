@@ -54,7 +54,7 @@ const QuestJoinDialog: React.FC<QuestJoinDialogProps> = ({
       }
 
       // fetch の URL を環境変数を使用して作成
-      const res = await fetch(`${apiBaseUrl}/api/quests/${quest.id}/join`, {
+      const res = await fetch(`${apiBaseUrl}/api/quests/${quest.id}/participants`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

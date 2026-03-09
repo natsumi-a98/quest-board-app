@@ -4,7 +4,7 @@ describe("openApiDocument", () => {
 	it("主要な API path を公開している", () => {
 		expect(openApiDocument.openapi).toBe("3.0.0");
 		expect(openApiDocument.paths["/api/quests"]).toBeDefined();
-		expect(openApiDocument.paths["/api/users/create"]).toBeDefined();
+		expect(openApiDocument.paths["/api/users"]).toBeDefined();
 		expect(openApiDocument.paths["/api/openapi.json"]).toBeDefined();
 	});
 

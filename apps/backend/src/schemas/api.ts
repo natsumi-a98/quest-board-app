@@ -42,16 +42,12 @@ export const UserWithRoleSchema = UserSummarySchema.extend({
 	role: z.enum(VALID_ROLES),
 }).openapi("UserWithRole");
 
-export const FindUserBodySchema = z
+export const FindUserQuerySchema = z
 	.object({
 		name: z.string().trim().min(1).optional(),
 		email: z.string().trim().email().optional(),
 	})
-	.refine((value) => Boolean(value.name || value.email), {
-		message: "name or email is required",
-		path: ["name"],
-	})
-	.openapi("FindUserBody");
+	.openapi("FindUserQuery");
 
 export const CreateUserBodySchema = z
 	.object({
@@ -74,17 +70,17 @@ export const DeleteUserResponseSchema = z
 	})
 	.openapi("DeleteUserResponse");
 
-export const UserIdResponseSchema = z
-	.object({
-		userId: z.number().int().positive(),
-	})
-	.openapi("UserIdResponse");
-
 export const UserIdParamSchema = z
 	.object({
 		id: numericIdSchema,
 	})
 	.openapi("UserIdParam");
+
+export const UserReviewParamSchema = z
+	.object({
+		userId: numericIdSchema,
+	})
+	.openapi("UserReviewParam");
 
 export const QuestIdParamSchema = z
 	.object({
@@ -104,13 +100,6 @@ export const ReviewIdParamSchema = z
 	})
 	.openapi("ReviewIdParam");
 
-export const ReviewCheckParamSchema = z
-	.object({
-		userId: numericIdSchema,
-		questId: numericIdSchema,
-	})
-	.openapi("ReviewCheckParam");
-
 export const AdminUserRoleParamSchema = z
 	.object({
 		userId: numericIdSchema,
@@ -123,8 +112,19 @@ export const QuestListQuerySchema = z
 		status: z
 			.enum(QUEST_STATUS_VALUES as [QuestStatusValue, ...QuestStatusValue[]])
 			.optional(),
+		includeDeleted: z.coerce.boolean().optional(),
 	})
 	.openapi("QuestListQuery");
+
+export const UserListQuerySchema = FindUserQuerySchema.extend({
+	questId: numericIdSchema.optional(),
+}).openapi("UserListQuery");
+
+export const ReviewExistsQuerySchema = z
+	.object({
+		questId: numericIdSchema,
+	})
+	.openapi("ReviewExistsQuery");
 
 export const QuestStatusBodySchema = z
 	.object({

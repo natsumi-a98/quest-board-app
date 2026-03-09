@@ -113,8 +113,8 @@ describe("questService", () => {
 			await questService.getAllQuestsIncludingDeleted();
 
 			expect(authenticatedApiClient.get).toHaveBeenCalledWith(
-				"/quests/admin/all",
-				undefined,
+				"/quests",
+				{ includeDeleted: true },
 			);
 		});
 	});
