@@ -7,11 +7,13 @@
 
 対象ファイル:
 
+- README.md
 - AGENTS.md
-- prompt/agent.md
 - docs/architecture.md
 - docs/ai-execution.md
-- README.md
+- prompt/agent.md
+- CLAUDE.md
+- ai-docs-refactor-prompt.md
 
 目的は **AIエージェントが迷わず実装できるドキュメント構造に整理すること**です。
 
@@ -76,10 +78,9 @@ AIエージェントが使いやすい構造を設計してください。
 repo
 ├ README.md
 ├ AGENTS.md
+├ CLAUDE.md
 ├ docs
 │ ├ architecture.md
-│ ├ api.md
-│ ├ database.md
 │ └ ai-execution.md
 └ prompt
    └ agent.md
@@ -148,16 +149,13 @@ prompt/agent.md
 
 ---
 
-## Step6 改善されたドキュメントテンプレート
+## Step6 変更方針の提示
 
-以下のテンプレートを作成してください。
+必要なファイルだけを最小変更で更新してください。
 
-- AGENTS.md
-- docs/architecture.md
-- docs/ai-execution.md
-- prompt/agent.md
-
-AIがそのまま利用できる形式で作成してください。
+- source-of-truth docs を優先して修正する
+- prompt は docs を参照する形へ寄せる
+- 不要な新規ファイルは増やさない
 
 ---
 
