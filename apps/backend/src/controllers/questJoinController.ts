@@ -4,6 +4,9 @@ import { getUserByFirebaseUidService } from "../services/userService";
 import { asyncHandler } from "../utils/asyncHandler";
 import { badRequest, notFound, unauthorized } from "../utils/appError";
 
+/**
+ * 認証済みユーザーをクエスト参加者として登録する。
+ */
 export const joinQuest = asyncHandler(async (req: Request, res: Response) => {
   const firebaseUid = req.user?.uid;
   if (!firebaseUid) {

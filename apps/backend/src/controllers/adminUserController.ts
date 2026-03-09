@@ -6,6 +6,9 @@ import {
 import { asyncHandler } from "../utils/asyncHandler";
 import { badRequest, notFound } from "../utils/appError";
 
+/**
+ * 管理画面向けユーザー一覧を返す。
+ */
 export const getAllUsersForAdmin = asyncHandler(
   async (_req: Request, res: Response) => {
     const users = await getAllUsersForAdminService();
@@ -13,6 +16,9 @@ export const getAllUsersForAdmin = asyncHandler(
   }
 );
 
+/**
+ * 指定ユーザーのロールを更新する。
+ */
 export const updateUserRole = asyncHandler(
   async (req: Request, res: Response) => {
     const { userId } = req.params;
