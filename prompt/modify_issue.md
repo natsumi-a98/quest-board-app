@@ -77,7 +77,8 @@ gh issue view <issue-number>
     .github/ISSUE_TEMPLATE/bug.yml
     .github/ISSUE_TEMPLATE/feature.yml
     .github/ISSUE_TEMPLATE/config.yml
-    .git/refs/heads/docs/issue-pr-rules
+    AGENTS.md
+    README.md
 
 これらから以下を整理してください。
 
@@ -88,6 +89,7 @@ gh issue view <issue-number>
 -   ラベル運用のルール
 -   親Issue / 子Issue / 関連Issue の扱い
 -   粒度に関する暗黙ルール
+-   source-of-truth docs との関係
 
 ------------------------------------------------------------------------
 
