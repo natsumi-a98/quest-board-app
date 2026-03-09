@@ -24,12 +24,14 @@
 2. AGENTS.md
 3. docs/architecture.md
 4. docs/ai-execution.md
-5. 関連コードと関連テスト
+5. 必要に応じて関連 prompt
+6. 関連コードと関連テスト
 
 守るべき原則:
 
 - 既存実装と既存差分を先に確認する
 - 前提を決め打ちしない
+- issue 対応では必要に応じて worktree で作業を分離する
 - 最小変更で実装する
 - unrelated な修正を混ぜない
 - 実装後は可能な範囲でテスト、型チェック、lint、ビルドを行う
