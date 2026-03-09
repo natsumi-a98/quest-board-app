@@ -16,7 +16,9 @@ declare global {
   }
 }
 
-// 認証ミドルウェア
+/**
+ * Bearer トークンを検証し、Firebase のデコード済みユーザー情報を `req.user` に格納する。
+ */
 export const authMiddleware = async (
   req: Request,
   _res: Response,
@@ -40,6 +42,9 @@ export const authMiddleware = async (
   }
 };
 
+/**
+ * 認証済みユーザーが管理者ロールを持つことを検証する。
+ */
 export const requireAdmin = async (
   req: Request,
   _res: Response,

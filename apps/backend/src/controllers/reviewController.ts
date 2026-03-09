@@ -17,6 +17,9 @@ import { badRequest } from "../utils/appError";
 import { asyncHandler } from "../utils/asyncHandler";
 import { validateRequest } from "../utils/validate";
 
+/**
+ * クエストに紐づくレビュー一覧を返す。
+ */
 export const getReviewsByQuestId = asyncHandler(
 	async (req: Request, res: Response) => {
 		const { params } = validateRequest(req, { params: QuestJoinParamSchema });
@@ -26,6 +29,9 @@ export const getReviewsByQuestId = asyncHandler(
 	},
 );
 
+/**
+ * クエストへのレビューを新規作成する。
+ */
 export const createReview = asyncHandler(
 	async (req: Request, res: Response) => {
 		const { params, body } = validateRequest(req, {
@@ -57,6 +63,9 @@ export const createReview = asyncHandler(
 	},
 );
 
+/**
+ * 既存レビューを更新する。
+ */
 export const updateReview = asyncHandler(
 	async (req: Request, res: Response) => {
 		const { params, body } = validateRequest(req, {
@@ -74,6 +83,9 @@ export const updateReview = asyncHandler(
 	},
 );
 
+/**
+ * レビューを削除する。
+ */
 export const deleteReview = asyncHandler(
 	async (req: Request, res: Response) => {
 		const { params } = validateRequest(req, { params: ReviewIdParamSchema });
@@ -83,6 +95,9 @@ export const deleteReview = asyncHandler(
 	},
 );
 
+/**
+ * 指定ユーザーが対象クエストにレビュー済みかを返す。
+ */
 export const checkUserReviewExists = asyncHandler(
 	async (req: Request, res: Response) => {
 		const { params } = validateRequest(req, { params: ReviewCheckParamSchema });

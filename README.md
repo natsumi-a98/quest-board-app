@@ -82,6 +82,9 @@ AIエージェント向けの正本は以下です。
 - `docs/architecture.md`: 実装対象の構造、責務、変更時の判断基準
 - `docs/ai-execution.md`: AIの調査、実装、検証フロー
 - `prompt/agent.md`: 他エージェントにも渡せる実行テンプレート
+- `prompt/create_issue.md`: 改善 issue を新規起票するときの補助プロンプト
+- `prompt/modify_issue.md`: 既存 issue を整理、修正するときの補助プロンプト
+- `ai-docs-refactor-prompt.md`: AI 向け docs 自体を見直すときの補助プロンプト
 
 ---
 
@@ -119,7 +122,7 @@ npm install -g pnpm
 ### 1. リポジトリをクローン
 
 ```bash
-git clone https://github.com/natsumi-a98/quest-board-app.git
+git clone https://github.com/Numamura-dev/quest-board-app.git
 cd quest-board-app
 ```
 

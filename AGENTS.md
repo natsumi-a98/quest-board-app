@@ -2,14 +2,24 @@
 
 このリポジトリで作業する AI エージェントは、このファイルを最優先の共通ルールとして扱う。
 
-参照順序:
+作業開始時の参照順序:
+
+1. ユーザーの最新依頼
+2. `README.md`
+3. `AGENTS.md`
+4. `docs/architecture.md`
+5. `docs/ai-execution.md`
+6. `prompt/agent.md`
+7. 関連コード / 関連テスト
+
+判断が衝突した場合の優先順位:
 
 1. ユーザーの最新依頼
 2. `AGENTS.md`
-3. `docs/architecture.md`
-4. `docs/ai-execution.md`
+3. `docs/ai-execution.md`
+4. `docs/architecture.md`
 5. `README.md`
-6. 関連コード / 関連テスト
+6. 補助 prompt / 互換 docs
 
 責務:
 
@@ -17,6 +27,7 @@
 - アーキテクチャの詳細は `docs/architecture.md` に集約する
 - 実行フェーズや検証手順は `docs/ai-execution.md` に集約する
 - 汎用プロンプトは `prompt/agent.md` に集約する
+- セットアップや repo 全体像は `README.md` を正本とする
 
 ---
 
