@@ -149,6 +149,30 @@ Page / Component
 - 画面固有の描画ロジック
 - DOM / UI 状態管理
 
+### Shared Types (`packages/types`)
+
+責務:
+
+- frontend / backend 間で共有する型定義
+- レイヤーをまたいで一致させたい契約の集約
+
+含めない内容:
+
+- runtime のビジネスロジック
+- UI 実装や API ハンドラ本体
+
+### Docs App (`apps/docs`)
+
+責務:
+
+- 開発者向けドキュメントサイトの表示
+- docs 配下や関連資料の案内
+
+含めない内容:
+
+- AI 共通ルールの正本管理
+- frontend / backend の実装ロジック
+
 ## 実装判断ルール
 
 変更時の優先順位は以下とする。
