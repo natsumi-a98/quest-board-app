@@ -1,9 +1,17 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { QuestEditorForm } from "@/components/organisms/QuestEditorForm";
-import { DEFAULT_QUEST_FORM_DATA } from "@/components/organisms/questEditorUtils";
+import {
+  DEFAULT_QUEST_FORM_DATA,
+  applyMarkdownFormat,
+  validateQuestForm,
+} from "@/components/organisms/questEditorUtils";
 
 describe("QuestEditorForm", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
   it("必須項目が空のときにバリデーションエラーを表示する", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
 
@@ -46,6 +54,12 @@ describe("QuestEditorForm", () => {
     fireEvent.click(screen.getByRole("button", { name: /見出し/ }));
 
     expect(textarea.value).toContain("## 本文");
+  });
+
+  it("リンク挿入時に編集前提のプレースホルダーを使う", () => {
+    const result = applyMarkdownFormat("詳細はこちら", 0, 0, "link");
+
+    expect(result.nextValue).toContain("[リンクテキスト](https://)");
   });
 
   it("貼り付け時に不要な書式を除去する", () => {
@@ -116,5 +130,42 @@ describe("QuestEditorForm", () => {
     await act(async () => {
       resolveSubmit?.();
     });
+  });
+
+  it("保存済み下書きがなくても入力内容を自動保存する", async () => {
+    render(
+      <QuestEditorForm
+        title="新しいクエストを作成"
+        submitLabel="クエストを作成"
+        submittingLabel="作成中..."
+        draftStorageKey="quest-editor:test-autosave"
+        onSubmit={vi.fn().mockResolvedValue(undefined)}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText("タイトル *"), {
+      target: { value: "新規タイトル" },
+    });
+
+    await waitFor(() => {
+      expect(
+        JSON.parse(
+          window.localStorage.getItem("quest-editor:test-autosave") ?? "{}"
+        ).title
+      ).toBe("新規タイトル");
+    });
+  });
+
+  it("終了日が開始日より前ならバリデーションエラーを返す", () => {
+    const errors = validateQuestForm({
+      ...DEFAULT_QUEST_FORM_DATA,
+      title: "クエスト",
+      description: "説明",
+      start_date: "2026-03-10",
+      end_date: "2026-03-01",
+    });
+
+    expect(errors.end_date).toBe("終了日は開始日以降を指定してください");
   });
 });

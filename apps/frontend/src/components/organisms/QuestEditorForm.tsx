@@ -50,6 +50,7 @@ export const QuestEditorForm: React.FC<QuestEditorFormProps> = ({
   );
   const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
   const isDraftReadyRef = useRef(false);
+  const dialogTitleId = `${draftStorageKey}-dialog-title`;
 
   useEffect(() => {
     setFormData(initialData);
@@ -60,6 +61,7 @@ export const QuestEditorForm: React.FC<QuestEditorFormProps> = ({
   }, [draftStorageKey, initialData]);
 
   useEffect(() => {
+    isDraftReadyRef.current = true;
     const savedDraft = window.localStorage.getItem(draftStorageKey);
     if (!savedDraft) return;
 
@@ -73,8 +75,6 @@ export const QuestEditorForm: React.FC<QuestEditorFormProps> = ({
     } catch (error) {
       console.error("下書き復元に失敗しました", error);
     }
-
-    isDraftReadyRef.current = true;
   }, [draftStorageKey, initialData]);
 
   useEffect(() => {
@@ -177,12 +177,20 @@ export const QuestEditorForm: React.FC<QuestEditorFormProps> = ({
       onClick={requestClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={dialogTitleId}
         className="mx-4 max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg border-4 border-amber-300 bg-gradient-to-br from-amber-50 to-amber-100 p-6 pb-28 md:pb-6"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-slate-800 font-serif">{title}</h2>
+            <h2
+              id={dialogTitleId}
+              className="text-2xl font-bold text-slate-800 font-serif"
+            >
+              {title}
+            </h2>
             <p className="mt-1 text-sm text-slate-600">
               入力内容は自動で下書き保存されます。
             </p>

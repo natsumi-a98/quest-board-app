@@ -92,7 +92,7 @@ export const applyMarkdownFormat = (
     }
     case "link": {
       const label = selectedText || "リンクテキスト";
-      const inserted = `[${label}](https://example.com)`;
+      const inserted = `[${label}](https://)`;
       return {
         nextValue: `${source.slice(0, selectionStart)}${inserted}${source.slice(selectionEnd)}`,
         selectionStart,
@@ -126,7 +126,7 @@ export const validateQuestForm = (formData: QuestFormData): QuestFormErrors => {
   if (
     formData.start_date &&
     formData.end_date &&
-    new Date(formData.end_date) < new Date(formData.start_date)
+    formData.end_date < formData.start_date
   ) {
     errors.end_date = "終了日は開始日以降を指定してください";
   }
