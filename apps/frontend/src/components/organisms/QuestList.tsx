@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Search,
   Sword,
@@ -19,15 +19,13 @@ import { useRouter } from "next/navigation";
 import QuestListCard, {
   type CompletedQuestButtonAction,
 } from "@/components/organisms/QuestListCard";
+import {
+  filterQuests,
+  getSuggestedQuests,
+} from "@/components/organisms/questListFilters";
 
 // 一般ユーザーに非表示にするクエストステータス
 const HIDDEN_QUEST_STATUSES: string[] = ["draft", "pending", "inactive"];
-
-const normalizeDate = (dateValue: string) => {
-  const date = new Date(dateValue);
-  date.setHours(0, 0, 0, 0);
-  return date;
-};
 
 const QuestListSkeleton = () => (
   <div className="w-full">
@@ -42,7 +40,7 @@ const QuestListSkeleton = () => (
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
         {Array.from({ length: 6 }).map((_, index) => (
           <div
-            key={index}
+            key={`skeleton-card-${index}`}
             className="overflow-hidden rounded-3xl border border-slate-700 bg-slate-800/70 shadow-lg"
           >
             <div className="space-y-4 p-6">
@@ -88,6 +86,7 @@ const QuestList: React.FC = () => {
     Map<number, CompletedQuestButtonAction>
   >(new Map());
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const searchContainerRef = useRef<HTMLDivElement | null>(null);
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
 
@@ -276,49 +275,15 @@ const QuestList: React.FC = () => {
   };
 
   const normalizedSearchQuery = debouncedSearchQuery.toLowerCase();
-
-  const suggestedQuests = quests
-    .filter((quest) => {
-      const isHiddenStatus = HIDDEN_QUEST_STATUSES.includes(quest.status as string);
-      return (
-        !isHiddenStatus &&
-        normalizedSearchQuery.length > 0 &&
-        quest.title.toLowerCase().includes(normalizedSearchQuery)
-      );
-    })
-    .slice(0, 5);
-
-  const filteredQuests = quests.filter((quest) => {
-    const matchesFilter =
-      selectedFilter === "all" || quest.status === selectedFilter;
-
-    const matchesSearch =
-      normalizedSearchQuery.length === 0 ||
-      quest.title.toLowerCase().includes(normalizedSearchQuery) ||
-      quest.description.toLowerCase().includes(normalizedSearchQuery) ||
-      (quest.tags ?? []).some((tag) =>
-        tag.toLowerCase().includes(normalizedSearchQuery)
-      );
-
-    const questStartDate = normalizeDate(quest.start_date);
-    const matchesStartDate =
-      !startDateFilter || questStartDate >= normalizeDate(startDateFilter);
-    const matchesEndDate =
-      !endDateFilter || questStartDate <= normalizeDate(endDateFilter);
-
-    // 一般ユーザーには非公開ステータスのクエストを非表示にする
-    const isHiddenStatus = HIDDEN_QUEST_STATUSES.includes(
-      quest.status as string
-    );
-
-    return (
-      matchesFilter &&
-      matchesSearch &&
-      matchesStartDate &&
-      matchesEndDate &&
-      !isHiddenStatus
-    );
-  });
+  const filterParams = {
+    selectedFilter,
+    normalizedSearchQuery,
+    startDateFilter,
+    endDateFilter,
+    hiddenStatuses: HIDDEN_QUEST_STATUSES,
+  };
+  const filteredQuests = filterQuests(quests, filterParams);
+  const suggestedQuests = getSuggestedQuests(quests, filterParams);
 
   if (loading) {
     return <QuestListSkeleton />;
@@ -331,16 +296,24 @@ const QuestList: React.FC = () => {
         <div className="mb-8 space-y-4">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-4 sm:flex-row">
-              <div className="relative flex-1">
+              <div
+                ref={searchContainerRef}
+                className="relative flex-1"
+                onBlur={(event) => {
+                  const nextTarget = event.relatedTarget as Node | null;
+                  if (nextTarget && searchContainerRef.current?.contains(nextTarget)) {
+                    return;
+                  }
+
+                  setShowSuggestions(false);
+                }}
+              >
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
                   placeholder="クエストを検索..."
                   value={searchQuery}
                   onFocus={() => setShowSuggestions(true)}
-                  onBlur={() => {
-                    window.setTimeout(() => setShowSuggestions(false), 120);
-                  }}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
                 />
