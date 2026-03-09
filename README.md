@@ -265,6 +265,19 @@ pnpm dev:docs
 
 ---
 
+## API ドキュメント
+
+バックエンド起動後、以下で OpenAPI を確認できます。
+
+- Swagger UI: `http://localhost:3001/api/docs`
+- OpenAPI JSON: `http://localhost:3001/api/openapi.json`
+
+現在の request schema は backend の `zod` を source of truth とし、OpenAPI ドキュメントも同じ schema から生成します。新しい API を追加する場合は、controller に手書きの `if` を足すのではなく、`apps/backend/src/schemas/api.ts` に schema を追加して `validateRequest` から利用してください。
+
+VS Code では `.vscode/extensions.json` に OpenAPI 向けの推奨拡張を追加しています。workspace を開くと推奨が表示されます。
+
+---
+
 ## Firebase のセットアップ
 
 1. [Firebase コンソール](https://console.firebase.google.com/) でプロジェクトを作成
