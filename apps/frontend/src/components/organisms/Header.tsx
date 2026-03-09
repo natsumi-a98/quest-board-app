@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { signOut } from "firebase/auth";
@@ -33,6 +33,8 @@ export const Header: React.FC = () => {
   const { user: firebaseUser } = useAuth();
   const [user, setUser] = useState<AppUser | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef<HTMLElement | null>(null);
+  const mobileMenuButtonRef = useRef<HTMLButtonElement | null>(null);
 
   // MySQLからユーザー情報を取得
   useEffect(() => {
@@ -70,6 +72,57 @@ export const Header: React.FC = () => {
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+
+    const getFocusableElements = () =>
+      Array.from(
+        mobileMenuRef.current?.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        ) ?? []
+      );
+
+    const focusableElements = getFocusableElements();
+    focusableElements[0]?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsMobileMenuOpen(false);
+        mobileMenuButtonRef.current?.focus();
+        return;
+      }
+
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const currentFocusableElements = getFocusableElements();
+      const firstElement = currentFocusableElements[0];
+      const lastElement = currentFocusableElements.at(-1);
+
+      if (!firstElement || !lastElement) {
+        return;
+      }
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+        return;
+      }
+
+      if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMobileMenuOpen]);
 
   const primaryNavItems = [
     {
@@ -135,6 +188,7 @@ export const Header: React.FC = () => {
             </div>
 
             <button
+              ref={mobileMenuButtonRef}
               type="button"
               className="rounded-lg border border-slate-600 p-2 text-yellow-400 transition hover:border-yellow-400 md:hidden"
               onClick={() => setIsMobileMenuOpen((current) => !current)}
@@ -178,6 +232,7 @@ export const Header: React.FC = () => {
 
       {isMobileMenuOpen && (
         <nav
+          ref={mobileMenuRef}
           id="mobile-navigation"
           className="border-b border-slate-600 bg-slate-800 px-4 py-4 md:hidden"
           aria-label="モバイルナビゲーション"
