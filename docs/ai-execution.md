@@ -33,6 +33,15 @@
 
 ## 実行フェーズ
 
+### Phase 0: issue / branch 準備
+
+issue ベースで作業する場合は、実装前に以下を確認する。
+
+- 対象 issue のスコープと Acceptance Criteria
+- 既存 PR と重複していないか
+- `git worktree` で分離した作業場所を作るか
+- branch 名、PR タイトル、検証方針
+
 ### Phase 1: 事前確認
 
 確認対象:
@@ -106,6 +115,15 @@
 - 検証結果
 - 未実施検証
 - 残るリスクや注意点
+
+### Phase 7: PR 作成
+
+issue 対応では、検証後に以下を整理して PR を作成する。
+
+- Summary
+- Verification
+- 必要に応じて Risks / Notes
+- 既存失敗と今回変更の切り分け
 
 ## ドキュメント責務の境界
 
