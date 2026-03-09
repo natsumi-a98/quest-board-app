@@ -1,5 +1,8 @@
 import { MypageDataAccessor } from "../dataAccessor/dbAccessor";
 
+/**
+ * マイページ表示用にユーザー関連データを整形するサービス。
+ */
 export class MypageService {
   constructor(private readonly mypageDataAccessor = new MypageDataAccessor()) {}
 
@@ -71,4 +74,7 @@ export class MypageService {
   }
 }
 
+/**
+ * マイページ機能で共有するサービスインスタンス。
+ */
 export const mypageService = new MypageService();

@@ -44,6 +44,9 @@ interface QuestMutationBody {
   note?: string;
 }
 
+/**
+ * 公開クエスト一覧を返す。
+ */
 export const getAllQuests = asyncHandler(async (req: Request, res: Response) => {
   const quests = await getAllQuestsService({
     keyword: typeof req.query.keyword === "string" ? req.query.keyword : undefined,
@@ -52,6 +55,9 @@ export const getAllQuests = asyncHandler(async (req: Request, res: Response) => 
   res.json(quests);
 });
 
+/**
+ * クエストのステータスを更新する。
+ */
 export const updateQuestStatus = asyncHandler(
   async (req: Request, res: Response) => {
     const id = Number(req.params.id);
@@ -70,6 +76,9 @@ export const updateQuestStatus = asyncHandler(
   }
 );
 
+/**
+ * クエスト詳細を 1 件返す。
+ */
 export const getQuestById = asyncHandler(async (req: Request, res: Response) => {
   const quest = await getQuestByIdService(Number(req.params.id));
   if (!quest) {
@@ -79,6 +88,10 @@ export const getQuestById = asyncHandler(async (req: Request, res: Response) => 
   res.json(quest);
 });
 
+/**
+ * クエストを新規作成する。
+ * 一般ユーザーが status 未指定で作成した場合は pending に補正する。
+ */
 export const createQuest = asyncHandler(async (req: Request, res: Response) => {
   const {
     title,
@@ -139,6 +152,9 @@ export const createQuest = asyncHandler(async (req: Request, res: Response) => {
   res.status(201).json(quest);
 });
 
+/**
+ * 既存クエストを更新する。
+ */
 export const updateQuest = asyncHandler(async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   const {
@@ -197,6 +213,9 @@ export const updateQuest = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * クエストを論理削除する。
+ */
 export const deleteQuest = asyncHandler(async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   if (Number.isNaN(id)) {
@@ -215,6 +234,9 @@ export const deleteQuest = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * 削除済みを含むクエスト一覧を管理者向けに返す。
+ */
 export const getAllQuestsIncludingDeleted = asyncHandler(
   async (req: Request, res: Response) => {
     const quests = await getAllQuestsIncludingDeletedService({
@@ -225,6 +247,9 @@ export const getAllQuestsIncludingDeleted = asyncHandler(
   }
 );
 
+/**
+ * 下書きまたは非公開クエストを承認待ちへ送る。
+ */
 export const submitQuestForApproval = asyncHandler(
   async (req: Request, res: Response) => {
     const id = Number(req.params.id);
@@ -249,6 +274,9 @@ export const submitQuestForApproval = asyncHandler(
   }
 );
 
+/**
+ * 論理削除済みクエストを復元する。
+ */
 export const restoreQuest = asyncHandler(async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   if (Number.isNaN(id)) {
@@ -271,6 +299,9 @@ export const restoreQuest = asyncHandler(async (req: Request, res: Response) => 
   });
 });
 
+/**
+ * 非アクティブ化されたクエストを再度 active に戻す。
+ */
 export const reactivateQuest = asyncHandler(
   async (req: Request, res: Response) => {
     const id = Number(req.params.id);

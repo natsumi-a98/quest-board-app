@@ -9,6 +9,9 @@ import {
 import { asyncHandler } from "../utils/asyncHandler";
 import { badRequest } from "../utils/appError";
 
+/**
+ * クエストに紐づくレビュー一覧を返す。
+ */
 export const getReviewsByQuestId = asyncHandler(
   async (req: Request, res: Response) => {
     const questId = Number(req.params.questId);
@@ -17,6 +20,9 @@ export const getReviewsByQuestId = asyncHandler(
   }
 );
 
+/**
+ * クエストへのレビューを新規作成する。
+ */
 export const createReview = asyncHandler(async (req: Request, res: Response) => {
   const questId = Number(req.params.questId);
   const { reviewer_id, rating, comment } = req.body;
@@ -50,6 +56,9 @@ export const createReview = asyncHandler(async (req: Request, res: Response) => 
   }
 });
 
+/**
+ * 既存レビューを更新する。
+ */
 export const updateReview = asyncHandler(async (req: Request, res: Response) => {
   const reviewId = Number(req.params.reviewId);
   const { rating, comment } = req.body;
@@ -69,12 +78,18 @@ export const updateReview = asyncHandler(async (req: Request, res: Response) => 
   res.json(review);
 });
 
+/**
+ * レビューを削除する。
+ */
 export const deleteReview = asyncHandler(async (req: Request, res: Response) => {
   const reviewId = Number(req.params.reviewId);
   await deleteReviewService(reviewId);
   res.status(204).send();
 });
 
+/**
+ * 指定ユーザーが対象クエストにレビュー済みかを返す。
+ */
 export const checkUserReviewExists = asyncHandler(
   async (req: Request, res: Response) => {
     const { userId, questId } = req.params;

@@ -15,6 +15,9 @@ import {
   unauthorized,
 } from "../utils/appError";
 
+/**
+ * 名前またはメールアドレスでユーザーを検索し、公開可能な基本情報を返す。
+ */
 export const findUserByNameOrEmail = asyncHandler(
   async (req: Request, res: Response) => {
     const { name, email } = req.body;
@@ -36,6 +39,9 @@ export const findUserByNameOrEmail = asyncHandler(
   }
 );
 
+/**
+ * 名前またはメールアドレスで検索したユーザーの ID を返す。
+ */
 export const getUserIdByNameOrEmail = asyncHandler(
   async (req: Request, res: Response) => {
     const { name, email } = req.body;
@@ -53,6 +59,9 @@ export const getUserIdByNameOrEmail = asyncHandler(
   }
 );
 
+/**
+ * 認証済み Firebase ユーザーをアプリケーションユーザーとして登録する。
+ */
 export const createUser = asyncHandler(async (req: Request, res: Response) => {
   const firebaseUser = req.user;
   if (!firebaseUser) {
@@ -90,6 +99,9 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
+/**
+ * 認証済みユーザーのプロフィールを返す。
+ */
 export const getCurrentUser = asyncHandler(
   async (req: Request, res: Response) => {
     const firebaseUser = req.user;
@@ -111,11 +123,17 @@ export const getCurrentUser = asyncHandler(
   }
 );
 
+/**
+ * 管理画面向けに全ユーザー一覧を返す。
+ */
 export const getAllUsers = asyncHandler(async (_req: Request, res: Response) => {
   const users = await getAllUsersService();
   res.json(users);
 });
 
+/**
+ * ユーザーを関連データとあわせて削除する。
+ */
 export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   if (Number.isNaN(id)) {
