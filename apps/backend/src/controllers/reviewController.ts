@@ -107,9 +107,6 @@ export const checkUserReviewExists = asyncHandler(
 		});
 		const { userId } = params;
 		const { questId } = query;
-		if (!questId) {
-			throw badRequest("questId is required");
-		}
 		const exists = await checkUserReviewExistsService(userId, questId);
 
 		res.json({ exists });

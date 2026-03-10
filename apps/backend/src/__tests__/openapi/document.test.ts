@@ -16,4 +16,16 @@ describe("openApiDocument", () => {
 			},
 		});
 	});
+
+	it("管理者向け条件を含む path のレスポンス定義を持つ", () => {
+		expect(openApiDocument.paths["/api/quests"]?.get?.responses).toMatchObject({
+			401: expect.any(Object),
+			403: expect.any(Object),
+		});
+		expect(
+			openApiDocument.paths["/api/users"]?.get?.responses?.["200"],
+		).toMatchObject({
+			description: "ユーザー一覧",
+		});
+	});
 });

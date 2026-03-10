@@ -27,7 +27,6 @@ import {
 	UserIdParamSchema,
 	UserListQuerySchema,
 	UserReviewParamSchema,
-	UserSummarySchema,
 	UserWithRoleSchema,
 } from "../schemas/api";
 import { z } from "./zod";
@@ -57,6 +56,14 @@ registry.registerPath({
 		200: {
 			description: "クエスト一覧",
 			content: jsonContent(z.array(QuestSchema)),
+		},
+		401: {
+			description: "未認証",
+			content: jsonContent(ErrorResponseSchema),
+		},
+		403: {
+			description: "管理者権限が必要",
+			content: jsonContent(ErrorResponseSchema),
 		},
 	},
 });
@@ -221,7 +228,7 @@ registry.registerPath({
 	responses: {
 		200: {
 			description: "ユーザー一覧",
-			content: jsonContent(z.array(UserSummarySchema)),
+			content: jsonContent(z.array(UserWithRoleSchema)),
 		},
 	},
 });

@@ -107,7 +107,7 @@ export const questService = {
   reactivateQuest: async (
     id: string
   ): Promise<{ message: string; quest: Quest }> => {
-    return authenticatedApiClient.patch<{ message: string; quest: Quest }, {}>(
+    return authenticatedApiClient.post<{ message: string; quest: Quest }, {}>(
       `/quests/${id}/activations`,
       {}
     );

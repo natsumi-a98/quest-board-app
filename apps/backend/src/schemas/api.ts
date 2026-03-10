@@ -116,9 +116,7 @@ export const QuestListQuerySchema = z
 	})
 	.openapi("QuestListQuery");
 
-export const UserListQuerySchema = FindUserQuerySchema.extend({
-	questId: numericIdSchema.optional(),
-}).openapi("UserListQuery");
+export const UserListQuerySchema = FindUserQuerySchema.openapi("UserListQuery");
 
 export const ReviewExistsQuerySchema = z
 	.object({

@@ -12,7 +12,7 @@ import {
 	getAllUsersService,
 	getUserByFirebaseUidService,
 } from "../services/userService";
-import { conflict, notFound, unauthorized } from "../utils/appError";
+import { conflict, forbidden, notFound, unauthorized } from "../utils/appError";
 import { asyncHandler } from "../utils/asyncHandler";
 import { validateRequest } from "../utils/validate";
 
@@ -36,6 +36,7 @@ export const getUsers = asyncHandler(
 					id: user.id,
 					name: user.name,
 					email: user.email,
+					role: user.role,
 				},
 			]);
 			return;
@@ -48,7 +49,7 @@ export const getUsers = asyncHandler(
 
 		const currentUser = await getUserByFirebaseUidService(firebaseUser.uid);
 		if (!currentUser || currentUser.role !== ROLES.ADMIN) {
-			throw unauthorized();
+			throw forbidden("Forbidden: admin access required");
 		}
 
 		const users = await getAllUsersService();
