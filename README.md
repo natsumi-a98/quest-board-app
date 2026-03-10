@@ -42,12 +42,20 @@ repo
 │  ├─ backend    # API、service、Prisma、認証
 │  ├─ docs       # 開発ドキュメントサイト
 │  └─ e2e        # Playwright E2E テスト
+<<<<<<< HEAD
+├─ docs          # AI / 開発運用の正本ドキュメント
+├─ prompt        # 補助テンプレート
+├─ AGENTS.md     # AI 共通ルールの正本
+├─ CLAUDE.md     # 互換用の案内
+└─ README.md     # セットアップと repo 全体像
+=======
 ├─ packages
 │  └─ types      # 共有型
 ├─ docs          # AI / 開発運用の正本ドキュメント
 ├─ prompt        # エージェント用テンプレート
 ├─ AGENTS.md     # AI 共通ルール
 └─ README.md     # セットアップと全体像
+>>>>>>> origin/main
 ```
 
 ## 変更箇所の当たり方
@@ -64,20 +72,42 @@ repo
 | テスト | `apps/frontend/src/__tests__`, `apps/backend/src/__tests__`, `apps/e2e/tests` |
 | ルール、設計 | `AGENTS.md`, `docs/architecture.md`, `docs/ai-execution.md` |
 
+<<<<<<< HEAD
+## AI 向けドキュメント導線
+
+AI が最初に読むべき文書セットは次の 5 つです。
+=======
 ## AI向けドキュメント導線
 
 AIエージェント向けの正本は以下です。
+>>>>>>> origin/main
 
 1. `README.md`
 2. `AGENTS.md`
 3. `docs/architecture.md`
 4. `docs/ai-execution.md`
 5. `prompt/agent.md`
+<<<<<<< HEAD
+6. 関連コード / 関連テスト
+=======
 6. 関連コード / テスト
+>>>>>>> origin/main
 
 役割は次のとおりです。
 
 - `README.md`: セットアップ、開発コマンド、リポジトリ全体像
+<<<<<<< HEAD
+- `AGENTS.md`: AI エージェント共通ルールの正本
+- `docs/architecture.md`: repo 構造、レイヤー責務、変更判断の基準
+- `docs/ai-execution.md`: 調査、実装、検証、報告の進め方
+- `prompt/agent.md`: 他エージェントに渡す短い実行テンプレート
+
+補助テンプレートは source-of-truth ではありません。
+
+- `prompt/create_issue.md`: 改善 issue を新規起票するときの補助テンプレート
+- `prompt/modify_issue.md`: 既存 issue を整理、修正するときの補助テンプレート
+- `CLAUDE.md`: `AGENTS.md` への互換エントリ
+=======
 - `AGENTS.md`: AIエージェント共通ルール
 - `docs/architecture.md`: 実装対象の構造、責務、変更時の判断基準
 - `docs/ai-execution.md`: AIの調査、実装、検証フロー
@@ -85,6 +115,7 @@ AIエージェント向けの正本は以下です。
 - `prompt/create_issue.md`: 改善 issue を新規起票するときの補助プロンプト
 - `prompt/modify_issue.md`: 既存 issue を整理、修正するときの補助プロンプト
 - `ai-docs-refactor-prompt.md`: AI 向け docs 自体を見直すときの補助プロンプト
+>>>>>>> origin/main
 
 ---
 
