@@ -25,16 +25,16 @@ import {
 // 一般ユーザーに非表示にするクエストステータス
 const HIDDEN_QUEST_STATUSES: string[] = ["draft", "pending", "inactive"];
 const QUEST_LIST_SKELETON_KEYS = [
-  "skeleton-card-0",
-  "skeleton-card-1",
-  "skeleton-card-2",
-  "skeleton-card-3",
-  "skeleton-card-4",
-  "skeleton-card-5",
+	"skeleton-card-0",
+	"skeleton-card-1",
+	"skeleton-card-2",
+	"skeleton-card-3",
+	"skeleton-card-4",
+	"skeleton-card-5",
 ];
 
 const QuestListSkeleton = () => (
-  <div className="w-full">
+	<div className="w-full">
 		<section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen flex flex-col">
 			<div className="mb-8 space-y-4 animate-pulse">
 				<div className="flex flex-col sm:flex-row gap-4">
@@ -44,11 +44,11 @@ const QuestListSkeleton = () => (
 			</div>
 
 			<div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
-        {QUEST_LIST_SKELETON_KEYS.map((skeletonKey) => (
-          <div
-            key={skeletonKey}
-            className="overflow-hidden rounded-3xl border border-slate-700 bg-slate-800/70 shadow-lg"
-          >
+				{QUEST_LIST_SKELETON_KEYS.map((skeletonKey) => (
+					<div
+						key={skeletonKey}
+						className="overflow-hidden rounded-3xl border border-slate-700 bg-slate-800/70 shadow-lg"
+					>
 						<div className="space-y-4 p-6">
 							<div className="flex items-center justify-between">
 								<div className="h-8 w-8 rounded-full bg-slate-700" />
@@ -160,7 +160,7 @@ const QuestList: React.FC = () => {
 		};
 
 		updateButtonActions();
-  }, [quests, currentUserId]);
+	}, [quests, currentUserId]);
 
 	const getIconComponent = (questType: string) => {
 		switch (questType) {
@@ -198,11 +198,11 @@ const QuestList: React.FC = () => {
 			day: "numeric",
 		});
 
-  const formatCurrency = (amount?: string | number) => {
-    if (!amount) return "-";
-    const numAmount =
-      typeof amount === "string" ? Number.parseFloat(amount) : amount;
-    if (Number.isNaN(numAmount)) return "-";
+	const formatCurrency = (amount?: string | number) => {
+		if (!amount) return "-";
+		const numAmount =
+			typeof amount === "string" ? Number.parseFloat(amount) : amount;
+		if (Number.isNaN(numAmount)) return "-";
 		return new Intl.NumberFormat("ja-JP", {
 			style: "currency",
 			currency: "JPY",
@@ -262,24 +262,24 @@ const QuestList: React.FC = () => {
 		const isParticipant = isUserParticipant(quest);
 		const hasSubmittedReview = await hasUserSubmittedReview(quest);
 
-    if (isParticipant && !hasSubmittedReview) {
-      return {
-        text: "レビューを投稿する",
-        action: () => router.push(`/quests/${quest.id}?action=review`),
-        icon: MessageSquare,
-        className:
-          "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700",
-      };
-    }
+		if (isParticipant && !hasSubmittedReview) {
+			return {
+				text: "レビューを投稿する",
+				action: () => router.push(`/quests/${quest.id}?action=review`),
+				icon: MessageSquare,
+				className:
+					"bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700",
+			};
+		}
 
-    return {
-      text: "レビューを見る",
-      action: () => router.push(`/quests/${quest.id}`),
-      icon: Eye,
-      className:
-        "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700",
-    };
-  };
+		return {
+			text: "レビューを見る",
+			action: () => router.push(`/quests/${quest.id}`),
+			icon: Eye,
+			className:
+				"bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700",
+		};
+	};
 
 	const handleJoinQuest = (quest: Quest) => {
 		setSelectedQuest(quest);
