@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { ROLES } from "../constants/roles";
 import {
 	CreateUserBodySchema,
-	FindUserBodySchema,
+	UserListQuerySchema,
 	UserIdParamSchema,
 } from "../schemas/api";
 import {
@@ -12,45 +12,48 @@ import {
 	getAllUsersService,
 	getUserByFirebaseUidService,
 } from "../services/userService";
-import { conflict, notFound, unauthorized } from "../utils/appError";
+import { conflict, forbidden, notFound, unauthorized } from "../utils/appError";
 import { asyncHandler } from "../utils/asyncHandler";
 import { validateRequest } from "../utils/validate";
 
 /**
- * 名前またはメールアドレスでユーザーを検索し、公開可能な基本情報を返す。
+ * クエリ有無に応じてユーザー検索または管理者向け一覧取得を行う。
  */
-export const findUserByNameOrEmail = asyncHandler(
+export const getUsers = asyncHandler(
 	async (req: Request, res: Response) => {
-		const { body } = validateRequest(req, { body: FindUserBodySchema });
-		const { name, email } = body;
+		const { query } = validateRequest(req, { query: UserListQuerySchema });
+		const { name, email } = query;
 
-		const user = await findUserByNameOrEmailService(name, email);
-		if (!user) {
-			throw notFound("User not found");
+		if (name || email) {
+			const user = await findUserByNameOrEmailService(name || "", email || "");
+			if (!user) {
+				res.json([]);
+				return;
+			}
+
+			res.json([
+				{
+					id: user.id,
+					name: user.name,
+					email: user.email,
+					role: user.role,
+				},
+			]);
+			return;
 		}
 
-		res.json({
-			id: user.id,
-			name: user.name,
-			email: user.email,
-		});
-	},
-);
-
-/**
- * 名前またはメールアドレスで検索したユーザーの ID を返す。
- */
-export const getUserIdByNameOrEmail = asyncHandler(
-	async (req: Request, res: Response) => {
-		const { body } = validateRequest(req, { body: FindUserBodySchema });
-		const { name, email } = body;
-
-		const user = await findUserByNameOrEmailService(name, email);
-		if (!user) {
-			throw notFound("User not found");
+		const firebaseUser = req.user;
+		if (!firebaseUser) {
+			throw unauthorized();
 		}
 
-		res.json({ userId: user.id });
+		const currentUser = await getUserByFirebaseUidService(firebaseUser.uid);
+		if (!currentUser || currentUser.role !== ROLES.ADMIN) {
+			throw forbidden("Forbidden: admin access required");
+		}
+
+		const users = await getAllUsersService();
+		res.json(users);
 	},
 );
 
@@ -113,16 +116,6 @@ export const getCurrentUser = asyncHandler(
 			email: user.email,
 			role: user.role,
 		});
-	},
-);
-
-/**
- * 管理画面向けに全ユーザー一覧を返す。
- */
-export const getAllUsers = asyncHandler(
-	async (_req: Request, res: Response) => {
-		const users = await getAllUsersService();
-		res.json(users);
 	},
 );
 

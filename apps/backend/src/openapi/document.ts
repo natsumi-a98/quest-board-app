@@ -10,7 +10,6 @@ import {
 	DeleteUserResponseSchema,
 	ErrorResponseSchema,
 	ExistsResponseSchema,
-	FindUserBodySchema,
 	JoinQuestResponseSchema,
 	MessageResponseSchema,
 	QuestActionResponseSchema,
@@ -20,14 +19,14 @@ import {
 	QuestMutationBodySchema,
 	QuestSchema,
 	QuestStatusBodySchema,
-	ReviewCheckParamSchema,
+	ReviewExistsQuerySchema,
 	ReviewCreateBodySchema,
 	ReviewIdParamSchema,
 	ReviewSchema,
 	ReviewUpdateBodySchema,
 	UserIdParamSchema,
-	UserIdResponseSchema,
-	UserSummarySchema,
+	UserListQuerySchema,
+	UserReviewParamSchema,
 	UserWithRoleSchema,
 } from "../schemas/api";
 import { z } from "./zod";
@@ -58,28 +57,12 @@ registry.registerPath({
 			description: "クエスト一覧",
 			content: jsonContent(z.array(QuestSchema)),
 		},
-	},
-});
-
-registry.registerPath({
-	method: "get",
-	path: "/api/quests/admin/all",
-	summary: "削除済みを含むクエスト一覧を取得する",
-	security: [{ bearerAuth: [] }],
-	request: {
-		query: QuestListQuerySchema,
-	},
-	responses: {
-		200: {
-			description: "クエスト一覧",
-			content: jsonContent(z.array(QuestSchema)),
-		},
 		401: {
 			description: "未認証",
 			content: jsonContent(ErrorResponseSchema),
 		},
 		403: {
-			description: "権限不足",
+			description: "管理者権限が必要",
 			content: jsonContent(ErrorResponseSchema),
 		},
 	},
@@ -173,12 +156,12 @@ registry.registerPath({
 });
 
 for (const [path, summary] of [
-	["/api/quests/{id}/submit", "クエストを承認待ちにする"],
-	["/api/quests/{id}/restore", "削除済みクエストを復元する"],
-	["/api/quests/{id}/reactivate", "停止中クエストを再公開する"],
+	["/api/quests/{id}/submissions", "クエストを承認待ちにする"],
+	["/api/quests/{id}/restorations", "削除済みクエストを復元する"],
+	["/api/quests/{id}/activations", "停止中クエストを再公開する"],
 ] as const) {
 	registry.registerPath({
-		method: "patch",
+		method: "post",
 		path,
 		summary,
 		security: [{ bearerAuth: [] }],
@@ -216,7 +199,7 @@ registry.registerPath({
 
 registry.registerPath({
 	method: "post",
-	path: "/api/quests/{questId}/join",
+	path: "/api/quests/{questId}/participants",
 	summary: "クエストに参加する",
 	security: [{ bearerAuth: [] }],
 	request: {
@@ -235,48 +218,24 @@ registry.registerPath({
 });
 
 registry.registerPath({
-	method: "post",
-	path: "/api/users/find",
-	summary: "名前またはメールアドレスでユーザーを検索する",
+	method: "get",
+	path: "/api/users",
+	summary: "条件付きユーザー検索またはユーザー一覧取得を行う",
 	security: [{ bearerAuth: [] }],
 	request: {
-		body: {
-			content: jsonContent(FindUserBodySchema),
-		},
+		query: UserListQuerySchema,
 	},
 	responses: {
 		200: {
-			description: "ユーザー情報",
-			content: jsonContent(UserSummarySchema),
-		},
-		404: {
-			description: "未検出",
-			content: jsonContent(ErrorResponseSchema),
+			description: "ユーザー一覧",
+			content: jsonContent(z.array(UserWithRoleSchema)),
 		},
 	},
 });
 
 registry.registerPath({
 	method: "post",
-	path: "/api/users/get-id",
-	summary: "名前またはメールアドレスからユーザー ID を取得する",
-	security: [{ bearerAuth: [] }],
-	request: {
-		body: {
-			content: jsonContent(FindUserBodySchema),
-		},
-	},
-	responses: {
-		200: {
-			description: "ユーザー ID",
-			content: jsonContent(UserIdResponseSchema),
-		},
-	},
-});
-
-registry.registerPath({
-	method: "post",
-	path: "/api/users/create",
+	path: "/api/users",
 	summary: "ログイン中ユーザーを作成する",
 	security: [{ bearerAuth: [] }],
 	request: {
@@ -314,19 +273,6 @@ registry.registerPath({
 });
 
 registry.registerPath({
-	method: "get",
-	path: "/api/users/all",
-	summary: "全ユーザー一覧を取得する",
-	security: [{ bearerAuth: [] }],
-	responses: {
-		200: {
-			description: "ユーザー一覧",
-			content: jsonContent(z.array(UserWithRoleSchema)),
-		},
-	},
-});
-
-registry.registerPath({
 	method: "delete",
 	path: "/api/users/{id}",
 	summary: "ユーザーを削除する",
@@ -344,7 +290,7 @@ registry.registerPath({
 
 registry.registerPath({
 	method: "get",
-	path: "/api/reviews/quest/{questId}",
+	path: "/api/quests/{questId}/reviews",
 	summary: "クエストのレビュー一覧を取得する",
 	request: {
 		params: QuestJoinParamSchema,
@@ -359,7 +305,7 @@ registry.registerPath({
 
 registry.registerPath({
 	method: "post",
-	path: "/api/reviews/quest/{questId}",
+	path: "/api/quests/{questId}/reviews",
 	summary: "クエストにレビューを投稿する",
 	request: {
 		params: QuestJoinParamSchema,
@@ -409,10 +355,11 @@ registry.registerPath({
 
 registry.registerPath({
 	method: "get",
-	path: "/api/reviews/check/{userId}/{questId}",
+	path: "/api/users/{userId}/reviews",
 	summary: "レビュー投稿済みか確認する",
 	request: {
-		params: ReviewCheckParamSchema,
+		params: UserReviewParamSchema,
+		query: ReviewExistsQuerySchema,
 	},
 	responses: {
 		200: {

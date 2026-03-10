@@ -43,6 +43,37 @@ export const authMiddleware = async (
 };
 
 /**
+ * Bearer トークンがある場合のみ検証し、未指定時は匿名のまま通過する。
+ */
+export const optionalAuthMiddleware = async (
+  req: Request,
+  _res: Response,
+  next: NextFunction
+) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    next();
+    return;
+  }
+
+  if (!authHeader.startsWith("Bearer ")) {
+    return next(unauthorized("Unauthorized: Invalid authorization header"));
+  }
+
+  const idToken = authHeader.split("Bearer ")[1];
+
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    req.user = decodedToken;
+    next();
+  } catch (error) {
+    logger.warn({ err: error }, "Firebase トークンの任意検証に失敗しました");
+    return next(unauthorized("Unauthorized: Invalid token"));
+  }
+};
+
+/**
  * 認証済みユーザーが管理者ロールを持つことを検証する。
  */
 export const requireAdmin = async (
