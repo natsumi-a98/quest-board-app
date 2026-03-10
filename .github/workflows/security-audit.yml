@@ -1,0 +1,67 @@
+name: Scheduled Security Audit
+
+on:
+  schedule:
+    # UTC 00:00 (JST 09:00) on Monday
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+
+jobs:
+  audit:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run security audit
+        id: audit
+        run: |
+          pnpm audit --audit-level=high 2>&1 | tee audit-result.txt
+        continue-on-error: true
+
+      - name: Check audit exit code
+        id: check
+        run: |
+          if grep -qE "vulnerabilities|critical|high" audit-result.txt; then
+            echo "AUDIT_FAILED=true" >> "$GITHUB_ENV"
+          fi
+
+      - name: Create issue on vulnerability found
+        if: env.AUDIT_FAILED == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          AUDIT_RESULT=$(cat audit-result.txt)
+          DATE=$(date '+%Y-%m-%d')
+          gh issue create \
+            --title "[Security] 依存パッケージの脆弱性が検出されました (${DATE})" \
+            --body "## 脆弱性スキャン結果
+
+          定期スキャン (毎週月曜) で Critical / High の脆弱性が検出されました。
+
+          \`\`\`
+          ${AUDIT_RESULT}
+          \`\`\`
+
+          ## 対応方法
+          - \`pnpm audit --fix\` で自動修正可能な脆弱性を修正する
+          - 手動での対応が必要な場合は、該当パッケージのバージョンを更新する
+
+          _このissueはGitHub Actionsによって自動生成されました。_" \
+            --label "security" \
+            || true
