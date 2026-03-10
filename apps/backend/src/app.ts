@@ -7,6 +7,7 @@ import reviewsRouter from "./routes/reviews";
 import usersRouter from "./routes/users";
 import mypageRouter from "./routes/mypage";
 import adminUsersRouter from "./routes/adminUsers";
+import tagsRouter from "./routes/tags";
 import { errorHandler } from "./middlewares/errorHandler";
 import { httpLogger, logger } from "./config/logger";
 
@@ -44,6 +45,7 @@ app.use("/api/reviews", reviewsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/mypage", mypageRouter);
 app.use("/api/admin/users", adminUsersRouter);
+app.use("/api/tags", tagsRouter);
 app.use(errorHandler);
 
 // サーバー起動
