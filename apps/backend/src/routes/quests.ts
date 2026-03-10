@@ -1,23 +1,29 @@
 import express from "express";
 import {
-  getAllQuests,
-  getAllQuestsIncludingDeleted,
-  getQuestById,
-  updateQuestStatus,
-  createQuest,
-  updateQuest,
-  deleteQuest,
-  reactivateQuest,
-  submitQuestForApproval,
-  restoreQuest,
+	createQuest,
+	deleteQuest,
+	getAllQuests,
+	getAllQuestsIncludingDeleted,
+	getQuestById,
+	reactivateQuest,
+	restoreQuest,
+	submitQuestForApproval,
+	updateQuest,
+	updateQuestStatus,
 } from "../controllers/questController";
 import { joinQuest } from "../controllers/questJoinController";
 import { authMiddleware, requireAdmin } from "../middlewares/auth.middleware";
+import { questSearchRateLimiter } from "../middlewares/rateLimiter";
 
 const router = express.Router();
 
-router.get("/", getAllQuests); // GET /quests
-router.get("/admin/all", authMiddleware, requireAdmin, getAllQuestsIncludingDeleted); // GET /quests/admin/all (管理者用)
+router.get("/", questSearchRateLimiter, getAllQuests); // GET /quests
+router.get(
+	"/admin/all",
+	authMiddleware,
+	requireAdmin,
+	getAllQuestsIncludingDeleted,
+); // GET /quests/admin/all (管理者用)
 router.get("/:id", getQuestById); // GET /quests/:id
 router.post("/", authMiddleware, createQuest); // POST /quests
 router.put("/:id", authMiddleware, requireAdmin, updateQuest); // PUT /quests/:id
