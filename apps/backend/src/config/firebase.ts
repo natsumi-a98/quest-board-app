@@ -1,5 +1,6 @@
 import "./env"; // 環境変数ロード（単一エントリポイント）
 import admin from "firebase-admin";
+import { logger } from "./logger";
 
 if (!admin.apps.length) {
   const projectId = process.env.FIREBASE_PROJECT_ID ?? "";
@@ -28,30 +29,40 @@ if (!admin.apps.length) {
       admin.initializeApp({
         credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
       });
-      console.log("[firebase] Firebase Admin SDK initialized with service account credentials");
+      logger.info("[firebase] Firebase Admin SDK をサービスアカウントで初期化しました");
     } else {
       admin.initializeApp({
         credential: admin.credential.applicationDefault(),
       });
-      console.warn(
-        "[firebase] Using Application Default Credentials. Set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY to use service account cert."
+      logger.warn(
+        "[firebase] Application Default Credentials を使用しています。サービスアカウントを使う場合は FIREBASE_PROJECT_ID / FIREBASE_CLIENT_EMAIL / FIREBASE_PRIVATE_KEY を設定してください。"
       );
     }
   } catch (e) {
-    console.error("[firebase] Firebase Admin SDK initialization failed:", e);
+    logger.error({ err: e }, "[firebase] Firebase Admin SDK の初期化に失敗しました");
     // サービスアカウント認証に失敗した場合は ADC にフォールバック
     try {
       if (!admin.apps.length) {
         admin.initializeApp({
           credential: admin.credential.applicationDefault(),
         });
-        console.warn("[firebase] Falling back to Application Default Credentials after cert failure.");
+        logger.warn(
+          "[firebase] サービスアカウント初期化に失敗したため、Application Default Credentials にフォールバックします。"
+        );
       }
     } catch (fallbackError) {
-      console.error("[firebase] ADC fallback also failed:", fallbackError);
-      console.warn("[firebase] Firebase Admin SDK initialization failed. Authentication will not work properly.");
+      logger.error(
+        { err: fallbackError },
+        "[firebase] Application Default Credentials へのフォールバックにも失敗しました"
+      );
+      logger.warn(
+        "[firebase] Firebase Admin SDK の初期化に失敗しました。認証機能が正しく動作しない可能性があります。"
+      );
     }
   }
 }
 
+/**
+ * 初期化済みの Firebase Admin SDK インスタンス。
+ */
 export default admin;

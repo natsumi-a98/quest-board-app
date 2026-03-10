@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+
+remote_name="$1"
+remote_url="$2"
+
+while read -r local_ref local_sha remote_ref remote_sha
+do
+  if [ "$remote_ref" = "refs/heads/main" ]; then
+    echo "Direct pushes to main are blocked."
+    echo "Remote: $remote_name ($remote_url)"
+    echo "Push to a feature branch and open a pull request instead."
+    exit 1
+  fi
+done
+
+exit 0

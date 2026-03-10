@@ -1,8 +1,14 @@
 import { UserDataAccessor } from "../dataAccessor/dbAccessor/User";
+import { logger } from "../config/logger";
 
 const userDataAccessor = new UserDataAccessor();
 
-// ユーザー検索サービス
+/**
+ * 名前またはメールアドレスでユーザーを検索する。
+ * @param name - 検索対象の名前
+ * @param email - 検索対象のメールアドレス
+ * @returns 一致したユーザー。見つからない場合は `null`
+ */
 export const findUserByNameOrEmailService = async (
   name: string,
   email: string
@@ -11,12 +17,17 @@ export const findUserByNameOrEmailService = async (
     const user = await userDataAccessor.findByNameOrEmail(name, email);
     return user;
   } catch (error) {
-    console.error("ユーザー検索エラー:", error);
+    logger.error({ err: error, name, email }, "ユーザー検索エラー");
     throw error;
   }
 };
 
-// ユーザーID取得サービス
+/**
+ * 名前またはメールアドレスからユーザー ID を取得する。
+ * @param name - 検索対象の名前
+ * @param email - 検索対象のメールアドレス
+ * @returns 一致したユーザー ID。見つからない場合は `null`
+ */
 export const getUserIdByNameOrEmailService = async (
   name: string,
   email: string
@@ -25,18 +36,26 @@ export const getUserIdByNameOrEmailService = async (
   return user ? user.id : null;
 };
 
-// Firebase UIDでユーザー取得サービス
+/**
+ * Firebase UID からユーザーを取得する。
+ * @param firebaseUid - Firebase Authentication の UID
+ * @returns 一致したユーザー。見つからない場合は `null`
+ */
 export const getUserByFirebaseUidService = async (firebaseUid: string) => {
   try {
     const user = await userDataAccessor.findByFirebaseUid(firebaseUid);
     return user;
   } catch (error) {
-    console.error("Firebase UIDでユーザー取得エラー:", error);
+    logger.error({ err: error, firebaseUid }, "Firebase UIDでユーザー取得エラー");
     throw error;
   }
 };
 
-// ユーザー作成サービス
+/**
+ * アプリケーション利用者を新規作成する。
+ * @param userData - 作成するユーザー情報
+ * @returns 作成後のユーザー情報
+ */
 export const createUserService = async (userData: {
   name: string;
   email: string;
@@ -52,23 +71,30 @@ export const createUserService = async (userData: {
     });
     return user;
   } catch (error) {
-    console.error("ユーザー作成エラー:", error);
+    logger.error({ err: error, userData }, "ユーザー作成エラー");
     throw error;
   }
 };
 
-// 全ユーザー取得サービス（管理者用）
+/**
+ * 管理者向けに全ユーザー一覧を取得する。
+ * @returns 管理画面表示用のユーザー一覧
+ */
 export const getAllUsersService = async () => {
   try {
     const users = await userDataAccessor.getAllForAdmin();
     return users;
   } catch (error) {
-    console.error("全ユーザー取得エラー:", error);
+    logger.error({ err: error }, "全ユーザー取得エラー");
     throw error;
   }
 };
 
-// ユーザー削除サービス（Firebase含む物理削除）
+/**
+ * ユーザー本体と関連データを削除し、必要に応じて Firebase ユーザーも削除する。
+ * @param id - 削除対象のユーザー ID
+ * @returns 削除されたユーザー情報
+ */
 export const deleteUserService = async (id: number) => {
   try {
     // まずユーザーを取得してFirebase UIDを確認
@@ -90,7 +116,10 @@ export const deleteUserService = async (id: number) => {
         const admin = require("firebase-admin");
         await admin.auth().deleteUser(user.firebase_uid);
       } catch (firebaseError) {
-        console.error("Firebase user deletion failed:", firebaseError);
+        logger.error(
+          { err: firebaseError, firebaseUid: user.firebase_uid },
+          "Firebase ユーザーの削除に失敗しました"
+        );
         // Firebase削除に失敗してもDB削除は続行（ユーザーが既に削除されている可能性）
       }
     }
@@ -99,7 +128,7 @@ export const deleteUserService = async (id: number) => {
     const deletedUser = await userDataAccessor.delete(id);
     return deletedUser;
   } catch (error) {
-    console.error("ユーザー削除エラー:", error);
+    logger.error({ err: error, userId: id }, "ユーザー削除エラー");
     throw error;
   }
 };

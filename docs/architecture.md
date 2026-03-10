@@ -37,6 +37,11 @@ repo
 │  ├─ backend    # Express API
 │  ├─ docs       # プロダクト / 開発ドキュメントサイト
 │  └─ e2e        # Playwright
+<<<<<<< HEAD
+=======
+├─ packages
+│  └─ types      # 共有型
+>>>>>>> origin/main
 ├─ docs
 │  ├─ architecture.md
 │  └─ ai-execution.md
@@ -45,7 +50,10 @@ repo
 │  ├─ create_issue.md
 │  └─ modify_issue.md
 ├─ AGENTS.md
+<<<<<<< HEAD
 ├─ CLAUDE.md
+=======
+>>>>>>> origin/main
 └─ README.md
 ```
 
@@ -148,6 +156,21 @@ Page / Component
 - 画面固有の描画ロジック
 - DOM / UI 状態管理
 
+<<<<<<< HEAD
+=======
+### Shared Types (`packages/types`)
+
+責務:
+
+- frontend / backend 間で共有する型定義
+- レイヤーをまたいで一致させたい契約の集約
+
+含めない内容:
+
+- runtime のビジネスロジック
+- UI 実装や API ハンドラ本体
+
+>>>>>>> origin/main
 ### Docs App (`apps/docs`)
 
 責務:
@@ -198,3 +221,19 @@ Page / Component
 2. 原因箇所の特定
 3. 最小修正
 4. 回帰防止テスト
+<<<<<<< HEAD
+=======
+
+## 含める内容
+
+- システム構造
+- レイヤー責務
+- 変更判断ルール
+- 実装順序の目安
+
+## 含めない内容
+
+- AI エージェントの行動規範
+- 具体的な実行フェーズ
+- そのまま貼り付けるためのプロンプト本文
+>>>>>>> origin/main

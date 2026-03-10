@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import admin from "../config/firebase"; // 初期化済みの Firebase Admin SDK を利用
 import type { User } from "@prisma/client";
 import { ROLES } from "../constants/roles";
+import { logger } from "../config/logger";
 import { getUserByFirebaseUidService } from "../services/userService";
 import { forbidden, unauthorized, AppError } from "../utils/appError";
 
@@ -15,7 +16,9 @@ declare global {
   }
 }
 
-// 認証ミドルウェア
+/**
+ * Bearer トークンを検証し、Firebase のデコード済みユーザー情報を `req.user` に格納する。
+ */
 export const authMiddleware = async (
   req: Request,
   _res: Response,
@@ -34,11 +37,14 @@ export const authMiddleware = async (
     req.user = decodedToken;
     next();
   } catch (error) {
-    console.error("Firebase token verification failed:", error);
+    logger.warn({ err: error }, "Firebase トークンの検証に失敗しました");
     return next(unauthorized("Unauthorized: Invalid token"));
   }
 };
 
+/**
+ * 認証済みユーザーが管理者ロールを持つことを検証する。
+ */
 export const requireAdmin = async (
   req: Request,
   _res: Response,
@@ -51,7 +57,8 @@ export const requireAdmin = async (
   }
 
   try {
-    const appUser = await getUserByFirebaseUidService(firebaseUid);
+    const appUser =
+      req.appUser ?? (await getUserByFirebaseUidService(firebaseUid));
 
     if (!appUser) {
       return next(forbidden("Forbidden: user not found"));
@@ -61,9 +68,11 @@ export const requireAdmin = async (
       return next(forbidden("Forbidden: admin access required"));
     }
 
-    return next();
+    req.appUser = appUser;
+    next();
+    return;
   } catch (error) {
-    console.error("Admin authorization failed:", error);
+    logger.error({ err: error }, "管理者権限の検証に失敗しました");
     return next(
       error instanceof AppError
         ? error
@@ -72,6 +81,6 @@ export const requireAdmin = async (
             500,
             "ADMIN_AUTHORIZATION_FAILED"
           )
-    );
+      );
   }
 };

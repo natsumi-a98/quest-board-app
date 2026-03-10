@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+set -e
+
+pnpm precommit:biome
+
+run_frontend=false
+staged_files="$(git diff --cached --name-only --diff-filter=ACMR)"
+
+if [ -n "$staged_files" ]; then
+  while IFS= read -r file; do
+    case "$file" in
+      apps/frontend/*)
+        run_frontend=true
+        ;;
+    esac
+  done <<EOF
+$staged_files
+EOF
+fi
+
+if [ "$run_frontend" = "true" ]; then
+  echo "frontend 差分を検出したため、frontend の pre-commit テストを実行します"
+  pnpm --filter frontend test:precommit
+fi

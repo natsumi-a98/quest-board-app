@@ -42,11 +42,20 @@ repo
 │  ├─ backend    # API、service、Prisma、認証
 │  ├─ docs       # 開発ドキュメントサイト
 │  └─ e2e        # Playwright E2E テスト
+<<<<<<< HEAD
 ├─ docs          # AI / 開発運用の正本ドキュメント
 ├─ prompt        # 補助テンプレート
 ├─ AGENTS.md     # AI 共通ルールの正本
 ├─ CLAUDE.md     # 互換用の案内
 └─ README.md     # セットアップと repo 全体像
+=======
+├─ packages
+│  └─ types      # 共有型
+├─ docs          # AI / 開発運用の正本ドキュメント
+├─ prompt        # エージェント用テンプレート
+├─ AGENTS.md     # AI 共通ルール
+└─ README.md     # セットアップと全体像
+>>>>>>> origin/main
 ```
 
 ## 変更箇所の当たり方
@@ -63,20 +72,31 @@ repo
 | テスト | `apps/frontend/src/__tests__`, `apps/backend/src/__tests__`, `apps/e2e/tests` |
 | ルール、設計 | `AGENTS.md`, `docs/architecture.md`, `docs/ai-execution.md` |
 
+<<<<<<< HEAD
 ## AI 向けドキュメント導線
 
 AI が最初に読むべき文書セットは次の 5 つです。
+=======
+## AI向けドキュメント導線
+
+AIエージェント向けの正本は以下です。
+>>>>>>> origin/main
 
 1. `README.md`
 2. `AGENTS.md`
 3. `docs/architecture.md`
 4. `docs/ai-execution.md`
 5. `prompt/agent.md`
+<<<<<<< HEAD
 6. 関連コード / 関連テスト
+=======
+6. 関連コード / テスト
+>>>>>>> origin/main
 
 役割は次のとおりです。
 
 - `README.md`: セットアップ、開発コマンド、リポジトリ全体像
+<<<<<<< HEAD
 - `AGENTS.md`: AI エージェント共通ルールの正本
 - `docs/architecture.md`: repo 構造、レイヤー責務、変更判断の基準
 - `docs/ai-execution.md`: 調査、実装、検証、報告の進め方
@@ -87,6 +107,15 @@ AI が最初に読むべき文書セットは次の 5 つです。
 - `prompt/create_issue.md`: 改善 issue を新規起票するときの補助テンプレート
 - `prompt/modify_issue.md`: 既存 issue を整理、修正するときの補助テンプレート
 - `CLAUDE.md`: `AGENTS.md` への互換エントリ
+=======
+- `AGENTS.md`: AIエージェント共通ルール
+- `docs/architecture.md`: 実装対象の構造、責務、変更時の判断基準
+- `docs/ai-execution.md`: AIの調査、実装、検証フロー
+- `prompt/agent.md`: 他エージェントにも渡せる実行テンプレート
+- `prompt/create_issue.md`: 改善 issue を新規起票するときの補助プロンプト
+- `prompt/modify_issue.md`: 既存 issue を整理、修正するときの補助プロンプト
+- `ai-docs-refactor-prompt.md`: AI 向け docs 自体を見直すときの補助プロンプト
+>>>>>>> origin/main
 
 ---
 
@@ -162,7 +191,6 @@ cp apps/backend/.env.local.example apps/backend/.env.local
 ```
 
 `apps/backend/.env.local` を開き、各項目を設定してください。
-
 ```env
 # Firebase Admin SDK（Firebase コンソール > プロジェクトの設定 > サービスアカウント から取得）
 FIREBASE_PROJECT_ID=your-project-id
@@ -171,13 +199,31 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY----
 
 # Prisma / MySQL（docker-compose.yml のデフォルト値に合わせて設定）
 DATABASE_URL=mysql://app_user:app_password@localhost:3306/your_project_db
-SHADOW_DATABASE_URL=mysql://app_user:app_password@localhost:3306/your_project_db_shadow
+MYSQL_ROOT_PASSWORD=rootpassword
+MYSQL_DATABASE=your_project_db
+MYSQL_USER=app_user
+MYSQL_PASSWORD=app_password
 
 # Backend
 PORT=3001
 NODE_ENV=development
 FRONTEND_BASE_URL=http://localhost:3000
 ```
+
+#### E2E（任意）
+
+E2E テストを実行する場合のみ、example から `.env` を作成してください。
+
+```bash
+cp apps/e2e/.env.example apps/e2e/.env
+```
+
+| 変数名 | 説明 |
+|--------|------|
+| `FRONTEND_BASE_URL` | Playwright が開くフロントエンド URL（デフォルト: `http://localhost:3000`） |
+| `API_BASE_URL` | API テスト用のバックエンド URL（デフォルト: `http://localhost:3001`） |
+
+> `.env` / `.env.local` などの実ファイルは Git 管理しない方針です。過去に実値を含むファイルを共有していた場合は、秘密情報のローテーションも検討してください。
 
 > **Firebase Admin SDK の取得方法**
 > Firebase コンソール > プロジェクトの設定 > サービスアカウント > 「新しい秘密鍵の生成」
@@ -250,6 +296,19 @@ pnpm dev:docs
 | フロントエンド | 3000 |
 | バックエンド | 3001 |
 | MySQL | 3306 |
+
+---
+
+## API ドキュメント
+
+バックエンド起動後、以下で OpenAPI を確認できます。
+
+- Swagger UI: `http://localhost:3001/api/docs`
+- OpenAPI JSON: `http://localhost:3001/api/openapi.json`
+
+現在の request schema は backend の `zod` を source of truth とし、OpenAPI ドキュメントも同じ schema から生成します。新しい API を追加する場合は、controller に手書きの `if` を足すのではなく、`apps/backend/src/schemas/api.ts` に schema を追加して `validateRequest` から利用してください。
+
+VS Code では `.vscode/extensions.json` に OpenAPI 向けの推奨拡張を追加しています。workspace を開くと推奨が表示されます。
 
 ---
 
