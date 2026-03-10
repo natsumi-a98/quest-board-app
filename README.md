@@ -2,6 +2,92 @@
 
 このプロジェクトは、モノレポ構成（frontend / backend / docs）で構築されたクエスト投稿・参加アプリです。
 
+## プロダクト概要
+
+クエスト掲示板は、ユーザーがクエストを投稿し、参加し、レビューできるアプリです。
+
+主なユースケース:
+
+- クエスト一覧の閲覧
+- クエスト詳細の確認
+- クエストの作成、編集、削除
+- クエストへの参加
+- レビュー投稿
+- マイページでの自分の活動確認
+- 管理者によるユーザー管理
+
+主要なデータフロー:
+
+```text
+ブラウザ
+  -> apps/frontend (Next.js)
+  -> apps/backend (Express API)
+  -> Prisma
+  -> MySQL
+
+認証:
+Firebase Authentication
+  -> frontend でログイン状態を管理
+  -> backend でトークンを検証
+```
+
+## リポジトリ全体像
+
+AI エージェントはまず次の単位でリポジトリを見ると全体像を把握しやすいです。
+
+```text
+repo
+├─ apps
+│  ├─ frontend   # UI、画面、hooks、API client
+│  ├─ backend    # API、service、Prisma、認証
+│  ├─ docs       # 開発ドキュメントサイト
+│  └─ e2e        # Playwright E2E テスト
+├─ docs          # AI / 開発運用の正本ドキュメント
+├─ prompt        # 補助テンプレート
+├─ AGENTS.md     # AI 共通ルールの正本
+├─ CLAUDE.md     # 互換用の案内
+└─ README.md     # セットアップと repo 全体像
+```
+
+## 変更箇所の当たり方
+
+変更内容ごとの主な確認先:
+
+| 変更内容 | 主な確認先 |
+|--------|------|
+| 画面、導線、表示 | `apps/frontend/src/app`, `apps/frontend/src/components` |
+| API 呼び出し | `apps/frontend/src/services` |
+| 認証 | `apps/frontend/src/hooks`, `apps/frontend/src/services/firebase.ts`, `apps/backend/src/middlewares/auth.middleware.ts` |
+| API 追加、修正 | `apps/backend/src/routes`, `apps/backend/src/controllers`, `apps/backend/src/services` |
+| DB 変更 | `apps/backend/prisma/schema.prisma`, `apps/backend/src/dataAccessor` |
+| テスト | `apps/frontend/src/__tests__`, `apps/backend/src/__tests__`, `apps/e2e/tests` |
+| ルール、設計 | `AGENTS.md`, `docs/architecture.md`, `docs/ai-execution.md` |
+
+## AI 向けドキュメント導線
+
+AI が最初に読むべき文書セットは次の 5 つです。
+
+1. `README.md`
+2. `AGENTS.md`
+3. `docs/architecture.md`
+4. `docs/ai-execution.md`
+5. `prompt/agent.md`
+6. 関連コード / 関連テスト
+
+役割は次のとおりです。
+
+- `README.md`: セットアップ、開発コマンド、リポジトリ全体像
+- `AGENTS.md`: AI エージェント共通ルールの正本
+- `docs/architecture.md`: repo 構造、レイヤー責務、変更判断の基準
+- `docs/ai-execution.md`: 調査、実装、検証、報告の進め方
+- `prompt/agent.md`: 他エージェントに渡す短い実行テンプレート
+
+補助テンプレートは source-of-truth ではありません。
+
+- `prompt/create_issue.md`: 改善 issue を新規起票するときの補助テンプレート
+- `prompt/modify_issue.md`: 既存 issue を整理、修正するときの補助テンプレート
+- `CLAUDE.md`: `AGENTS.md` への互換エントリ
+
 ---
 
 ## 技術スタック
@@ -38,7 +124,7 @@ npm install -g pnpm
 ### 1. リポジトリをクローン
 
 ```bash
-git clone https://github.com/natsumi-a98/quest-board-app.git
+git clone https://github.com/Numamura-dev/quest-board-app.git
 cd quest-board-app
 ```
 
