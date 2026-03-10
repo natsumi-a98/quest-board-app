@@ -13,10 +13,11 @@ import {
 } from "../controllers/questController";
 import { joinQuest } from "../controllers/questJoinController";
 import { authMiddleware, requireAdmin } from "../middlewares/auth.middleware";
+import { searchRateLimiter } from "../middlewares/rateLimiter";
 
 const router = express.Router();
 
-router.get("/", getAllQuests); // GET /quests
+router.get("/", searchRateLimiter, getAllQuests); // GET /quests
 router.get("/admin/all", authMiddleware, requireAdmin, getAllQuestsIncludingDeleted); // GET /quests/admin/all (管理者用)
 router.get("/:id", getQuestById); // GET /quests/:id
 router.post("/", authMiddleware, createQuest); // POST /quests
