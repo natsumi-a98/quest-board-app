@@ -54,6 +54,11 @@ export interface QuestWhereCondition {
   }>;
   status?: string;
   deleted_at?: Date | null;
+  quest_participants?: {
+    some: {
+      user_id: number;
+    };
+  };
 }
 
 export class QuestDataAccessor {
@@ -68,6 +73,7 @@ export class QuestDataAccessor {
   async findAll(params: {
     keyword?: string;
     status?: string;
+    participantUserId?: number;
   }): Promise<QuestWithRelations[]> {
     const where: QuestWhereCondition = {
       deleted_at: null, // 論理削除されていないクエストのみ取得
@@ -84,6 +90,15 @@ export class QuestDataAccessor {
     // ステータス絞り込み：指定されたステータスのクエストのみ取得
     if (params.status) {
       where.status = params.status;
+    }
+
+    // 参加者による絞り込み：指定ユーザーが参加しているクエストのみ取得
+    if (params.participantUserId) {
+      where.quest_participants = {
+        some: {
+          user_id: params.participantUserId,
+        },
+      };
     }
 
     return (await prisma.quest.findMany({

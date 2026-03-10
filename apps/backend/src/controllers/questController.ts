@@ -45,9 +45,16 @@ interface QuestMutationBody {
 }
 
 export const getAllQuests = asyncHandler(async (req: Request, res: Response) => {
+  const participantUserIdRaw = req.query.participantUserId;
+  const participantUserId =
+    typeof participantUserIdRaw === "string" && /^\d+$/.test(participantUserIdRaw)
+      ? Number(participantUserIdRaw)
+      : undefined;
+
   const quests = await getAllQuestsService({
     keyword: typeof req.query.keyword === "string" ? req.query.keyword : undefined,
     status: getStatusParam(req.query.status),
+    participantUserId,
   });
   res.json(quests);
 });

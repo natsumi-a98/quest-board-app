@@ -3,16 +3,18 @@ import { QuestDataAccessor } from "../dataAccessor/dbAccessor";
 interface GetAllQuestsParams {
   keyword?: string;
   status?: string;
+  participantUserId?: number;
 }
 
 const questDataAccessor = new QuestDataAccessor();
 
-// 全クエスト取得（オプションでキーワード・ステータスで絞り込み）
+// 全クエスト取得（オプションでキーワード・ステータス・参加者で絞り込み）
 export const getAllQuestsService = async ({
   keyword,
   status,
+  participantUserId,
 }: GetAllQuestsParams) => {
-  const quests = await questDataAccessor.findAll({ keyword, status });
+  const quests = await questDataAccessor.findAll({ keyword, status, participantUserId });
   return quests;
 };
 
