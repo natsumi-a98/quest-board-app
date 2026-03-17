@@ -1,5 +1,21 @@
 # Codex Rules
 
+## Commands
+
+詳細は README.md 参照。主要コマンドのみ抜粋:
+
+```bash
+pnpm dev                    # 全サービス並列起動
+pnpm build                  # 全体ビルド (docs -> frontend -> backend)
+pnpm lint / pnpm lint:fix   # Biome check / 自動修正
+pnpm --filter backend test  # Jest (バックエンド)
+pnpm --filter frontend test # Vitest (フロントエンド)
+pnpm --filter backend typecheck
+docker compose up -d        # MySQL 起動 (DB 操作前に必要)
+pnpm db:push                # Prisma スキーマを DB に反映
+pnpm --filter backend seed  # シードデータ投入
+```
+
 ## General
 
 - 返答、レビューコメント、PR 本文は日本語で記述する。
