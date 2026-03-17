@@ -10,16 +10,23 @@ const envCandidates = [
 	resolve(backendRoot, ".env.local"),
 ];
 
+let loadedFromCandidate = false;
+
+// process.cwd() と backendRoot が同じ解決結果になるケースの重複を除外する。
 for (const path of [...new Set(envCandidates)]) {
 	if (!existsSync(path)) {
 		continue;
 	}
 
 	dotenv.config({ path });
+	loadedFromCandidate = true;
 	break;
 }
 
-dotenv.config();
+// .env.local が見つからない場合のみ、従来互換でデフォルトの .env を読む。
+if (!loadedFromCandidate) {
+	dotenv.config();
+}
 
 if (!process.env.DATABASE_URL) {
 	throw new Error(

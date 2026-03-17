@@ -10,7 +10,7 @@ describe("config/env", () => {
 		process.chdir(originalCwd);
 
 		if (originalDatabaseUrl === undefined) {
-			process.env.DATABASE_URL = "";
+			Reflect.deleteProperty(process.env, "DATABASE_URL");
 			return;
 		}
 
@@ -18,7 +18,7 @@ describe("config/env", () => {
 	});
 
 	it("DATABASE_URL が未設定なら分かりやすいエラーを投げる", () => {
-		process.env.DATABASE_URL = "";
+		Reflect.deleteProperty(process.env, "DATABASE_URL");
 		jest.doMock("dotenv", () => ({
 			config: jest.fn(),
 		}));
@@ -46,7 +46,7 @@ describe("config/env", () => {
 	});
 
 	it("repo root から実行しても apps/backend/.env.local を探索できる", () => {
-		process.env.DATABASE_URL = "";
+		Reflect.deleteProperty(process.env, "DATABASE_URL");
 		process.chdir(resolve(__dirname, "../../../../.."));
 
 		const configMock = jest.fn((options?: { path?: string }) => {
