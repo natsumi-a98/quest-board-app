@@ -45,9 +45,6 @@ test.describe("クエストエントリー UI E2E", () => {
 		rewardIds: [] as number[],
 	};
 
-	// テスト実行ごとのクエストIDを保存（クリーンアップ用）
-	const testQuestIds = new Map<string, number[]>();
-
 	// 各テスト実行ごとに独立したクエストを作成（ブラウザ間の並列実行に対応）
 	test.beforeEach(async () => {
 		// テストユーザーの既存の参加記録をクリーンアップ（重複参加を防ぐため）
