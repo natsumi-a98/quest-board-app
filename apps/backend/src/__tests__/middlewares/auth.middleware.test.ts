@@ -55,7 +55,7 @@ describe("auth.middleware", () => {
 			expect(error.code).toBe("UNAUTHORIZED");
 		});
 
-		it("無効トークンの場合は 403 を返す", async () => {
+		it("無効トークンの場合は 401 を返す", async () => {
 			const req = createRequest("Bearer invalid-token");
 			const next = jest.fn() as NextFunction;
 			mockVerifyIdToken.mockRejectedValueOnce(new Error("invalid token"));
@@ -64,8 +64,8 @@ describe("auth.middleware", () => {
 
 			const error = getNextError(next as unknown as jest.Mock);
 			expect(error).toBeInstanceOf(AppError);
-			expect(error.statusCode).toBe(403);
-			expect(error.code).toBe("FORBIDDEN");
+			expect(error.statusCode).toBe(401);
+			expect(error.code).toBe("UNAUTHORIZED");
 		});
 
 		it("有効トークンの場合は req.user を設定して次へ進む", async () => {
@@ -92,7 +92,7 @@ describe("auth.middleware", () => {
 			expect(next).toHaveBeenCalledWith();
 		});
 
-		it("無効トークンの場合は 403 を返す", async () => {
+		it("無効トークンの場合は 401 を返す", async () => {
 			const req = createRequest("Bearer invalid-token");
 			const next = jest.fn() as NextFunction;
 			mockVerifyIdToken.mockRejectedValueOnce(new Error("invalid token"));
@@ -101,8 +101,8 @@ describe("auth.middleware", () => {
 
 			const error = getNextError(next as unknown as jest.Mock);
 			expect(error).toBeInstanceOf(AppError);
-			expect(error.statusCode).toBe(403);
-			expect(error.code).toBe("FORBIDDEN");
+			expect(error.statusCode).toBe(401);
+			expect(error.code).toBe("UNAUTHORIZED");
 		});
 	});
 

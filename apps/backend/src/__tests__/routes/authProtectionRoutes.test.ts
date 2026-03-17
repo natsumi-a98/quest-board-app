@@ -1,63 +1,115 @@
 process.env.DATABASE_URL =
 	process.env.DATABASE_URL ?? "mysql://user:password@localhost:3306/test_db";
 
-const questsRouter = require("../../routes/quests").default;
-const reviewsRouter = require("../../routes/reviews").default;
-const authMiddleware =
-	require("../../middlewares/auth.middleware").authMiddleware;
+import { Readable, Writable } from "node:stream";
+import type { NextFunction } from "express";
+import express from "express";
+import { errorHandler } from "../../middlewares/errorHandler";
+import questsRouter from "../../routes/quests";
+import reviewsRouter from "../../routes/reviews";
 
-type RouteMethod = "get" | "post" | "put" | "patch" | "delete";
+const createApp = () => {
+	const app = express();
+	app.use(express.json());
+	app.use("/api/quests", questsRouter);
+	app.use("/api/reviews", reviewsRouter);
+	app.use(errorHandler);
+	return app;
+};
 
-type RouteStackLayer = {
-	handle: unknown;
-	route?: {
-		path: string;
-		methods: Partial<Record<RouteMethod, boolean>>;
-		stack: RouteStackLayer[];
+type MockResponse = Writable & {
+	statusCode: number;
+	setHeader: (name: string, value: string | string[] | number) => void;
+	getHeader: (name: string) => string | string[] | number | undefined;
+	removeHeader: (name: string) => void;
+	writeHead: (statusCode: number) => MockResponse;
+	end: (chunk?: string | Buffer) => MockResponse;
+};
+
+const request = async (path: string, method: "POST" | "PUT" | "DELETE") => {
+	const app = createApp() as ReturnType<typeof createApp> & {
+		handle: (req: Readable, res: Writable, next: NextFunction) => void;
+	};
+	const body = JSON.stringify({
+		rating: 5,
+		comment: "test",
+	});
+	const req = Object.assign(Readable.from([body]), {
+		method,
+		url: path,
+		headers: {
+			"content-type": "application/json",
+			"content-length": Buffer.byteLength(body).toString(),
+		},
+	});
+	const chunks: Buffer[] = [];
+	const headers = new Map<string, string | string[] | number>();
+	const res = Object.assign(
+		new Writable({
+			write(chunk, _encoding, callback) {
+				chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+				callback();
+			},
+		}),
+		{
+			statusCode: 200,
+			setHeader(name: string, value: string | string[] | number) {
+				headers.set(name.toLowerCase(), value);
+			},
+			getHeader(name: string) {
+				return headers.get(name.toLowerCase());
+			},
+			removeHeader(name: string) {
+				headers.delete(name.toLowerCase());
+			},
+			writeHead(statusCode: number) {
+				this.statusCode = statusCode;
+				return this;
+			},
+			end(chunk?: string | Buffer) {
+				if (chunk) {
+					chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+				}
+				(this as unknown as Writable).emit("finish");
+				return this;
+			},
+		},
+	) as unknown as MockResponse;
+
+	await new Promise<void>((resolve, reject) => {
+		res.on("finish", () => resolve());
+		res.on("error", reject);
+		app.handle(req, res, reject);
+	});
+
+	return {
+		status: res.statusCode,
+		json: () =>
+			JSON.parse(Buffer.concat(chunks).toString("utf8")) as {
+				code: string;
+			},
 	};
 };
 
-const getRouteHandlers = (
-	router: typeof questsRouter,
-	method: RouteMethod,
-	path: string,
-) => {
-	const routeLayer = (router as { stack: RouteStackLayer[] }).stack.find(
-		(layer) =>
-			layer.route && layer.route.path === path && layer.route.methods[method],
-	);
-
-	if (!routeLayer) {
-		throw new Error(`Route not found: ${method.toUpperCase()} ${path}`);
-	}
-
-	if (!routeLayer.route) {
-		throw new Error(`Route stack is missing: ${method.toUpperCase()} ${path}`);
-	}
-
-	return routeLayer.route.stack.map((layer) => layer.handle);
-};
-
 describe("認証保護ルート", () => {
-	it("POST /quests/:questId/reviews は authMiddleware を必須にする", () => {
-		const handlers = getRouteHandlers(
-			questsRouter,
-			"post",
-			"/:questId/reviews",
-		);
-
-		expect(handlers).toContain(authMiddleware);
+	it("POST /api/quests/:questId/reviews はトークン無しで 401 を返す", async () => {
+		const response = await request("/api/quests/1/reviews", "POST");
+		expect(response.status).toBe(401);
+		const body = (await response.json()) as { code: string };
+		expect(body.code).toBe("UNAUTHORIZED");
 	});
 
-	it("PUT /reviews/:reviewId は authMiddleware を必須にする", () => {
-		const handlers = getRouteHandlers(reviewsRouter, "put", "/:reviewId");
-
-		expect(handlers).toContain(authMiddleware);
+	it("PUT /api/reviews/:reviewId はトークン無しで 401 を返す", async () => {
+		const response = await request("/api/reviews/1", "PUT");
+		expect(response.status).toBe(401);
+		const body = (await response.json()) as { code: string };
+		expect(body.code).toBe("UNAUTHORIZED");
 	});
 
-	it("DELETE /reviews/:reviewId は authMiddleware を必須にする", () => {
-		const handlers = getRouteHandlers(reviewsRouter, "delete", "/:reviewId");
-
-		expect(handlers).toContain(authMiddleware);
+	it("DELETE /api/reviews/:reviewId はトークン無しで 401 を返す", async () => {
+		const response = await request("/api/reviews/1", "DELETE");
+		expect(response.status).toBe(401);
+		const body = (await response.json()) as { code: string };
+		expect(body.code).toBe("UNAUTHORIZED");
 	});
 });

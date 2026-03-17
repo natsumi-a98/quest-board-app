@@ -38,7 +38,7 @@ export const authMiddleware = async (
 		next();
 	} catch (error) {
 		logger.warn({ err: error }, "Firebase トークンの検証に失敗しました");
-		return next(forbidden("Forbidden: Invalid token"));
+		return next(unauthorized("Unauthorized: Invalid token"));
 	}
 };
 
@@ -69,7 +69,7 @@ export const optionalAuthMiddleware = async (
 		next();
 	} catch (error) {
 		logger.warn({ err: error }, "Firebase トークンの任意検証に失敗しました");
-		return next(forbidden("Forbidden: Invalid token"));
+		return next(unauthorized("Unauthorized: Invalid token"));
 	}
 };
 
